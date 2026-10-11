@@ -628,6 +628,8 @@ const ENGLISH = {
   'common.count.artists.other': '{count} artists',
   'common.count.books.one': '{count} book',
   'common.count.books.other': '{count} books',
+  'common.count.channels.one': '{count} channel',
+  'common.count.channels.other': '{count} channels',
   'common.count.chapters.one': '{count} chapter',
   'common.count.chapters.other': '{count} chapters',
   'common.count.days.one': '{count} day',
@@ -917,6 +919,7 @@ const ENGLISH = {
   'common.listeningPartyPanel.startAListeningParty': 'Start a listening party',
   'common.listeningPartyPanel.youAreInAWatchParty': 'You’re in a watch party',
   'common.live': 'Live',
+  'common.liveTv': 'Live TV',
   'common.loading': 'Loading',
   'common.loadingTitle': 'Loading {title}',
   'common.login': 'Login',
@@ -2043,6 +2046,21 @@ const ENGLISH = {
   'error.linking.yourServerIsPlayingAsMuchAsItMay':
     'Your server has reached its stream limit on this server. Stop a stream first.',
   'error.listening.noSuchTrackInThatBook': 'No such track in that book.',
+  'error.live.iptvOrgCouldNotBeReached': 'iptv-org couldn’t be reached.',
+  'error.live.noSuchChannel': 'There’s no such channel.',
+  'error.live.noSuchSource': 'There’s no such live TV source.',
+  'error.live.thatChannelCouldNotBeStarted': 'That channel couldn’t be started.',
+  'error.live.thatChannelHasNoLogo': 'That channel has no logo.',
+  'error.live.thatIsNotAStream': 'The address answered with a web page rather than a stream.',
+  'error.live.thatLinkHasRunOut': 'That stream link has run out. Start the channel again.',
+  'error.live.thatPageWillNotBeShownHere':
+    'That page does not allow other sites to show it, so it cannot be played here.',
+  'error.live.theBroadcasterRefusedIt':
+    'The broadcaster refused to send it to this server. It’s most likely geo-blocked; a live TV proxy in its country can play it.',
+  'error.live.theStreamDidNotAnswer':
+    'The stream’s server didn’t answer. It may be down, or not reachable from here.',
+  'error.live.theStreamIsGone':
+    'The stream isn’t there any more. The playlist it came from may be out of date.',
   'error.music.chooseAProfileFirst': 'Choose a profile first.',
   'error.music.noCoverForThatAlbum': 'No cover for that album.',
   'error.music.noCoverWasFoundForThat': 'No cover was found for that album.',
@@ -4023,6 +4041,63 @@ const ENGLISH = {
     'When a linked server gets something someone here requested, they’re notified either way. When on, the request here is also removed.',
   'screens.adminArea.linkedServersPanel.whereOtherServersReachIt': 'Public address',
   'screens.adminArea.linkedServersPanel.withdrawTheInvite': 'Revoke the invite created {when}',
+  'screens.adminArea.liveTvPanel.addALiveTvSource': 'Add a live TV source',
+  'screens.adminArea.liveTvPanel.addASource': 'Add a source',
+  'screens.adminArea.liveTvPanel.addedNameWithCountChannels': 'Added {name} with {count} channels.',
+  'screens.adminArea.liveTvPanel.anHlsAddressOrAnyStream':
+    'An HLS address ending in .m3u8 plays as it is; other streams are converted for the browser.',
+  'screens.adminArea.liveTvPanel.anM3uPlaylistEachStream':
+    'An M3U playlist. Each stream in it becomes a numbered channel.',
+  'screens.adminArea.liveTvPanel.anXmltvGuideSaysWhatsOn':
+    'An XMLTV guide, which says what’s on each channel. A playlist that names its own guide uses that.',
+  'screens.adminArea.liveTvPanel.aPageWithItsOwnPlayer':
+    'A web page with its own player, such as an embed link. It is shown as it is, with its own controls.',
+  'screens.adminArea.liveTvPanel.byCategory': 'By category',
+  'screens.adminArea.liveTvPanel.byCountry': 'By country',
+  'screens.adminArea.liveTvPanel.channels': 'Channels',
+  'screens.adminArea.liveTvPanel.chooseAPlaylist': 'Choose a playlist',
+  'screens.adminArea.liveTvPanel.embeddedPage': 'Embedded page',
+  'screens.adminArea.liveTvPanel.fillInANameAndAnAddress':
+    'Give it a name and a working address, or choose a playlist.',
+  'screens.adminArea.liveTvPanel.formulaOneLive': 'Formula 1 live',
+  'screens.adminArea.liveTvPanel.freeGuidesThatCoverManyChannels':
+    'Free guides that cover many channels in free playlists. Add several; each fills in what the others miss.',
+  'screens.adminArea.liveTvPanel.guideAddresses': 'Guide addresses',
+  'screens.adminArea.liveTvPanel.guideAddressesMenu': 'Guide addresses…',
+  'screens.adminArea.liveTvPanel.guideAddressOptional': 'Guide address (optional)',
+  'screens.adminArea.liveTvPanel.iptvOrg': 'iptv-org',
+  'screens.adminArea.liveTvPanel.iptvOrgListsFreeChannels':
+    'iptv-org lists publicly available channels. Some may not play in every country.',
+  'screens.adminArea.liveTvPanel.iptvOrgName': 'iptv-org · {name}',
+  'screens.adminArea.liveTvPanel.itsChannelsAndGuideGoWithIt':
+    'Its channels and guide go with it, and so does anyone’s favourite of those channels.',
+  'screens.adminArea.liveTvPanel.leftEmptyItIsNamedForYou': 'Left empty, it’s named for you.',
+  'screens.adminArea.liveTvPanel.logoAddressOptional': 'Logo address (optional)',
+  'screens.adminArea.liveTvPanel.myChannels': 'My channels',
+  'screens.adminArea.liveTvPanel.noSourcesYet':
+    'No live TV yet. Add a stream, a playlist, a tuner or a playlist from iptv-org.',
+  'screens.adminArea.liveTvPanel.oneOrMoreXmltvGuides':
+    'One or more XMLTV guide addresses, separated by spaces.',
+  'screens.adminArea.liveTvPanel.oneStream': 'One stream',
+  'screens.adminArea.liveTvPanel.pageAddress': 'Page address',
+  'screens.adminArea.liveTvPanel.pickBy': 'Pick by',
+  'screens.adminArea.liveTvPanel.playlistAddress': 'Playlist address',
+  'screens.adminArea.liveTvPanel.playlistFile': 'Playlist file',
+  'screens.adminArea.liveTvPanel.plutoTvGuide': 'Pluto TV guide',
+  'screens.adminArea.liveTvPanel.readNameCountChannels': 'Read {count} channels from {name}.',
+  'screens.adminArea.liveTvPanel.removeThisSource': 'Remove this source?',
+  'screens.adminArea.liveTvPanel.samsungTvPlusGuide': 'Samsung TV Plus guide',
+  'screens.adminArea.liveTvPanel.streamAddress': 'Stream address',
+  'screens.adminArea.liveTvPanel.theHdHomeRunsAddress':
+    'The HDHomeRun’s address on your network, such as http://192.168.1.50.',
+  'screens.adminArea.liveTvPanel.thoseAreNotAllAddresses':
+    'One of those isn’t a guide address. Each should start with https://.',
+  'screens.adminArea.liveTvPanel.tuner': 'Tuner',
+  'screens.adminArea.liveTvPanel.tunerAddress': 'Tuner address',
+  'screens.adminArea.liveTvPanel.ukGuideEpgPw': 'UK guide · epg.pw',
+  'screens.adminArea.liveTvPanel.ukGuideEpgShare': 'UK guide · epgshare01',
+  'screens.adminArea.liveTvPanel.uploadAChannelPicture': 'Upload a channel picture',
+  'screens.adminArea.liveTvPanel.whatToAdd': 'What to add',
   'screens.adminArea.matchPicker.choosingHereCorrectsEveryEpisodeOf':
     'Your choice applies to every episode of this series and to future scans.',
   'screens.adminArea.matchPicker.choosingHereCorrectsThisFilmAnd':
@@ -5583,6 +5658,49 @@ const ENGLISH = {
   'screens.libraryBrowser.goToMusic': 'Go to Music',
   'screens.libraryBrowser.readingYourLibrary': 'Loading your library',
   'screens.libraryBrowser.thisServerHasNoFilmsOr': 'This server has no films or programmes yet.',
+  'screens.liveTvPage.allChannels': 'All channels',
+  'screens.liveTvPage.blockedEvenThroughTheVpn': 'Blocked, even through the VPN',
+  'screens.liveTvPage.blockedHere': 'Blocked here',
+  'screens.liveTvPage.blockedOutsideSomeCountries':
+    'Only plays in some countries, and the playlist doesn’t say which.',
+  'screens.liveTvPage.channel': 'Channel',
+  'screens.liveTvPage.findAChannel': 'Find a channel',
+  'screens.liveTvPage.geoBlocked': 'Geo-blocked',
+  'screens.liveTvPage.geoBlockedCountry': 'Geo-blocked · {country}',
+  'screens.liveTvPage.groups': 'Groups',
+  'screens.liveTvPage.guide': 'Guide',
+  'screens.liveTvPage.itIsNotBroadcastingNow':
+    'This channel isn’t broadcasting right now. Some, like event channels, only come on for a programme.',
+  'screens.liveTvPage.itsDescriptionCannotBeRead':
+    'The stream’s description of itself couldn’t be read, so there was nothing to play.',
+  'screens.liveTvPage.itSentNoPictures':
+    'It started but sent no pictures. It may be off air right now; some channels aren’t on all day.',
+  'screens.liveTvPage.itStoppedAnswering': 'The stream stopped answering part of the way in.',
+  'screens.liveTvPage.jumpToNow': 'Jump to now',
+  'screens.liveTvPage.keepName': 'Keep {name} as a favourite',
+  'screens.liveTvPage.likelyOnlyPlaysInCountry':
+    'Most likely only plays in {country}. A live TV proxy in that country can play it.',
+  'screens.liveTvPage.list': 'List',
+  'screens.liveTvPage.liveNowNoGuide': 'Live now · no guide',
+  'screens.liveTvPage.nextTimeTitle': 'Next at {time}: {title}',
+  'screens.liveTvPage.noChannelsYet':
+    'There are no live TV channels yet. An admin can add a stream, a playlist or a tuner under Server → Live TV.',
+  'screens.liveTvPage.noFavouritesYet':
+    'You haven’t kept any channels yet. Star one to find it here.',
+  'screens.liveTvPage.notAllDay': 'Not 24/7',
+  'screens.liveTvPage.notWorking': 'Not working',
+  'screens.liveTvPage.offAir': 'Off air',
+  'screens.liveTvPage.onAir': 'On air',
+  'screens.liveTvPage.onAirNow': 'On air now',
+  'screens.liveTvPage.onNow': 'On now',
+  'screens.liveTvPage.showChannelsAs': 'Show channels as',
+  'screens.liveTvPage.startingName': 'Starting {name}…',
+  'screens.liveTvPage.stopKeepingName': 'Stop keeping {name} as a favourite',
+  'screens.liveTvPage.thatChannelCouldNotBePlayed': 'That channel couldn’t be played.',
+  'screens.liveTvPage.thatCouldNotBeKept': 'That channel couldn’t be kept.',
+  'screens.liveTvPage.watchName': 'Watch {name}',
+  'screens.liveTvPage.whichChannels': 'Which channels',
+  'screens.liveTvPage.yourBrowserCannotPlayIt': 'This browser can’t play the stream’s format.',
   'screens.logDetailDialog.happened': 'Occurrences',
   'screens.logDetailDialog.level': 'Level',
   'screens.logExplorer.levelToggles.levels': 'Levels',
@@ -6880,6 +6998,8 @@ const ENGLISH = {
   'server.imports.sourceCaller.nameDidNotAnswerInTime': '{name} didn’t respond in time.',
   'server.imports.sourceCaller.nameRefusedTheKey':
     '{name} rejected the API key. Check you copied all of it.',
+  'server.jobs.jobDefinitions.asksEveryLiveChannelWhetherItIs':
+    'Asks every live TV channel’s stream for a moment of pictures, so the guide can show which are on air, off air, blocked or gone.',
   'server.jobs.jobDefinitions.bringEverythingAcross': 'Import from Jellyfin, Emby or Plex',
   'server.jobs.jobDefinitions.bringRequestsUpToDateWith': 'Sync requests with the catalogue',
   'server.jobs.jobDefinitions.bringsPeopleWatchingAndLibrariesAcross':
@@ -6895,6 +7015,7 @@ const ENGLISH = {
     'Checks TMDB for new episodes and changed release dates, and what the library already holds of each requested show.',
   'server.jobs.jobDefinitions.checkTheRequestsService': 'Check the requests service',
   'server.jobs.jobDefinitions.checkTheTranscoder': 'Check the transcoder',
+  'server.jobs.jobDefinitions.checkWhichLiveChannelsPlay': 'Check which live channels play',
   'server.jobs.jobDefinitions.cleanUpCachedImages': 'Clean up cached images',
   'server.jobs.jobDefinitions.cleanUpCachedPreviews': 'Clean up cached previews',
   'server.jobs.jobDefinitions.cleanUpSessions': 'Clean up sessions',
@@ -6932,6 +7053,8 @@ const ENGLISH = {
   'server.jobs.jobDefinitions.generateMissingScrubPreviews': 'Generate missing scrub previews',
   'server.jobs.jobDefinitions.keepsACopyBesideEachFilm':
     'Creates a copy of each film and episode that low-powered devices can play without transcoding, during the hours set under Encoding.',
+  'server.jobs.jobDefinitions.keepsTheChannelsAndGuideOfEach':
+    'Keeps the channels and programme guide of each live TV source up to date.',
   'server.jobs.jobDefinitions.keepsTheTitlesOtherValenceServers':
     'Updates the list of titles other Valence servers share with this one, so you can browse them here.',
   'server.jobs.jobDefinitions.makesTheReEncodesAnAdministrator':
@@ -6945,6 +7068,7 @@ const ENGLISH = {
   'server.jobs.jobDefinitions.pruneOldWebhookDeliveries': 'Prune old webhook deliveries',
   'server.jobs.jobDefinitions.readsJellyfinEmbyOrPlexWithoutWriting':
     'Reads Jellyfin, Emby or Plex and reports what an import would bring in, without changing anything.',
+  'server.jobs.jobDefinitions.readTheLiveTvSources': 'Read the live TV sources',
   'server.jobs.jobDefinitions.readWhatLinkedServersShare': 'Update linked servers’ libraries',
   'server.jobs.jobDefinitions.rendersPreviewClipsForItemsWithout':
     'Renders preview clips for items without one.',
@@ -7013,6 +7137,11 @@ const ENGLISH = {
   'server.library.withRottenTomatoes.oMDbAnsweredImdbIdWithAnError':
     'OMDb returned an error for {imdbId}',
   'server.library.withRottenTomatoes.oMDbCouldNotBeReachedFor': 'Couldn’t reach OMDb for {imdbId}',
+  'server.live.theGuideCouldNotBeRead':
+    'The guide couldn’t be read, so the channels show without what’s on.',
+  'server.live.thePlaylistCouldNotBeRead': 'The playlist couldn’t be read.',
+  'server.live.thePlaylistHasNoChannels': 'The playlist has no channels in it.',
+  'server.live.theTunerCouldNotBeReached': 'The tuner couldn’t be reached.',
   'server.logging.describeFailure.itFailedAndSaidNothingAbout':
     'It failed without giving a reason.',
   'server.logging.jobEventLog.aBackgroundJob': 'A background job',

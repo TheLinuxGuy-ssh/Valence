@@ -117,6 +117,12 @@ import { createPeerClient } from '@ValenceServer/linking/createPeerClient';
 import { createLinkService } from '@ValenceServer/linking/createLinkService';
 import { linkSettingsOf } from '@ValenceServer/linking/linkSettingsOf';
 import { createChangeTeller } from '@ValenceServer/linking/createChangeTeller';
+import { createLiveTvService } from '@ValenceServer/live/createLiveTvService';
+import { createDatabaseLiveTvStore } from '@ValenceServer/live/createDatabaseLiveTvStore';
+import { createLiveRelay } from '@ValenceServer/live/createLiveRelay';
+import { createLiveRoutes } from '@ValenceServer/live/createLiveRoutes';
+import { createIptvOrgCatalogue } from '@ValenceServer/live/createIptvOrgCatalogue';
+import type { LiveTvOptions } from '@ValenceServer/live/LiveTvOptions';
 import { createServerPictures } from '@ValenceServer/linking/createServerPictures';
 import { createCatalogueSync } from '@ValenceServer/linking/catalogue/createCatalogueSync';
 import { readLinkedAddress } from '@ValenceServer/linking/catalogue/readLinkedAddress';
@@ -278,6 +284,8 @@ import {
   CHECK_CATALOGUE_CONNECTIVITY_JOB,
   CHECK_TRANSCODER_JOB,
   SYNC_LINKED_CATALOGUES_JOB,
+  REFRESH_LIVE_TV_JOB,
+  CHECK_LIVE_CHANNELS_JOB,
   CHECK_REQUESTS_JOB,
   CHECK_DISK_SPACE_JOB,
   SEND_MEDIA_DIGEST_JOB,
@@ -1398,6 +1406,36 @@ const catalogueSync = createCatalogueSync({
   },
 });
 
+const liveRoutes = createLiveRoutes(env.LIVE_TV_PROXY);
+
+const liveTvService = createLiveTvService({
+  store: createDatabaseLiveTvStore(db),
+  routes: liveRoutes,
+  fetcher: liveRoutes.readings,
+  warn: (message) => {
+    log.warn('server', message);
+  },
+});
+
+const liveTv: LiveTvOptions = {
+  service: liveTvService,
+  relay: createLiveRelay(),
+  iptvOrg: createIptvOrgCatalogue(),
+  routes: liveRoutes,
+  pictures: createServerPictures(join(env.PROFILE_IMAGE_DIR, 'live')),
+  startTranscoded: async (channel, proxy) => {
+    const liveId =
+      (await transcoder.startLive?.(channel.streamUrl, {
+        userAgent: channel.userAgent,
+        referrer: channel.referrer,
+        proxy,
+      })) ?? null;
+
+    return liveId === null ? null : `/api/live/session/${encodeURIComponent(liveId)}/index.m3u8`;
+  },
+  readTranscoded: async (liveId, name) => (await transcoder.readLiveFile?.(liveId, name)) ?? null,
+};
+
 const parties = createPartyRegistry(() => randomUUID());
 
 const partyRelay = createPartyRelayHub();
@@ -2347,6 +2385,25 @@ const jobs = createJobQueue({
         log.info(
           'jobs',
           `linking: read ${outcomes.reduce((sum, one) => sum + one.kept, 0).toString()} shared titles from ${outcomes.length.toString()} linked servers`,
+        );
+      },
+      [REFRESH_LIVE_TV_JOB]: async (jobId) => {
+        jobs.reportProgress(jobId, saying('server.jobs.phase.checking'), 0, 1);
+
+        const read = await liveTvService.refreshAll();
+
+        jobs.reportProgress(jobId, saying('server.jobs.phase.checking'), 1, 1);
+        log.info('jobs', `live tv: read ${read.toString()} sources again`);
+      },
+      [CHECK_LIVE_CHANNELS_JOB]: async (jobId) => {
+        jobs.reportProgress(jobId, saying('server.jobs.phase.checking'), 0, 1);
+
+        const counts = await liveTvService.checkAll();
+
+        jobs.reportProgress(jobId, saying('server.jobs.phase.checking'), 1, 1);
+        log.info(
+          'jobs',
+          `live tv: ${counts.onAir.toString()} channels on air, ${counts.offAir.toString()} off air, ${counts.refused.toString()} refused, ${(counts.gone + counts.unreachable + counts.notAStream).toString()} not working`,
         );
       },
       [CHECK_TRANSCODER_JOB]: async (jobId) => {
@@ -3961,6 +4018,7 @@ const app = createApp({
   },
   preTranscoding: preTranscodingService,
   favourites: createDatabaseFavouriteService(db),
+  liveTv,
   hiding: createDatabaseHiddenService(db),
   ratings: createDatabaseRatingService(db),
   shares: shareService,
