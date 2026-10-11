@@ -1,5 +1,5 @@
 import { sayVerbatim } from '@ValenceI18n/sayVerbatim';
-import { fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { describe, expect, it, vi } from 'vitest';
 import { StreamStats } from './StreamStats';
@@ -107,6 +107,78 @@ const draw = (overrides: Partial<StreamStatsProps> = {}) => {
 };
 
 describe('StreamStats', () => {
+  it('says how the browser’s own player is keeping up, where it is the one playing', () => {
+    draw({
+      engine: {
+        route: 'webgpu',
+        gpu: 'apple metal-3',
+        hdrSignal: 'pq',
+        isHdrFilm: true,
+        container: 'video/x-matroska',
+        sound: 'opus',
+        soundChannels: 8,
+        decodedFrames: 1440,
+        drawnFrames: 1432,
+        skippedFrames: 8,
+        decodedAheadSeconds: 0.125,
+      },
+    });
+
+    expect(screen.getByText('Valence WebGPU (Mediabunny + WebCodecs)')).toBeInTheDocument();
+    expect(screen.getByText('apple metal-3')).toBeInTheDocument();
+    expect(screen.getByText('PQ to SDR, BT.2390')).toBeInTheDocument();
+    expect(screen.getByText('Decoded here, encoded again as opus 8ch')).toBeInTheDocument();
+  });
+
+  it('says a file repackaged in the browser is shown by the media element', () => {
+    draw({
+      delivered: { ...delivered, bitrateKbps: null },
+      engine: {
+        route: 'remux',
+        gpu: null,
+        hdrSignal: null,
+        isHdrFilm: false,
+        container: 'video/x-matroska; codecs="hev1"',
+        sound: 'carried',
+        soundChannels: 6,
+        decodedFrames: 0,
+        drawnFrames: 0,
+        skippedFrames: 0,
+        decodedAheadSeconds: null,
+      },
+    });
+
+    expect(screen.getByText('Mediabunny → Media Source → <video>')).toBeInTheDocument();
+    expect(screen.getByText('video/x-matroska → video/mp4')).toBeInTheDocument();
+    expect(screen.queryByText('GPU')).not.toBeInTheDocument();
+    expect(screen.getByText('Carried as it is')).toBeInTheDocument();
+    expect(screen.queryByText('Frames drawn')).not.toBeInTheDocument();
+    expect(screen.getByText(/3,308/)).toBeInTheDocument();
+  });
+
+  it('shows a handle to drag it by only where it can be dragged', () => {
+    draw();
+
+    const still = document.querySelectorAll('header .valence-icon').length;
+
+    cleanup();
+    draw({ onGrab: vi.fn() });
+
+    expect(document.querySelectorAll('header .valence-icon').length).toBe(still + 1);
+  });
+
+  it('names Shaka as the player for a stream the server makes', () => {
+    draw();
+
+    expect(screen.getByText('Shaka Player (HLS)')).toBeInTheDocument();
+  });
+
+  it('shows no browser player card where the browser is not the one playing', () => {
+    draw();
+
+    expect(screen.queryByText('Renderer')).not.toBeInTheDocument();
+  });
+
   it('names itself so it can be found and dismissed', () => {
     draw();
 

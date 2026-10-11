@@ -124,6 +124,14 @@ import type { PlayerState, VideoPlayerProps } from './VideoPlayer.types';
 import { FindSubtitlesDialog } from '@ValenceScreens/components/FindSubtitlesDialog/FindSubtitlesDialog';
 import { PlayOnDialog } from '@ValenceScreens/components/PlayOnDialog/PlayOnDialog';
 import { useVideoDevices } from '@ValenceClient/video/useVideoDevices';
+import { PictureCanvas } from '@ValenceUI/PictureCanvas';
+import { attachEngine } from '@ValenceScreens/playback/engine/attachEngine';
+import { attachRemux } from '@ValenceScreens/playback/engine/attachRemux';
+import { chooseBrowserRoute } from '@ValenceClient/playback/chooseBrowserRoute';
+import { readEngineSupport } from '@ValenceScreens/playback/readEngineSupport';
+import { withTheEngine } from '@ValenceClient/playback/withTheEngine';
+import { isPlayedNatively } from '@ValenceClient/playback/isPlayedNatively';
+import type { EngineStats } from '@ValenceScreens/playback/engine/EngineStats';
 import { say } from '@ValenceI18n/say';
 import { sayCount } from '@ValenceI18n/sayCount';
 import { DEFAULT_DISCORD_PRESENCE } from '@ValenceContracts/schemas/DiscordPresence';
@@ -280,6 +288,11 @@ const VideoPlayer = ({
   keptDownloadId,
 }: VideoPlayerProps) => {
   const videoRef = useRef<HTMLVideoElement>(null);
+  const pictureRef = useRef<HTMLCanvasElement>(null);
+  const [isDrawnByTheEngine, setIsDrawnByTheEngine] = useState(false);
+  const engineRefusedRef = useRef(false);
+  const engineStatsRef = useRef<(() => EngineStats) | null>(null);
+  const [engineStats, setEngineStats] = useState<EngineStats | null>(null);
 
   const stageRef = useRef<HTMLDivElement>(null);
   const statsDrag = useDragControls();
@@ -600,7 +613,7 @@ const VideoPlayer = ({
 
   const wasCastingRef = useRef(false);
 
-  const start = useCallback((element: HTMLVideoElement) => {
+  const start = useCallback((element: HTMLVideoElement, mayReload = true) => {
     let attempts = 0;
 
     const attempt = () => {
@@ -624,7 +637,7 @@ const VideoPlayer = ({
     startTimerRef.current = setInterval(() => {
       attempts += 1;
 
-      if (attempts > START_ATTEMPTS || element.readyState > 0 || !element.paused) {
+      if (!mayReload || attempts > START_ATTEMPTS || element.readyState > 0 || !element.paused) {
         clearInterval(startTimerRef.current ?? undefined);
         startTimerRef.current = null;
 
@@ -767,6 +780,8 @@ const VideoPlayer = ({
 
   useEffect(() => {
     setSession(null);
+    setIsDrawnByTheEngine(false);
+    engineStatsRef.current = null;
     setState('starting');
     setProblem(null);
     setIsPlaying(false);
@@ -813,18 +828,60 @@ const VideoPlayer = ({
     window.addEventListener('pagehide', onPageHide);
 
     const run = async () => {
-      const outcome =
+      const rememberedAudio =
+        request.audioStreamIndex === undefined && keptSource === undefined
+          ? readPlaybackPreferences().audioLanguage
+          : null;
+      const known =
+        rememberedAudio === null
+          ? null
+          : await cache.ensureQueryData(libraryQueries.detail(request.mediaId)).catch(() => null);
+      const remembered =
+        known?.audioStreams.find((stream) => stream.language === rememberedAudio) ?? null;
+      const audioStreamIndex =
+        request.audioStreamIndex ??
+        (remembered === null || remembered.isDefault ? undefined : remembered.index);
+      const film =
+        keptSource === undefined &&
+        !engineRefusedRef.current &&
+        readPlaybackPreferences().playsInTheBrowser
+          ? await cache.ensureQueryData(libraryQueries.detail(request.mediaId)).catch(() => null)
+          : null;
+      const engine = film === null ? null : await readEngineSupport();
+      const asked =
+        audioStreamIndex === undefined
+          ? null
+          : (film?.audioStreams.find((stream) => stream.index === audioStreamIndex) ?? null);
+      const isWhole =
+        request.requestedQuality === 'original' ||
+        (request.requestedQuality === 'auto' && request.autoRung === 'original');
+      const mayPickSound =
+        isWhole && engine !== null && asked !== null && engine.audioCodecs.includes(asked.codec);
+      const ask = (heardIndex: number | undefined) =>
+        startPlaybackSession(
+          request.mediaId,
+          engine === null || film === null
+            ? deviceProfile
+            : withTheEngine(deviceProfile, engine, { isHdr: film.videoRange !== 'SDR' }),
+          clientId,
+          request.startSeconds,
+          heardIndex,
+          request.requestedQuality === 'auto' ? request.autoRung : request.requestedQuality,
+          request.subtitleStreamIndex,
+        );
+      const first =
         keptSource === undefined
-          ? await startPlaybackSession(
-              request.mediaId,
-              deviceProfile,
-              clientId,
-              request.startSeconds,
-              request.audioStreamIndex,
-              request.requestedQuality === 'auto' ? request.autoRung : request.requestedQuality,
-              request.subtitleStreamIndex,
-            )
+          ? await ask(mayPickSound ? undefined : audioStreamIndex)
           : ({ kind: 'started', session: aKeptSession(request.mediaId, keptSource) } as const);
+      const isServerMade =
+        mayPickSound && first.kind === 'started' && first.session.delivery.kind !== 'direct';
+
+      if (isServerMade) {
+        void stopPlaybackSession(first.session.sessionId, clientId);
+      }
+
+      const picksItsOwnSound = mayPickSound && !isServerMade;
+      const outcome = isServerMade ? await ask(audioStreamIndex) : first;
 
       if (outcome.kind === 'failed') {
         if (!isAbandoned()) {
@@ -835,7 +892,10 @@ const VideoPlayer = ({
         return;
       }
 
-      startedId = keptSource === undefined ? outcome.session.sessionId : null;
+      startedId =
+        keptSource === undefined && outcome.session.delivery.kind !== 'direct'
+          ? outcome.session.sessionId
+          : null;
 
       if (isAbandoned()) {
         if (startedId !== null) {
@@ -844,7 +904,17 @@ const VideoPlayer = ({
 
         return;
       }
-      setSession(outcome.session);
+      setSession(
+        picksItsOwnSound && audioStreamIndex !== undefined
+          ? {
+              ...outcome.session,
+              plan: {
+                ...outcome.session.plan,
+                audio: { ...outcome.session.plan.audio, streamIndex: audioStreamIndex },
+              },
+            }
+          : outcome.session,
+      );
 
       const { sessionId } = outcome.session;
       const isHls = outcome.session.delivery.kind !== 'direct';
@@ -875,7 +945,75 @@ const VideoPlayer = ({
       }
 
       try {
-        if (outcome.session.delivery.kind === 'direct') {
+        const heard =
+          film?.audioStreams.findIndex(
+            (stream) =>
+              stream.index ===
+              (picksItsOwnSound ? audioStreamIndex : outcome.session.plan.audio.streamIndex),
+          ) ?? -1;
+        const isTheEngines =
+          outcome.session.delivery.kind === 'direct' &&
+          engine !== null &&
+          film !== null &&
+          pictureRef.current !== null &&
+          (picksItsOwnSound ||
+            !isPlayedNatively(deviceProfile, {
+              container: film.container,
+              videoCodec: film.videoCodec,
+              audioCodec: film.audioStreams[Math.max(heard, 0)]?.codec ?? '',
+            }));
+        const route =
+          engine === null || film === null
+            ? null
+            : chooseBrowserRoute(film, engine, window.matchMedia('(dynamic-range: high)').matches);
+
+        if (
+          isTheEngines &&
+          route !== null &&
+          outcome.session.delivery.kind === 'direct' &&
+          pictureRef.current !== null
+        ) {
+          const handOver = () => {
+            if (isAbandoned()) {
+              return;
+            }
+
+            engineRefusedRef.current = true;
+            setRequest((asked) => ({
+              ...asked,
+              startSeconds: Math.floor(videoRef.current?.currentTime ?? asked.startSeconds),
+            }));
+          };
+          const toPlay = {
+            element,
+            url: outcome.session.delivery.url,
+            startSeconds: request.startSeconds,
+            audioTrackAt: Math.max(heard, 0),
+            onFault: handOver,
+          };
+
+          setIsDrawnByTheEngine(route === 'webgpu');
+
+          const attached = await (
+            route === 'webgpu'
+              ? attachEngine({ ...toPlay, canvas: pictureRef.current })
+              : attachRemux(toPlay)
+          ).catch(() => null);
+
+          if (attached === null) {
+            if (!isAbandoned()) {
+              engineRefusedRef.current = true;
+              setRequest((asked) => ({ ...asked }));
+            }
+
+            return;
+          }
+
+          teardown = attached.detach;
+          releaseRef.current = attached.detach;
+          deliveredRef.current = attached.readDelivered;
+          engineStatsRef.current = attached.readEngine;
+        } else if (outcome.session.delivery.kind === 'direct') {
           element.src = outcome.session.delivery.url;
         } else {
           const { plan } = outcome.session;
@@ -908,7 +1046,11 @@ const VideoPlayer = ({
           ladderRef.current = attached.readLadder;
         }
 
-        if (request.startSeconds > 0 && outcome.session.delivery.kind === 'direct') {
+        if (
+          request.startSeconds > 0 &&
+          outcome.session.delivery.kind === 'direct' &&
+          !isTheEngines
+        ) {
           element.currentTime = request.startSeconds;
         }
 
@@ -916,7 +1058,7 @@ const VideoPlayer = ({
           setState('playing');
           setPosition(element.currentTime);
 
-          start(element);
+          start(element, !isTheEngines);
         }
       } catch (error) {
         if (!isAbandoned()) {
@@ -1203,6 +1345,7 @@ const VideoPlayer = ({
       if (element !== null) {
         setHealth(readPlaybackHealth(element, frameSkewRef.current));
         setDelivered(deliveredRef.current?.() ?? null);
+        setEngineStats(engineStatsRef.current?.() ?? null);
       }
     };
 
@@ -1504,6 +1647,12 @@ const VideoPlayer = ({
 
       hold(element);
 
+      const heard = detail?.audioStreams.find((stream) => stream.index === streamIndex);
+
+      if (heard?.language !== undefined && heard.language !== null) {
+        writePlaybackPreferences({ audioLanguage: heard.language });
+      }
+
       setSelectedAudioIndex(streamIndex);
       setRequest({
         mediaId: request.mediaId,
@@ -1523,6 +1672,7 @@ const VideoPlayer = ({
       request.subtitleStreamIndex,
       position,
       hold,
+      detail,
     ],
   );
 
@@ -2036,6 +2186,12 @@ const VideoPlayer = ({
           {...asItPlays}
         />
 
+        <PictureCanvas
+          canvasRef={pictureRef}
+          isShown={isDrawnByTheEngine}
+          className="absolute inset-0 size-full"
+        />
+
         <div
           data-slot="picture-cover"
           aria-hidden
@@ -2153,7 +2309,7 @@ const VideoPlayer = ({
             dragMomentum={false}
             dragElastic={0}
             dragConstraints={stageRef}
-            className="pointer-events-none absolute left-3 top-16 w-[min(32rem,calc(100%-1.5rem))]"
+            className="pointer-events-none absolute left-3 top-16 z-50 w-[min(32rem,calc(100%-1.5rem))]"
           >
             <StreamStats
               onGrab={(event) => {
@@ -2164,6 +2320,7 @@ const VideoPlayer = ({
               detail={detail}
               health={health}
               delivered={delivered}
+              engine={engineStats}
               sessionStartSeconds={request.startSeconds}
               {...(party === undefined
                 ? {}

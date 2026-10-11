@@ -1,7 +1,7 @@
 import { sayAgain } from '@ValenceI18n/sayAgain';
 import { FormattedNumber } from '@ValenceUI/FormattedNumber';
 import { Icon } from '@ValenceUI/Icon';
-import { X as XIcon } from '@keyline-icons/react';
+import { GripVertical as GripIcon, X as XIcon } from '@keyline-icons/react';
 import { Button } from '@ValenceUI/Button';
 import { cn } from '@ValenceUI/cn';
 import { formatDuration } from '@ValenceCore/functions/formatDuration';
@@ -33,6 +33,9 @@ import { say } from '@ValenceI18n/say';
  * @param detail - What the catalogue holds about the item.
  * @param health - How the stream is faring.
  * @param delivered - What the engine is actually being sent, where it has chosen a variant.
+ * @param engine - How the browser's own player is keeping up — the GPU drawing, the decoder, how
+ *   the sound reaches the element, and the frames decoded, drawn and skipped — where it is the one
+ *   playing. It plays the file itself, so the file's own bitrate is what it is being sent.
  * @param sessionStartSeconds - Where the session itself began, which is not always where the viewer
  *   is now.
  * @param party - How the watch party is faring, where this viewing is part of one.
@@ -46,6 +49,7 @@ const StreamStats = ({
   detail,
   health,
   delivered,
+  engine = null,
   sessionStartSeconds,
   party,
   onClose,
@@ -65,6 +69,10 @@ const StreamStats = ({
   const videoCodec = delivered?.videoCodec ?? detail?.videoCodec ?? null;
   const audioCodec = delivered?.audioCodec ?? audio?.codec ?? null;
   const channels = delivered?.audioChannels ?? audio?.channels ?? null;
+  const bitrateKbps =
+    delivered?.bitrateKbps ?? (engine === null ? null : (detail?.bitrateKbps ?? null));
+  const isHdrScreen =
+    typeof window !== 'undefined' && window.matchMedia('(dynamic-range: high)').matches === true;
 
   return (
     <section
@@ -85,9 +93,16 @@ const StreamStats = ({
           onGrab === undefined ? '' : 'cursor-grab touch-none select-none active:cursor-grabbing',
         )}
       >
-        <span className="flex min-w-0 flex-col">
-          <h3 className="text-sm font-medium tracking-tight">{say('common.statsForNerds')}</h3>
-          <span className="truncate text-[0.6875rem] text-text-muted">{media.title}</span>
+        <span className="flex min-w-0 items-center gap-2">
+          {onGrab === undefined ? null : (
+            <span className="shrink-0 text-text-muted">
+              <Icon of={GripIcon} size={16} />
+            </span>
+          )}
+          <span className="flex min-w-0 flex-col">
+            <h3 className="text-sm font-medium tracking-tight">{say('common.statsForNerds')}</h3>
+            <span className="truncate text-[0.6875rem] text-text-muted">{media.title}</span>
+          </span>
         </span>
 
         <Button
@@ -117,8 +132,8 @@ const StreamStats = ({
             {
               label: say('common.bitrate'),
               value:
-                delivered === null || delivered.bitrateKbps === null ? null : (
-                  <FormattedNumber value={delivered.bitrateKbps} suffix=" kbps" />
+                bitrateKbps === null ? null : (
+                  <FormattedNumber value={bitrateKbps} suffix=" kbps" />
                 ),
             },
             { label: say('common.position'), value: formatDuration(health.positionSeconds) },
@@ -195,6 +210,75 @@ const StreamStats = ({
           </StatsCard>
         </div>
 
+        {engine === null ? null : (
+          <StatsCard name="Browser player">
+            {engine.route === 'webgpu' ? (
+              <>
+                <StatsFact name="Renderer" value="WebGPU" />
+                <StatsFact name="GPU" value={engine.gpu} />
+                <StatsFact name="Decoder" value="WebCodecs" />
+              </>
+            ) : (
+              <>
+                <StatsFact name="Renderer" value="HTMLVideoElement" />
+                <StatsFact
+                  name="Repackaged by"
+                  value={say('screens.videoPlayer.streamStats.mediabunny')}
+                />
+                <StatsFact
+                  name="Container"
+                  value={
+                    engine.container === null
+                      ? null
+                      : `${engine.container.split(';')[0] ?? engine.container} → video/mp4`
+                  }
+                />
+              </>
+            )}
+            {engine.isHdrFilm ? (
+              <StatsFact
+                name="Tone mapping"
+                value={
+                  engine.hdrSignal !== null
+                    ? say('screens.videoPlayer.streamStats.signalToSdr', {
+                        signal: engine.hdrSignal.toUpperCase(),
+                      })
+                    : isHdrScreen
+                      ? say('screens.videoPlayer.streamStats.noneShownAsHdr')
+                      : say('screens.videoPlayer.streamStats.byTheBrowser')
+                }
+              />
+            ) : null}
+            <StatsFact
+              name="Sound"
+              value={
+                engine.sound === 'carried'
+                  ? say('screens.videoPlayer.streamStats.carriedAsItIs')
+                  : say('screens.videoPlayer.streamStats.encodedAgainAsCodec', {
+                      codec: engine.sound,
+                      channels: (engine.soundChannels ?? 2).toString(),
+                    })
+              }
+            />
+            {engine.route === 'webgpu' ? (
+              <>
+                <StatsFact
+                  name="Frames drawn"
+                  value={<FormattedNumber value={engine.drawnFrames} />}
+                />
+                <StatsFact
+                  name="Decoded ahead"
+                  value={
+                    engine.decodedAheadSeconds === null ? null : (
+                      <StatsSeconds value={engine.decodedAheadSeconds} />
+                    )
+                  }
+                />
+              </>
+            ) : null}
+          </StatsCard>
+        )}
+
         <StatsCard name="Plan">
           <PlanAxis
             name="Container"
@@ -246,7 +330,12 @@ const StreamStats = ({
             <StatsFact
               name="Dropped"
               value={
-                health.droppedFrames === null || health.decodedFrames === null ? null : (
+                engine !== null && engine.route === 'webgpu' ? (
+                  <>
+                    <FormattedNumber value={engine.skippedFrames} /> /{' '}
+                    <FormattedNumber value={engine.decodedFrames} />
+                  </>
+                ) : health.droppedFrames === null || health.decodedFrames === null ? null : (
                   <>
                     <FormattedNumber value={health.droppedFrames} /> /{' '}
                     <FormattedNumber value={health.decodedFrames} />
@@ -263,6 +352,20 @@ const StreamStats = ({
                 session === null || session.reuse === null
                   ? null
                   : describeTranscodeReuse(session.reuse)
+              }
+            />
+            <StatsFact
+              name="Player"
+              value={
+                engine?.route === 'webgpu'
+                  ? say('screens.videoPlayer.streamStats.valencesWebGpuPlayer')
+                  : engine?.route === 'remux'
+                    ? say('screens.videoPlayer.streamStats.repackagedInTheBrowser')
+                    : session === null
+                      ? null
+                      : session.delivery.kind === 'hls'
+                        ? say('screens.videoPlayer.streamStats.shakaPlayingHls')
+                        : say('screens.videoPlayer.streamStats.theBrowsersMediaElement')
               }
             />
             <StatsFact name="Starts at" value={formatDuration(sessionStartSeconds)} />
