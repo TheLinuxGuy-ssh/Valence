@@ -16,6 +16,7 @@ const aBrowser = (overrides: Partial<EnginesBrowser> = {}): EnginesBrowser => ({
   canEncodeAudio: () => Promise.resolve(true),
   canStream: (mimeType) => /mp4a|opus/.test(mimeType),
   canToneMap: () => Promise.resolve(true),
+  hasDecoders: () => Promise.resolve(false),
   ...overrides,
 });
 
@@ -30,7 +31,7 @@ describe('detectEngineSupport', () => {
 
     expect(support.remuxVideoCodecs).toEqual(['h264']);
     expect(support.remuxTenBitVideoCodecs).toEqual(['hevc']);
-    expect(support.toneMapsHevc).toBe(true);
+    expect(support.toneMappedCodecs).toEqual(['hevc']);
   });
 
   it('leaves HDR alone where the browser does not hand the signal over untouched', async () => {
@@ -42,7 +43,28 @@ describe('detectEngineSupport', () => {
     );
 
     expect(support.videoCodecs).toContain('hevc');
-    expect(support.toneMapsHevc).toBe(false);
+    expect(support.toneMappedCodecs).toEqual([]);
+  });
+
+  it('claims TrueHD and MPEG-2 where Valence’s own decoders load and the element takes FLAC', async () => {
+    const support = await detectEngineSupport(
+      aBrowser({
+        hasDecoders: () => Promise.resolve(true),
+        canStream: (mimeType) => /mp4a|opus|flac/.test(mimeType),
+      }),
+    );
+
+    expect(support.audioCodecs).toContain('truehd');
+    expect(support.videoCodecs).toContain('mpeg2');
+  });
+
+  it('leaves TrueHD to the server where the element cannot take FLAC to hand it on in', async () => {
+    const support = await detectEngineSupport(
+      aBrowser({ hasDecoders: () => Promise.resolve(true) }),
+    );
+
+    expect(support.audioCodecs).not.toContain('truehd');
+    expect(support.videoCodecs).toContain('mpeg2');
   });
 
   it('claims the pictures WebCodecs decodes and the sounds the element takes or the page decodes', async () => {
@@ -51,8 +73,8 @@ describe('detectEngineSupport', () => {
       tenBitVideoCodecs: [],
       remuxVideoCodecs: [],
       remuxTenBitVideoCodecs: [],
-      toneMapsHevc: false,
-      audioCodecs: ['aac', 'opus', 'vorbis', 'ac3', 'eac3', 'pcm'],
+      toneMappedCodecs: [],
+      audioCodecs: ['aac', 'opus', 'vorbis', 'ac3', 'eac3', 'dts', 'pcm'],
     });
   });
 

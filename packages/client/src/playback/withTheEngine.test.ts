@@ -31,7 +31,7 @@ const SUPPORT: EngineSupport = {
   tenBitVideoCodecs: ['hevc'],
   remuxVideoCodecs: ['h264', 'av1'],
   remuxTenBitVideoCodecs: ['av1'],
-  toneMapsHevc: true,
+  toneMappedCodecs: ['hevc'],
   audioCodecs: ['ac3', 'aac'],
 };
 
@@ -61,7 +61,7 @@ describe('withTheEngine', () => {
   });
 
   it('claims no new range where nothing can tone map', () => {
-    const profile = withTheEngine(BROWSER, { ...SUPPORT, toneMapsHevc: false }, { isHdr: true });
+    const profile = withTheEngine(BROWSER, { ...SUPPORT, toneMappedCodecs: [] }, { isHdr: true });
 
     expect(profile.supportedVideoRanges).toEqual(['SDR']);
   });
@@ -74,5 +74,18 @@ describe('withTheEngine', () => {
         { isHdr: false },
       ),
     ).toBe(BROWSER);
+  });
+
+  it('claims MPEG-2 for a DVD but leaves an HD one to the server', () => {
+    const withMpeg2 = { ...SUPPORT, videoCodecs: ['mpeg2', 'h264'] };
+    const mp4Of = (profile: DeviceProfile) =>
+      profile.directPlayProfiles.find(({ container }) => container === 'mp4')?.videoCodecs;
+
+    expect(mp4Of(withTheEngine(BROWSER, withMpeg2, { isHdr: false, height: 576 }))).toContain(
+      'mpeg2',
+    );
+    expect(mp4Of(withTheEngine(BROWSER, withMpeg2, { isHdr: false, height: 1080 }))).not.toContain(
+      'mpeg2',
+    );
   });
 });
