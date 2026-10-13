@@ -1,6 +1,8 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Animated, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { THE_SPLASH_LANDS } from '@ValenceMobile/components/ASplash/THE_SPLASH_LANDS';
+import type { ARectOnScreen } from '@ValenceMobile/hooks/useArrivingFrom.types';
 import type { ComponentRef } from 'react';
 import type { NativeScrollEvent, NativeSyntheticEvent, ScrollView } from 'react-native';
 import { showIdOf } from '@ValenceClient/library/showIdOf';
@@ -126,6 +128,42 @@ const TheFeaturedTitles = ({
   );
   const aside = (width - across) / 2;
   const step = across + GAP;
+  const cardHigh = Math.round(across * tallness);
+  const cardSize = useRef({ across, high: cardHigh });
+
+  useEffect(() => {
+    cardSize.current = { across, high: cardHigh };
+  }, [across, cardHigh]);
+
+  useEffect(() => {
+    const measure = () =>
+      new Promise<ARectOnScreen | null>((told) => {
+        if (pager.current === null) {
+          told(null);
+
+          return;
+        }
+
+        pager.current.measureInWindow((x, y, wide) => {
+          const size = cardSize.current;
+
+          told({
+            x: x + (wide - size.across) / 2,
+            y: y + ROOM_FOR_THE_SHADOW,
+            width: size.across,
+            height: size.high,
+          });
+        });
+      });
+
+    THE_SPLASH_LANDS.measure = measure;
+
+    return () => {
+      if (THE_SPLASH_LANDS.measure === measure) {
+        THE_SPLASH_LANDS.measure = null;
+      }
+    };
+  }, []);
   const [scrolled] = useState(() => new Animated.Value(0));
   const [pointedAt, setPointedAt] = useState<number | null>(null);
   const followScrolling = useMemo(

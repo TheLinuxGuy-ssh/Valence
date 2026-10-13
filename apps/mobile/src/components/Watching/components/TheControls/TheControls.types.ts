@@ -6,6 +6,7 @@ type TheControlsProps = {
   title: string;
   year: number | null;
   isPlaying: boolean;
+  wait?: { isShown: boolean; isFinishing: boolean; onFilled: () => void } | undefined;
   at: number;
   runsFor: number;
   buffered: number;
@@ -20,7 +21,7 @@ type TheControlsProps = {
   onLock: () => void;
   onPictureInPicture: () => void;
   onSpeed: () => void;
-  onAudioAndSubtitles: () => void;
+  onAudioAndSubtitles?: (() => void) | undefined;
   onQuality?: (() => void) | undefined;
   onStats: () => void;
   onEpisodes?: (() => void) | undefined;

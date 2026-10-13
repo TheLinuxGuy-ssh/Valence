@@ -3,7 +3,7 @@ import { Star as StarFilled } from '@keyline-icons/react-native/fill';
 import { useEvent, useEventListener } from 'expo';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Animated, Linking, Modal, StyleSheet, Text, View } from 'react-native';
+import { Animated, Linking, Modal, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { AirPlayButton } from '@ValenceMobile/components/AirPlayButton/AirPlayButton';
 import { Button } from '@ValenceMobile/components/Button/Button';
@@ -19,6 +19,7 @@ import { watchLiveChannel } from '@ValenceClient/live/watchLiveChannel';
 import type { VideoSource, VideoView as VideoViewRef } from 'expo-video';
 import type { ALivePlayerProps } from './ALivePlayer.types';
 import { say } from '@ValenceI18n/say';
+import { ASpinner } from '@ValenceMobile/components/ASpinner/ASpinner';
 
 const LEAVE_THEM_UP_FOR = 4000;
 
@@ -26,7 +27,7 @@ const { colours, edge } = PLAYER_LOOK;
 
 const styles = StyleSheet.create({
   bar: { backgroundColor: colours.rest, borderRadius: 2, height: 4, overflow: 'hidden' },
-  barFilled: { backgroundColor: colours.played, height: '100%' },
+  barFilled: { backgroundColor: colours.text, height: '100%' },
   centre: {
     alignItems: 'center',
     bottom: 0,
@@ -228,7 +229,7 @@ const TheLivePicture = ({
 
       {isWaiting ? (
         <View style={styles.centre} pointerEvents="none">
-          <ActivityIndicator color={colours.text} />
+          <ASpinner colour={colours.text} />
           <Text style={styles.said}>{say('screens.liveTvPage.startingName', { name })}</Text>
         </View>
       ) : null}

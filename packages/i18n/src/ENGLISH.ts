@@ -2283,6 +2283,8 @@ const ENGLISH = {
     'If {name} has an email address on their account, we’ve sent a password reset link to it. The link works once, for one hour.',
   'phone.aTextReader.theBookText.followTheLink': 'Open link',
   'phone.aTextReader.theBookText.followTheLinkToValue': 'Open link to {value}',
+  'phone.aThemeChoice.lightDarkOrAsThePhoneIs':
+    'Light, dark, or matching your phone’s own setting. Only changes this phone.',
   'phone.aThemeChoice.lightOrDark': 'Appearance',
   'phone.aThemeChoice.nameFromPluginName': '{name}, from {pluginName}',
   'phone.aTitle.allEpisodes': 'All episodes',
@@ -2323,6 +2325,8 @@ const ENGLISH = {
   'phone.theAccount.theHidden.showTheNameLibrary': 'Show the {name} library',
   'phone.theAccount.theHistory.forgetEverythingYouHaveWatchedAnd':
     'Clear your watch history and reading history?',
+  'phone.theAccount.theHistory.itIsTakenOffYourHistory':
+    'It’s removed from your history. This can’t be undone.',
   'phone.theAccount.theHistory.nothingWatchedOrReadYet': 'Nothing watched or read yet.',
   'phone.theAccount.theHistory.viewingsAreForgottenAutomaticallyAfterA':
     'Watch history is deleted automatically after one year.',
@@ -2424,10 +2428,6 @@ const ENGLISH = {
     'No results for “{asked}” in the library.',
   'phone.theServerIsAway.tryingAgainEveryFewSeconds': 'Trying again every few seconds.',
   'phone.theServerIsAway.tryNow': 'Try now',
-  'phone.theStars.householdAverageFromCountRatings.one':
-    'Household average {average} from {count} rating',
-  'phone.theStars.householdAverageFromCountRatings.other':
-    'Household average {average} from {count} ratings',
   'phone.theWayIn.aWallFace.signInAsName': 'Sign in as {name}',
   'phone.theWayIn.itMayBeRestartingValenceTries':
     'The server may be restarting. Valence retries every few seconds, or pull down to retry now.',
@@ -2441,7 +2441,6 @@ const ENGLISH = {
   'phone.watching.closeTheSpeed': 'Close the speed',
   'phone.watching.closeTheStats': 'Close stats for nerds',
   'phone.watching.lockTheControls': 'Lock the controls',
-  'phone.watching.normalSpeed': '1x (Normal)',
   'phone.watching.noSubtitlesForThis': 'There are no subtitles for this.',
   'phone.watching.playbackWasStopped': 'Playback was stopped',
   'phone.watching.playingNow': 'Playing now',
@@ -7381,6 +7380,7 @@ const ENGLISH = {
   'server.subtitles.describeSubtitleCharset.fromTheTrackLanguage': 'from the track language',
   'server.subtitles.describeSubtitleCharset.readAsCharsetWhyNotValid':
     'read as {charset} ({why}; not valid UTF-8)',
+  'server.subtitles.embeddedSubtitleService.labelAsPictures': '{label} (picture)',
   'server.subtitles.findSidecarSubtitles.unknown': 'Unknown',
   'server.subtitles.sidecarSubtitleService.aSubtitleHeldAsPicturesRather':
     'An image-based subtitle, which can’t be shown yet.',

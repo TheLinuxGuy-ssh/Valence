@@ -9705,6 +9705,11 @@
     "context": "The label of a button in the book text in the text reader of the phone app. {value} is filled in by the app."
   },
   {
+    "handler": "phone.aThemeChoice.lightDarkOrAsThePhoneIs",
+    "text": "Light, dark, or matching your phone’s own setting. Only changes this phone.",
+    "context": "Under Appearance in the phone app's theme choice, explaining the light, dark and system choices beneath it."
+  },
+  {
     "handler": "phone.aThemeChoice.lightOrDark",
     "text": "Appearance",
     "context": "The label of a segmented row in the theme choice of the phone app."
@@ -9873,6 +9878,11 @@
     "handler": "phone.theAccount.theHistory.forgetEverythingYouHaveWatchedAnd",
     "text": "Clear your watch history and reading history?",
     "context": "A message in an alert in the history in the account of the phone app."
+  },
+  {
+    "handler": "phone.theAccount.theHistory.itIsTakenOffYourHistory",
+    "text": "It’s removed from your history. This can’t be undone.",
+    "context": "The phone app asks before removing one film, episode or book from the account's history; this explains what happens."
   },
   {
     "handler": "phone.theAccount.theHistory.nothingWatchedOrReadYet",
@@ -10265,16 +10275,6 @@
     "context": "The label of a button in the server is away of the phone app."
   },
   {
-    "handler": "phone.theStars.householdAverageFromCountRatings.one",
-    "text": "Household average {average} from {count} rating",
-    "context": "Text shown in the stars of the phone app. {average} is filled in by the app; {count} is a number."
-  },
-  {
-    "handler": "phone.theStars.householdAverageFromCountRatings.other",
-    "text": "Household average {average} from {count} ratings",
-    "context": "Text shown in the stars of the phone app. {average} is filled in by the app; {count} is a number."
-  },
-  {
     "handler": "phone.theWayIn.aWallFace.signInAsName",
     "text": "Sign in as {name}",
     "context": "The label of a button in the wall face in the way in of the phone app. {name} is filled in by the app."
@@ -10333,11 +10333,6 @@
     "handler": "phone.watching.lockTheControls",
     "text": "Lock the controls",
     "context": "The button in the phone's video player that locks its controls so a stray touch does nothing."
-  },
-  {
-    "handler": "phone.watching.normalSpeed",
-    "text": "1x (Normal)",
-    "context": "The normal speed stop in the speed panel of the phone's video player."
   },
   {
     "handler": "phone.watching.noSubtitlesForThis",
@@ -29099,6 +29094,11 @@
     "handler": "server.subtitles.describeSubtitleCharset.readAsCharsetWhyNotValid",
     "text": "read as {charset} ({why}; not valid UTF-8)",
     "context": "Shown in the subtitles on the server (from `describeSubtitleCharset`). {charset} is filled in by the app; {why} is filled in by the app."
+  },
+  {
+    "handler": "server.subtitles.embeddedSubtitleService.labelAsPictures",
+    "text": "{label} (picture)",
+    "context": "A Blu-ray subtitle track offered as its original pictures, burned into the video, beside the same track read into text. {label} is the track's own name, such as English SDH."
   },
   {
     "handler": "server.subtitles.findSidecarSubtitles.unknown",

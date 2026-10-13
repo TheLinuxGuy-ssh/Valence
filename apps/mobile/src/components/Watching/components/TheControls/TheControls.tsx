@@ -1,6 +1,6 @@
 import {
-  Activity,
   Gauge,
+  Info,
   Layers,
   ListVideo,
   Lock,
@@ -18,6 +18,7 @@ import { Animated, StyleSheet, Text, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Button } from '@ValenceMobile/components/Button/Button';
 import { Icon } from '@ValenceMobile/components/Icon/Icon';
+import { ASpinner } from '@ValenceMobile/components/ASpinner/ASpinner';
 import { TheFrameAt } from '@ValenceMobile/components/Watching/components/TheFrameAt/TheFrameAt';
 import { Slider } from '@ValenceMobile/components/Slider/Slider';
 import { asAClock } from '@ValenceMobile/components/Watching/asAClock';
@@ -34,11 +35,11 @@ const A_STEP = 10;
 
 const FRAME_WIDE = 224;
 
-const { colours, edge } = PLAYER_LOOK;
+const { colours, edge, icon: ICON, middle: MIDDLE, slot: SLOT } = PLAYER_LOOK;
 
 const styles = StyleSheet.create({
   actions: { alignItems: 'center', flexDirection: 'row', gap: 4, justifyContent: 'center' },
-  brightness: { bottom: 0, justifyContent: 'center', position: 'absolute', top: 0 },
+  brightness: { justifyContent: 'center', position: 'absolute' },
   clock: {
     color: colours.text,
     fontFamily: FONTS.sans.semibold,
@@ -63,7 +64,7 @@ const styles = StyleSheet.create({
     gap: 0,
     justifyContent: 'flex-end',
   },
-  icon: { padding: 9 },
+  icon: { alignItems: 'center', height: SLOT, justifyContent: 'center', width: SLOT },
   line: { alignItems: 'center', flexDirection: 'row', gap: 14 },
   middle: {
     alignItems: 'center',
@@ -82,6 +83,7 @@ const styles = StyleSheet.create({
     width: '62%',
   },
   reach: { padding: 16 },
+  waiting: { alignItems: 'center', height: MIDDLE, justifyContent: 'center', width: MIDDLE },
   said: {
     alignItems: 'baseline',
     flex: 1,
@@ -132,6 +134,8 @@ const styles = StyleSheet.create({
  * @param title - What is playing.
  * @param year - When it came out, where that is known.
  * @param isPlaying - Whether the picture is moving.
+ * @param wait - Whether it is waiting for more of the film, which turns play and pause into
+ *   Valence's own loading mark, and whether that mark is finishing.
  * @param at - How far in they are.
  * @param runsFor - How long it runs.
  * @param buffered - How much of it has arrived.
@@ -158,6 +162,7 @@ const TheControls = ({
   title,
   year,
   isPlaying,
+  wait,
   at,
   runsFor,
   buffered,
@@ -182,6 +187,8 @@ const TheControls = ({
   const room = useSafeAreaInsets();
   const [scrubbingTo, setScrubbingTo] = useState<number | null>(null);
   const [lineWide, setLineWide] = useState(0);
+  const [headTall, setHeadTall] = useState(0);
+  const [footTall, setFootTall] = useState(0);
   const left = Math.max(room.left, edge);
   const right = Math.max(room.right, edge);
 
@@ -196,6 +203,9 @@ const TheControls = ({
       <View
         pointerEvents="box-none"
         style={[styles.head, { paddingLeft: left, paddingRight: right }]}
+        onLayout={(event) => {
+          setHeadTall(event.nativeEvent.layout.y + event.nativeEvent.layout.height);
+        }}
       >
         <View style={styles.said}>
           <Text style={styles.title} numberOfLines={1}>
@@ -206,19 +216,19 @@ const TheControls = ({
         </View>
 
         <View style={styles.headEnd} pointerEvents="box-none">
+          <Button tone="bare" label={say('common.statsForNerds')} onPress={onStats}>
+            <View style={styles.icon}>
+              <Icon of={Info} size={ICON} colour={colours.text} />
+            </View>
+          </Button>
+
           {onParty === undefined ? null : (
             <Button tone="bare" label={say('common.partyMenu.watchParty')} onPress={onParty}>
               <View style={styles.icon}>
-                <Icon of={Users} size={26} colour={colours.text} />
+                <Icon of={Users} size={ICON} colour={colours.text} />
               </View>
             </Button>
           )}
-
-          <Button tone="bare" label={say('common.statsForNerds')} onPress={onStats}>
-            <View style={styles.icon}>
-              <Icon of={Activity} size={26} colour={colours.text} />
-            </View>
-          </Button>
 
           <View style={styles.icon}>
             <AirPlayButton isOverPicture />
@@ -226,7 +236,7 @@ const TheControls = ({
 
           <Button tone="bare" label={say('phone.watching.lockTheControls')} onPress={onLock}>
             <View style={styles.icon}>
-              <Icon of={Lock} size={26} colour={colours.text} />
+              <Icon of={Lock} size={ICON} colour={colours.text} />
             </View>
           </Button>
 
@@ -236,7 +246,7 @@ const TheControls = ({
             onPress={onPictureInPicture}
           >
             <View style={styles.icon}>
-              <Icon of={PictureInPicture} size={26} colour={colours.text} />
+              <Icon of={PictureInPicture} size={ICON} colour={colours.text} />
             </View>
           </Button>
 
@@ -246,7 +256,7 @@ const TheControls = ({
             onPress={onClose}
           >
             <View style={styles.icon}>
-              <Icon of={X} size={30} colour={colours.text} />
+              <Icon of={X} size={ICON} colour={colours.text} />
             </View>
           </Button>
         </View>
@@ -264,7 +274,7 @@ const TheControls = ({
             }}
           >
             <View style={[styles.step, styles.reach]}>
-              <Icon of={RotateCcw} size={52} colour={colours.text} />
+              <Icon of={RotateCcw} size={MIDDLE} colour={colours.text} />
               <Text style={styles.stepHowFar}>{A_STEP}</Text>
             </View>
           </Button>
@@ -275,7 +285,18 @@ const TheControls = ({
             onPress={onPlayPause}
           >
             <View style={styles.reach}>
-              <Icon of={isPlaying ? Pause : Play} size={68} colour={colours.text} />
+              {wait?.isShown === true ? (
+                <View style={styles.waiting}>
+                  <ASpinner
+                    colour={colours.text}
+                    size={MIDDLE}
+                    isFinishing={wait.isFinishing}
+                    onFilled={wait.onFilled}
+                  />
+                </View>
+              ) : (
+                <Icon of={isPlaying ? Pause : Play} size={MIDDLE} colour={colours.text} />
+              )}
             </View>
           </Button>
 
@@ -289,20 +310,26 @@ const TheControls = ({
             }}
           >
             <View style={[styles.step, styles.reach]}>
-              <Icon of={RotateCw} size={52} colour={colours.text} />
+              <Icon of={RotateCw} size={MIDDLE} colour={colours.text} />
               <Text style={styles.stepHowFar}>{A_STEP}</Text>
             </View>
           </Button>
         </View>
       </View>
 
-      <View style={[styles.brightness, { left: left - 8 }]} pointerEvents="box-none">
+      <View
+        style={[styles.brightness, { left: left - 8, top: headTall, bottom: footTall }]}
+        pointerEvents="box-none"
+      >
         <ABrightness onTouched={onTouched} />
       </View>
 
       <View
         style={[styles.foot, { paddingLeft: left, paddingRight: right }]}
         pointerEvents="box-none"
+        onLayout={(event) => {
+          setFootTall(event.nativeEvent.layout.height + room.bottom + 14);
+        }}
       >
         <View
           style={styles.line}
@@ -335,7 +362,7 @@ const TheControls = ({
               value={at}
               furthest={runsFor}
               buffered={buffered}
-              colour={colours.played}
+              colour={colours.text}
               restColour={colours.rest}
               aheadColour={colours.ahead}
               onScrubbing={(to) => {
@@ -363,11 +390,13 @@ const TheControls = ({
             <APlayerAction icon={ListVideo} label={say('common.episodes')} onPress={onEpisodes} />
           )}
 
-          <APlayerAction
-            icon={MessageSquareLines}
-            label={say('phone.watching.audioAndSubtitles')}
-            onPress={onAudioAndSubtitles}
-          />
+          {onAudioAndSubtitles === undefined ? null : (
+            <APlayerAction
+              icon={MessageSquareLines}
+              label={say('phone.watching.audioAndSubtitles')}
+              onPress={onAudioAndSubtitles}
+            />
+          )}
 
           {onQuality === undefined ? null : (
             <APlayerAction

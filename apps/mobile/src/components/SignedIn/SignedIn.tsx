@@ -5,7 +5,7 @@ import { AVideoRemoteBar } from '@ValenceMobile/components/AVideoRemoteBar/AVide
 import { CircleUser, Download, Home, Search } from '@keyline-icons/react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { ActivityIndicator, Alert, StyleSheet, View } from 'react-native';
+import { Alert, StyleSheet, View } from 'react-native';
 import { sessionQueries } from '@ValenceClient/query/sessionQueries';
 import { libraryQueries } from '@ValenceClient/query/libraryQueries';
 import { profileQueries } from '@ValenceClient/query/profileQueries';
@@ -94,6 +94,7 @@ import type { HeldFile } from '@ValenceContracts/schemas/HeldFile';
 import type { APage, SignedInProps } from './SignedIn.types';
 import type { MediaSummary } from '@ValenceContracts/schemas/Library';
 import { say } from '@ValenceI18n/say';
+import { ASpinner } from '@ValenceMobile/components/ASpinner/ASpinner';
 
 const A_SERVER = /^[a-z][a-z0-9+.-]*:\/\/[^/?#\s]+/iu;
 
@@ -208,6 +209,7 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
   }, [partyNotice, forgetPartyNotice]);
   const [carriedOn, setCarriedOn] = useState(0);
   const [isRemoteOpen, setIsRemoteOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
   const [tabsHigh, setTabsHigh] = useState(0);
   const settingUp = useQuery(householdQueries.onboarding());
   const [watchingHeld, setWatchingHeld] = useState<HeldFile | null>(null);
@@ -500,7 +502,7 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
   if (session.isPending) {
     return (
       <Screen centres>
-        <ActivityIndicator />
+        <ASpinner />
       </Screen>
     );
   }
@@ -605,8 +607,6 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
             onBack={back}
           />
         );
-      case 'notifications':
-        return <TheNotifications onOpen={open} onJoin={join} onBack={back} />;
       case 'calendar':
         return <TheCalendar onOpen={open} onBack={back} />;
       case 'account':
@@ -712,7 +712,7 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
           onLookAt={lookAt}
           onLookAtShow={lookAtShow}
           onNotifications={() => {
-            open({ kind: 'notifications' });
+            setIsNotificationsOpen(true);
           }}
           onScan={() => {
             void scanATelevision();
@@ -786,7 +786,6 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
       />
     ) : watching !== null ? (
       <WatchingTogether
-        key={watching.mediaId}
         watchParty={watchParty}
         invitedTo={watching.invitedTo ?? null}
         mediaId={watching.mediaId}
@@ -831,6 +830,15 @@ const SignedIn = ({ onOut, onElsewhere, onFaceAt, isFaceArriving = false }: Sign
           setIsRemoteOpen(false);
         }}
         onPlayHere={choose}
+      />
+
+      <TheNotifications
+        isOpen={isNotificationsOpen}
+        onOpen={open}
+        onJoin={join}
+        onClose={() => {
+          setIsNotificationsOpen(false);
+        }}
       />
     </>
   );

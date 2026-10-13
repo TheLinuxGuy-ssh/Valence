@@ -1,12 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Animated, StyleSheet, View } from 'react-native';
+import { Alert, Animated, StyleSheet, View } from 'react-native';
 import { useEvent, useEventListener } from 'expo';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { FINISHED_WITHIN_SECONDS } from '@ValenceContracts/schemas/WatchProgress';
 import { useVideoPlayer, VideoView } from 'expo-video';
 import { libraryQueries } from '@ValenceClient/query/libraryQueries';
 import { artworkUrl } from '@ValenceClient/library/artworkUrl';
-import { fetchSubtitleTracks, SUBTITLES_OFF } from '@ValenceClient/playback/fetchSubtitles';
+import {
+  fetchSubtitleTracks,
+  SUBTITLES_OFF,
+  trackForLanguage,
+} from '@ValenceClient/playback/fetchSubtitles';
+import {
+  readAudioLanguage,
+  readSubtitleLanguage,
+  saveAudioLanguage,
+  saveSubtitleLanguage,
+} from '@ValenceClient/playback/languagePreference';
 import { fetchSegments } from '@ValenceClient/playback/fetchSegments';
 import { namePlaying } from '@ValenceClient/playback/namePlaying';
 import {
@@ -41,7 +51,6 @@ import { Button } from '@ValenceMobile/components/Button/Button';
 import { Screen } from '@ValenceMobile/components/Screen/Screen';
 import { Words } from '@ValenceMobile/components/Words/Words';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { useTheColours } from '@ValenceMobile/theme/useTheColours';
 import { TheLeap } from '@ValenceMobile/components/Watching/components/TheLeap/TheLeap';
 import { useTapsOnThePicture } from '@ValenceMobile/components/Watching/useTapsOnThePicture';
 import { TheChoices } from '@ValenceMobile/components/Watching/components/TheChoices/TheChoices';
@@ -52,6 +61,8 @@ import { useCaptionStyle } from '@ValenceClient/playback/useCaptionStyle';
 import { howBigToDrawIt } from '@ValenceMobile/components/Watching/howBigToDrawIt';
 import { usePinchToFill } from '@ValenceMobile/components/Watching/usePinchToFill';
 import { theChoicesOn } from '@ValenceMobile/components/Watching/theChoicesOn';
+import { PLAYER_LOOK } from '@ValenceMobile/components/Watching/PLAYER_LOOK';
+import { useTheWait } from '@ValenceMobile/components/Watching/useTheWait';
 import { TheAudioAndSubtitles } from '@ValenceMobile/components/Watching/components/TheAudioAndSubtitles/TheAudioAndSubtitles';
 import { TheSpeed } from '@ValenceMobile/components/Watching/components/TheSpeed/TheSpeed';
 import { TheEpisodes } from '@ValenceMobile/components/Watching/components/TheEpisodes/TheEpisodes';
@@ -78,6 +89,7 @@ import type { MediaSegment } from '@ValenceClient/playback/fetchSegments';
 import type { StartedSession } from '@ValenceClient/playback/startPlaybackSession';
 import type { StreamReading } from '@ValenceClient/playback/describeStreamStats';
 import { say } from '@ValenceI18n/say';
+import { ASpinner } from '@ValenceMobile/components/ASpinner/ASpinner';
 
 const SAY_IT_IS_ALIVE_EVERY = 30_000;
 
@@ -123,6 +135,15 @@ const NEVER_REFUSES = () => undefined;
 
 const styles = StyleSheet.create({
   picture: { backgroundColor: '#000000', flex: 1 },
+  waiting: {
+    alignItems: 'center',
+    bottom: 0,
+    justifyContent: 'center',
+    left: 0,
+    position: 'absolute',
+    right: 0,
+    top: 0,
+  },
 });
 
 /**
@@ -234,7 +255,7 @@ const Watching = ({
   kept,
   watchParty,
 }: WatchingProps) => {
-  const colours = useTheColours();
+  const cache = useQueryClient();
   const [source, setSource] = useState<VideoSource | null>(null);
   const [seekTo, setSeekTo] = useState(0);
   const [sessionId, setSessionId] = useState<string | null>(null);
@@ -289,6 +310,23 @@ const Watching = ({
           startSeconds),
     requestedQuality: kept === undefined ? readQualityPreference() : 'original',
   }));
+  const [askingFor, setAskingFor] = useState(mediaId);
+
+  if (askingFor !== mediaId) {
+    setAskingFor(mediaId);
+    setAsking((asked) =>
+      asked.requestedQuality === undefined
+        ? { from: startSeconds }
+        : { from: startSeconds, requestedQuality: asked.requestedQuality },
+    );
+    setRefusal(null);
+    setPanel(null);
+    setSession(null);
+    setSessionId(null);
+    setStreamReading(NOTHING_READ);
+    setSubtitleOffset(0);
+  }
+
   const clientId = platformInUse().thisClientId();
   const title = useQuery({ ...libraryQueries.detail(mediaId), enabled: !isKept });
   const called =
@@ -313,6 +351,27 @@ const Watching = ({
     enabled: !isKept,
   });
   const [reading, setReading] = useState(SUBTITLES_OFF);
+  const carriedOver = useRef<string | null>(null);
+
+  useEffect(() => {
+    if (carriedOver.current === mediaId || tracks.data === undefined) {
+      return;
+    }
+
+    carriedOver.current = mediaId;
+
+    const remembered = readSubtitleLanguage();
+
+    if (remembered === null || remembered === SUBTITLES_OFF) {
+      return;
+    }
+
+    const continuing = trackForLanguage(tracks.data, remembered);
+
+    if (continuing !== null) {
+      setReading(continuing.id);
+    }
+  }, [tracks.data, mediaId]);
   const beingRead = (tracks.data ?? []).find((track) => track.id === reading) ?? null;
   const cues = useTheSubtitles(mediaId, reading, beingRead?.delivery === 'burnIn');
 
@@ -344,54 +403,73 @@ const Watching = ({
 
     setSource(null);
 
-    void startPlaybackSession(
-      mediaId,
-      thePhonesProfile(),
-      clientId,
-      Math.floor(asking.from),
-      asking.audioStreamIndex,
-      asking.requestedQuality,
-      asking.subtitleStreamIndex,
-    ).then((outcome) => {
-      if (outcome.kind === 'failed') {
-        setRefusal(outcome.reason);
+    const rememberedAudio = asking.audioStreamIndex === undefined ? readAudioLanguage() : null;
 
-        return;
-      }
+    void (
+      rememberedAudio === null
+        ? Promise.resolve(asking.audioStreamIndex)
+        : cache
+            .ensureQueryData(libraryQueries.detail(mediaId))
+            .then((known) => {
+              const heard = known?.audioStreams.find(
+                (stream) => stream.language === rememberedAudio,
+              );
 
-      started = outcome.session.sessionId;
-      setSession(outcome.session);
-      setSentAudio(outcome.session.plan.audio.streamIndex);
+              return heard === undefined || heard.isDefault ? undefined : heard.index;
+            })
+            .catch(() => undefined)
+    )
+      .then((audioStreamIndex) =>
+        startPlaybackSession(
+          mediaId,
+          thePhonesProfile(),
+          clientId,
+          Math.floor(asking.from),
+          audioStreamIndex,
+          asking.requestedQuality,
+          asking.subtitleStreamIndex,
+        ),
+      )
+      .then((outcome) => {
+        if (outcome.kind === 'failed') {
+          setRefusal(outcome.reason);
 
-      if (leftAlready) {
-        void stopPlaybackSession(started, clientId);
-
-        return;
-      }
-
-      const uri = onThisServer(
-        outcome.session.delivery.kind === 'direct'
-          ? outcome.session.delivery.url
-          : outcome.session.delivery.manifestUrl,
-      );
-      const wasStarted = started;
-
-      void theCookiesThisPhoneHolds(uri).then((cookie) => {
-        if (leftAlready) {
           return;
         }
 
-        setSeekTo(asking.from);
-        setSessionId(wasStarted);
-        const artwork = onThisServer(artworkUrl(mediaId, 'poster'));
-        const told = {
-          uri,
-          metadata: named.current === undefined ? { artwork } : { title: named.current, artwork },
-        };
+        started = outcome.session.sessionId;
+        setSession(outcome.session);
+        setSentAudio(outcome.session.plan.audio.streamIndex);
 
-        setSource(cookie === null ? told : { ...told, headers: { Cookie: cookie } });
+        if (leftAlready) {
+          void stopPlaybackSession(started, clientId);
+
+          return;
+        }
+
+        const uri = onThisServer(
+          outcome.session.delivery.kind === 'direct'
+            ? outcome.session.delivery.url
+            : outcome.session.delivery.manifestUrl,
+        );
+        const wasStarted = started;
+
+        void theCookiesThisPhoneHolds(uri).then((cookie) => {
+          if (leftAlready) {
+            return;
+          }
+
+          setSeekTo(asking.from);
+          setSessionId(wasStarted);
+          const artwork = onThisServer(artworkUrl(mediaId, 'poster'));
+          const told = {
+            uri,
+            metadata: named.current === undefined ? { artwork } : { title: named.current, artwork },
+          };
+
+          setSource(cookie === null ? told : { ...told, headers: { Cookie: cookie } });
+        });
       });
-    });
 
     return () => {
       leftAlready = true;
@@ -402,7 +480,7 @@ const Watching = ({
 
       letGo();
     };
-  }, [mediaId, asking, clientId, isKept]);
+  }, [mediaId, asking, clientId, isKept, cache]);
 
   const player = useVideoPlayer(source, (ready) => {
     ready.timeUpdateEventInterval = HOW_OFTEN_IT_SAYS_WHERE_IT_IS;
@@ -411,6 +489,7 @@ const Watching = ({
   });
 
   const status = useEvent(player, 'statusChange', { status: player.status });
+  const wait = useTheWait(source === null || status.status === 'loading');
   const partyPlayback = usePartyPlayback(watchParty, mediaId);
   const party = isKept || partyPlayback === null ? undefined : partyPlayback;
   const playerOf = useCallback(() => roomPlayerOfExpo(player), [player]);
@@ -460,6 +539,11 @@ const Watching = ({
 
   const seekedToTheEnd = useRef(false);
   const [isHeldAtTheEnd, setIsHeldAtTheEnd] = useState(false);
+
+  useEffect(() => {
+    seekedToTheEnd.current = false;
+    setIsHeldAtTheEnd(false);
+  }, [mediaId]);
 
   const moveTo = useCallback(
     (seconds: number) => {
@@ -528,6 +612,9 @@ const Watching = ({
       const wanted = (tracks.data ?? []).find((track) => track.id === trackId) ?? null;
 
       setReading(trackId);
+      saveSubtitleLanguage(
+        trackId === SUBTITLES_OFF ? SUBTITLES_OFF : (wanted?.language ?? SUBTITLES_OFF),
+      );
 
       const burning = wanted?.delivery === 'burnIn' ? (wanted.streamIndex ?? undefined) : undefined;
 
@@ -623,6 +710,8 @@ const Watching = ({
     if (sessionId === null && !isKept) {
       return;
     }
+
+    whereTheyGotTo.current = null;
 
     const looking = setInterval(() => {
       if (player.duration > 0) {
@@ -741,6 +830,14 @@ const Watching = ({
         chosenAudio: asking.audioStreamIndex ?? sentAudio,
         chosenQuality: asking.requestedQuality ?? 'auto',
         onAudio: (audioStreamIndex) => {
+          const heard = title.data?.audioStreams.find(
+            (stream) => stream.index === audioStreamIndex,
+          );
+
+          if (heard?.language !== undefined && heard.language !== null) {
+            saveAudioLanguage(heard.language);
+          }
+
           askAgain({ audioStreamIndex });
         },
         onQuality: (requestedQuality) => {
@@ -783,14 +880,6 @@ const Watching = ({
     return (
       <Screen centres onBack={onDone}>
         <Words tone="danger">{refusal}</Words>
-      </Screen>
-    );
-  }
-
-  if (source === null) {
-    return (
-      <Screen centres onBack={onDone}>
-        <ActivityIndicator color={colours.textMuted} />
       </Screen>
     );
   }
@@ -875,6 +964,7 @@ const Watching = ({
           title: called?.name ?? '',
           year: called?.year ?? null,
           isPlaying: moving.isPlaying,
+          wait,
           trickplay: (isKept ? keptFrames.data : frames.data) ?? null,
           onPlayPause: () => {
             keepThemUp();
@@ -912,9 +1002,12 @@ const Watching = ({
           onSpeed: () => {
             setPanel('speed');
           },
-          onAudioAndSubtitles: () => {
-            setPanel('audio');
-          },
+          onAudioAndSubtitles:
+            settings.audio === null && settings.subtitles === null
+              ? undefined
+              : () => {
+                  setPanel('audio');
+                },
           onQuality:
             settings.quality === null
               ? undefined
@@ -951,6 +1044,17 @@ const Watching = ({
                 },
         }}
       />
+
+      {wait.isShown && !areControlsDrawn && panel === null ? (
+        <View style={styles.waiting} pointerEvents="none">
+          <ASpinner
+            colour="#ffffff"
+            size={PLAYER_LOOK.middle}
+            isFinishing={wait.isFinishing}
+            onFilled={wait.onFilled}
+          />
+        </View>
+      ) : null}
 
       {isLocked && areControlsDrawn ? (
         <TheUnlock
@@ -1000,16 +1104,7 @@ const Watching = ({
 
       {panel === 'style' ? <TheChoices sets={settings.captions} onClose={stopChoosing} /> : null}
 
-      {panel === 'speed' ? (
-        <TheSpeed
-          rate={rate}
-          onRate={(chosen) => {
-            setRate(chosen);
-            setPanel(null);
-          }}
-          onClose={stopChoosing}
-        />
-      ) : null}
+      {panel === 'speed' ? <TheSpeed rate={rate} onRate={setRate} onClose={stopChoosing} /> : null}
 
       {panel === 'quality' && settings.quality !== null ? (
         <APlayerPanel label={say('phone.watching.closeTheQuality')} onClose={stopChoosing}>
