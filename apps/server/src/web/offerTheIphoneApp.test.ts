@@ -15,7 +15,12 @@ const aServer = (appStoreId: string) => {
 
   app.use('*', offerTheIphoneApp(appStoreId));
   app.get('/api/health', (context) => context.json({ ok: true }));
-  app.get('*', (context) => context.html(PAGE));
+  app.get('*', (context) =>
+    context.body(PAGE, 200, {
+      'content-type': 'text/html; charset=utf-8',
+      'content-length': PAGE.length.toString(),
+    }),
+  );
 
   return app;
 };
@@ -37,6 +42,15 @@ describe('offerTheIphoneApp', () => {
     expect(await answer.text()).toContain(
       'app-argument=valence://device?user_code=ABCD&amp;server=http%3A%2F%2Fvalence%3A8420',
     );
+  });
+
+  it('drops the page’s old length, so the browser reads the whole longer page', async () => {
+    const answer = await aServer('1').request('http://valence:8420/films');
+    const page = await answer.text();
+    const length = answer.headers.get('content-length');
+
+    expect(page).toContain('</body></html>');
+    expect(length === null || Number(length) === new TextEncoder().encode(page).length).toBe(true);
   });
 
   it('offers nothing where no listing is set', async () => {

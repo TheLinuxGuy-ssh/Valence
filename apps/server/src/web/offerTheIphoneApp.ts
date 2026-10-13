@@ -36,10 +36,10 @@ const offerTheIphoneApp = (appStoreId: string) =>
       askedOriginOf(context.req.url, context.req.raw.headers),
     );
     const page = withTheAppStoreBanner(await context.res.text(), appStoreId, link);
-    const headers = new Headers(context.res.headers);
+    const { status } = context.res;
 
-    headers.delete('content-length');
-    context.res = new Response(page, { status: context.res.status, headers });
+    context.res.headers.delete('content-length');
+    context.res = new Response(page, { status, headers: { 'content-type': type } });
   });
 
 export { offerTheIphoneApp };
