@@ -1,3 +1,4 @@
+import { HardwareSchema } from '@ValenceContracts/schemas/Hardware';
 import {
   BookListeningSessionSchema,
   ReadingSessionSchema,
@@ -88,6 +89,7 @@ const AdminOverviewSchema = z.object({
       )
       .default([]),
   }),
+  hardware: HardwareSchema.nullable().default(null),
   library: z.object({
     itemCount: z.number(),
     libraryCount: z.number(),
@@ -177,6 +179,8 @@ const MonitorSchema = z.object({
     systemMemoryUsedBytes: z.number(),
     systemMemoryTotalBytes: z.number(),
     cpuCount: z.number(),
+    cpuPercents: z.array(z.number()).default([]),
+    cpuSpeedsMhz: z.array(z.number()).default([]),
     serviceCpuPercent: z.number(),
     serviceMemoryBytes: z.number(),
     children: z.array(ProcessUseSchema),

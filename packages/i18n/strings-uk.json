@@ -13115,6 +13115,11 @@
     "context": "Shown in the cache breakdown in the admin area."
   },
   {
+    "handler": "screens.adminArea.cacheBreakdown.keptByValence",
+    "text": "Kept by Valence, not counting the library",
+    "context": "Above the total of the files Valence keeps for itself (preview clips, thumbnails, transcodes, artwork), on the admin overview's storage card."
+  },
+  {
     "handler": "screens.adminArea.cacheBreakdown.whatLabelMeans",
     "text": "What {label} means",
     "context": "The label of a button in the cache breakdown in the admin area. {label} is filled in by the app."
@@ -13733,6 +13738,21 @@
     "handler": "screens.adminArea.confirmedCountReEncodes.other",
     "text": "Kept {count} new encodes and deleted their originals.",
     "context": "Shown after confirming re-encodes awaiting review in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.coreMap.efficiency",
+    "text": "Efficiency cores",
+    "context": "Over a group of the processor's cores in the hardware information card at the top of the admin area. The power-saving cores of a chip that has both fast and efficient ones."
+  },
+  {
+    "handler": "screens.adminArea.coreMap.label",
+    "text": "{cores} cores running {threads} threads",
+    "context": "Read out for the drawing of the processor's cores in the admin area. {cores} is how many physical cores it has and {threads} how many threads they run."
+  },
+  {
+    "handler": "screens.adminArea.coreMap.performance",
+    "text": "Performance cores",
+    "context": "Over a group of the processor's cores in the hardware information card at the top of the admin area. The fast cores of a chip that has both fast and efficient ones."
   },
   {
     "handler": "screens.adminArea.coresValenceNotMeasured.one",
@@ -14908,6 +14928,76 @@
     "handler": "screens.adminArea.graphics",
     "text": "Graphics",
     "context": "The label in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.hardware.capacity",
+    "text": "Capacity",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside how much memory the machine has."
+  },
+  {
+    "handler": "screens.adminArea.hardware.card",
+    "text": "Card",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside the name of the graphics card."
+  },
+  {
+    "handler": "screens.adminArea.hardware.cores",
+    "text": "Cores",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside how many physical processor cores the machine has."
+  },
+  {
+    "handler": "screens.adminArea.hardware.currentSpeed",
+    "text": "Current speed",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside how fast the processor is running right now, averaged across its cores."
+  },
+  {
+    "handler": "screens.adminArea.hardware.drives",
+    "text": "Drives",
+    "context": "In the information card of the hardware figures at the top of the admin area. The heading over the list of physical drives in the machine."
+  },
+  {
+    "handler": "screens.adminArea.hardware.gigahertz",
+    "text": "{speed} GHz",
+    "context": "In the information card of the hardware figures at the top of the admin area. The fastest the processor runs. {speed} is a number of gigahertz, such as 3.2."
+  },
+  {
+    "handler": "screens.adminArea.hardware.hardDisk",
+    "text": "Hard disk",
+    "context": "In the information card of the hardware figures at the top of the admin area. A drive that is a spinning hard disk."
+  },
+  {
+    "handler": "screens.adminArea.hardware.insideAVirtualMachine",
+    "text": "Valence is running inside a virtual machine, such as Docker Desktop's, so these are what that machine was given rather than the computer itself.",
+    "context": "In the information card of the hardware figures at the top of the admin area. Shown when Valence runs inside a virtual machine."
+  },
+  {
+    "handler": "screens.adminArea.hardware.megatransfers",
+    "text": "{speed} MT/s",
+    "context": "In the information card of the hardware figures at the top of the admin area. How fast a memory stick runs. {speed} is millions of transfers a second, such as 5,600."
+  },
+  {
+    "handler": "screens.adminArea.hardware.model",
+    "text": "Model",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside the name the processor gives itself."
+  },
+  {
+    "handler": "screens.adminArea.hardware.ssd",
+    "text": "SSD",
+    "context": "In the information card of the hardware figures at the top of the admin area. A drive that is a solid-state drive."
+  },
+  {
+    "handler": "screens.adminArea.hardware.sticksNeedPrivileges",
+    "text": "Each memory stick's speed and maker can only be read when Valence's container runs privileged.",
+    "context": "In the information card of the hardware figures at the top of the admin area. Shown when the memory sticks could not be read because Valence runs in a container."
+  },
+  {
+    "handler": "screens.adminArea.hardware.threads",
+    "text": "Threads",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside how many threads the processor runs at once."
+  },
+  {
+    "handler": "screens.adminArea.hardware.topSpeed",
+    "text": "Top speed",
+    "context": "In the information card of the hardware figures at the top of the admin area. The label beside the fastest the processor can run."
   },
   {
     "handler": "screens.adminArea.hardwareChains",
@@ -16700,6 +16790,11 @@
     "context": "Shown in the overview panel in the admin area."
   },
   {
+    "handler": "screens.adminArea.overviewPanel.allLogs",
+    "text": "All logs",
+    "context": "The link from that card to the full log on the Jobs and logs page."
+  },
+  {
     "handler": "screens.adminArea.overviewPanel.allSessions",
     "text": "All sessions",
     "context": "Shown in the overview panel in the admin area."
@@ -16708,6 +16803,36 @@
     "handler": "screens.adminArea.overviewPanel.allWork",
     "text": "All work",
     "context": "Shown in the overview panel in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.diskUsage",
+    "text": "Disk usage",
+    "context": "The disk usage card on the admin overview: a ring of how much space each library's files take. Its title."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.how",
+    "text": "How",
+    "context": "A column heading in a table on the admin overview."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.howTheLibrariesShareTheDisk",
+    "text": "How much space each library takes up",
+    "context": "The disk usage card on the admin overview: a ring of how much space each library's files take. Read out in place of the ring."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.inTheLibraries",
+    "text": "in libraries",
+    "context": "The disk usage card on the admin overview: a ring of how much space each library's files take. Beneath the total written in the middle of the ring, such as 329 GB in libraries."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.kindOfWork",
+    "text": "Kind of work",
+    "context": "A column heading in a table on the admin overview."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.loadAgainstCores",
+    "text": "Load (share of cores)",
+    "context": "In the key beneath the server load graph: the load average, drawn as a share of how many processor cores the machine has."
   },
   {
     "handler": "screens.adminArea.overviewPanel.loadFigures.average",
@@ -16770,6 +16895,11 @@
     "context": "The title of a region in the overview panel in the admin area."
   },
   {
+    "handler": "screens.adminArea.overviewPanel.recentLogs",
+    "text": "Recent logs",
+    "context": "The title of the admin overview card that lists the newest log lines."
+  },
+  {
     "handler": "screens.adminArea.overviewPanel.runningNow",
     "text": "Running now",
     "context": "The title of a region in the overview panel in the admin area."
@@ -16818,6 +16948,16 @@
     "handler": "screens.adminArea.overviewPanel.storageValenceIsUsing",
     "text": "Storage used by Valence",
     "context": "The title of a region in the overview panel in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.whatIsOn",
+    "text": "What",
+    "context": "A column heading in a table on the admin overview."
+  },
+  {
+    "handler": "screens.adminArea.overviewPanel.whoAndWhere",
+    "text": "Who and where",
+    "context": "A column heading in a table on the admin overview."
   },
   {
     "handler": "screens.adminArea.pausedThatStream",
@@ -21235,6 +21375,126 @@
     "context": "The field in the forgotten password dialog."
   },
   {
+    "handler": "screens.getStarted.addAProfilePicture",
+    "text": "Add a profile picture",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. A step."
+  },
+  {
+    "handler": "screens.getStarted.browseFilms",
+    "text": "Browse films",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Opens the films page."
+  },
+  {
+    "handler": "screens.getStarted.discoverMore",
+    "text": "Discover more",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. The second group of steps."
+  },
+  {
+    "handler": "screens.getStarted.favouritesHaveARow",
+    "text": "Favourites get a row of their own on the home page.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to favourite something."
+  },
+  {
+    "handler": "screens.getStarted.findSomethingToWatch",
+    "text": "Find something to watch",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Goes to the home page."
+  },
+  {
+    "handler": "screens.getStarted.finishedOfTotal",
+    "text": "{finished}/{total}",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Beside the folded-away title, how many steps are finished of how many."
+  },
+  {
+    "handler": "screens.getStarted.getStartedWithName",
+    "text": "Get started with {name}",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Its title. {name} is what this server is called, usually Valence."
+  },
+  {
+    "handler": "screens.getStarted.getTheApp",
+    "text": "Get the app",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Opens the page about the phone app."
+  },
+  {
+    "handler": "screens.getStarted.getThePhoneApp",
+    "text": "Get the phone app",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. A step."
+  },
+  {
+    "handler": "screens.getStarted.hearWhenSomethingArrives",
+    "text": "Hear when something new arrives or something you asked for is ready.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to turn on notifications."
+  },
+  {
+    "handler": "screens.getStarted.keepAFavourite",
+    "text": "Keep a favourite",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. A step: favourite a film or show."
+  },
+  {
+    "handler": "screens.getStarted.makeItYours",
+    "text": "Make it yours",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. The first group of steps."
+  },
+  {
+    "handler": "screens.getStarted.ofTotalCompleted",
+    "text": "/{total} completed",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. At its foot, after the number finished, such as 1/7 completed."
+  },
+  {
+    "handler": "screens.getStarted.signInATelevision",
+    "text": "Sign in a TV",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Opens devices to sign a TV in."
+  },
+  {
+    "handler": "screens.getStarted.signTheTelevisionInWithACode",
+    "text": "Sign the TV app in with a short code, no typing passwords on a remote.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why and how to sign a TV in."
+  },
+  {
+    "handler": "screens.getStarted.skip",
+    "text": "Skip",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Passes over one step."
+  },
+  {
+    "handler": "screens.getStarted.skipAll",
+    "text": "Skip all",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Puts the whole checklist away for good."
+  },
+  {
+    "handler": "screens.getStarted.soEveryoneSeesWhoIsWatching",
+    "text": "So everyone in the household can see who’s watching.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to add a profile picture."
+  },
+  {
+    "handler": "screens.getStarted.startAWatchPartyFromAnyFilm",
+    "text": "Start a watch party from any film or episode and invite people to watch in step.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to try a watch party."
+  },
+  {
+    "handler": "screens.getStarted.turnOn",
+    "text": "Turn on",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Turns on notifications."
+  },
+  {
+    "handler": "screens.getStarted.turnOnNotifications",
+    "text": "Turn on notifications",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. A step."
+  },
+  {
+    "handler": "screens.getStarted.watchAndDownloadOnYourPhone",
+    "text": "Watch, download and pick up where you left off on your phone.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to get the phone app."
+  },
+  {
+    "handler": "screens.getStarted.watchOnYourTelevision",
+    "text": "Watch on your TV",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. A step."
+  },
+  {
+    "handler": "screens.getStarted.yourFaceOrFingerprint",
+    "text": "Use your face or fingerprint instead of typing a password.",
+    "context": "The get-started checklist kept in the corner of the app for somebody new. Why to add a passkey."
+  },
+  {
     "handler": "screens.getTheDesktopApp.getIt",
     "text": "Get it",
     "context": "The button in the note offering the desktop app, which opens the page it is downloaded from (from `GetTheDesktopApp`)."
@@ -22670,6 +22930,16 @@
     "context": "The name of a row in a log entry's details: how serious it is."
   },
   {
+    "handler": "screens.logExplorer.asATable",
+    "text": "Table",
+    "context": "A choice on the Jobs and logs page between reading the log as a table or as the containers' console prints it."
+  },
+  {
+    "handler": "screens.logExplorer.asTheConsole",
+    "text": "Console",
+    "context": "A choice on the Jobs and logs page between reading the log as a table or as the containers' console prints it."
+  },
+  {
     "handler": "screens.logExplorer.levelToggles.levels",
     "text": "Levels",
     "context": "Read aloud by screen readers as the name in the level toggles in the log explorer."
@@ -22718,6 +22988,11 @@
     "handler": "screens.logExplorer.logLine.traceThisJob",
     "text": "Trace this job",
     "context": "The label in the log line in the log explorer."
+  },
+  {
+    "handler": "screens.logExplorer.timeInZone",
+    "text": "Time ({zone})",
+    "context": "The heading of the time column in the server log. {zone} is the reader's own time zone, such as BST."
   },
   { "handler": "screens.lyricLines.end", "text": "End", "context": "Shown in the lyric lines." },
   {
@@ -30390,6 +30665,11 @@
     "handler": "ui.filterMenu.clearFilters",
     "text": "Clear filters",
     "context": "Text shown in the filter menu."
+  },
+  {
+    "handler": "ui.noticeCard.thisWillCloseIn",
+    "text": "This message will close in",
+    "context": "The notice cards (toasts) the app shows. Before a countdown such as 5 seconds."
   },
   {
     "handler": "ui.pageCurl.xPxYPx",

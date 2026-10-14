@@ -89,6 +89,9 @@ import { sessionQueries } from '@ValenceClient/query/sessionQueries';
 import { profileQueries } from '@ValenceClient/query/profileQueries';
 import { libraryQueries } from '@ValenceClient/query/libraryQueries';
 import { StatStrip } from './components/StatStrip/StatStrip';
+import { ProcessorInfo } from './components/ProcessorInfo/ProcessorInfo';
+import { MemoryInfo } from './components/MemoryInfo/MemoryInfo';
+import { DriveList } from './components/DriveList/DriveList';
 import { InfoRow } from '@ValenceUI/InfoRow';
 import { InfoNote } from '@ValenceUI/InfoNote';
 import type { LoadReading } from './components/OverviewPanel/components/LoadChart/LoadChart.types';
@@ -715,6 +718,10 @@ const AdminArea = ({
             systemMemoryUsedBytes: reading.resources.systemMemoryUsedBytes,
             systemMemoryTotalBytes: reading.resources.systemMemoryTotalBytes,
             cpuCount: reading.resources.cpuCount,
+            gpuPercent:
+              reading.resources.graphics?.devicePercent ??
+              reading.resources.graphics?.encoderPercent ??
+              null,
           },
         ].slice(-historyLength),
       );
@@ -751,8 +758,15 @@ const AdminArea = ({
 
   const ffmpegLine = describeFfmpeg(overview?.transcoder.ffmpegVersion ?? null);
 
+  const hardware = overview?.hardware ?? null;
+  const cardName = resources?.graphics?.name ?? null;
+
   const graphicsInfo = (
     <>
+      {cardName === null ? null : (
+        <InfoRow label={say('screens.adminArea.hardware.card')}>{cardName}</InfoRow>
+      )}
+
       <InfoRow label={say('screens.adminArea.hardwareEncoding')}>
         {acceleration?.label ?? '—'}
       </InfoRow>
@@ -892,6 +906,17 @@ const AdminArea = ({
                 <FormattedNumber value={Math.round(resources?.systemCpuPercent ?? 0)} suffix="%" />
               ),
               fraction: (resources?.systemCpuPercent ?? 0) / 100,
+              ...(hardware === null
+                ? {}
+                : {
+                    info: (
+                      <ProcessorInfo
+                        hardware={hardware}
+                        percents={resources?.cpuPercents ?? []}
+                        speedsMhz={resources?.cpuSpeedsMhz ?? []}
+                      />
+                    ),
+                  }),
               detail:
                 resources === null ? (
                   '—'
@@ -921,6 +946,7 @@ const AdminArea = ({
               label: say('screens.adminArea.memory'),
               value: memory === null ? '—' : <FormattedBytes bytes={memory.usedBytes} />,
               fraction: memoryFraction,
+              ...(hardware === null ? {} : { info: <MemoryInfo hardware={hardware} /> }),
               detail:
                 memory === null ? (
                   '—'
@@ -954,6 +980,9 @@ const AdminArea = ({
             },
             {
               label: say('screens.adminArea.storage'),
+              ...(hardware === null || hardware.drives.length === 0
+                ? {}
+                : { info: <DriveList hardware={hardware} /> }),
               value:
                 mediaDisk === null ? (
                   '—'
