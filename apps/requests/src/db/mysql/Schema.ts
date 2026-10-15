@@ -58,6 +58,7 @@ import {
 import type {
   BookFormat,
   Narration,
+  SeriesBook,
   ReleaseType,
   RequestCatalogue,
   ProfileAsk,
@@ -328,6 +329,12 @@ const mediaRequest = requestsSchema(
     bookFormats: jsonColumn('book_formats').$type<BookFormat[]>(),
     narrations: jsonColumn('narrations').$type<Narration[]>(),
     narrationsWanted: jsonColumn('narrations_wanted').$type<string[]>(),
+    seriesAsin: varchar('series_asin', { length: 20 }),
+    seriesRequestId: char('series_request_id', { length: 36 }),
+    books: jsonColumn('books').$type<SeriesBook[]>(),
+    companionsWanted: jsonColumn('companions_wanted').$type<string[]>(),
+    keepsOneNarrator: boolean('keeps_one_narrator').notNull().default(false),
+    seriesNarrators: jsonColumn('series_narrators').$type<string[]>(),
     versions: jsonColumn('versions').$type<string[]>(),
     anime: jsonColumn('anime').$type<AnimeFacts>(),
     animeAudio: varchar('anime_audio', { length: 24, enum: ANIME_AUDIO_POLICIES }),
@@ -354,6 +361,7 @@ const mediaRequest = requestsSchema(
     unique('media_request_title').on(table.kind, table.tmdbId),
     unique('media_request_music').on(table.kind, table.musicBrainzId),
     unique('media_request_book').on(table.kind, table.openLibraryId),
+    unique('media_request_book_series').on(table.kind, table.seriesAsin),
   ],
 );
 

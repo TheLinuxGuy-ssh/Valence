@@ -20,13 +20,14 @@ type CatalogueSources = {
     kind: MusicRequestKind,
   ) => Promise<RequestCatalogue | null>;
   describeBookForRequest: (openLibraryId: number) => Promise<RequestCatalogue | null>;
+  describeBookSeriesForRequest?: (seriesAsin: string) => Promise<RequestCatalogue | null>;
 };
 
 /**
  * What the catalogue says of something asked for: TMDB of a film or a series, by its TMDB id,
- * MusicBrainz of an artist or an album, by its MusicBrainz id, and Open Library of a book, by its
- * Open Library id. Anime's cours are worked out the way the request asks, and a series is taken
- * for anime where it is filed among the anime.
+ * MusicBrainz of an artist or an album, by its MusicBrainz id, Open Library of a book, by its Open
+ * Library id, and Audible of a book series, by its Audible id. Anime's cours are worked out the way
+ * the request asks, and a series is taken for anime where it is filed among the anime.
  *
  * @param sources - How each catalogue is asked.
  * @param asked - What was asked for, and the id its kind is found by.
@@ -40,10 +41,19 @@ const catalogueForRequest = (
     tmdbId?: number | null | undefined;
     musicBrainzId?: string | null | undefined;
     openLibraryId?: number | null | undefined;
+    seriesAsin?: string | null | undefined;
     courOrder?: CourOrder | null | undefined;
     asAnime?: boolean;
   },
 ): Promise<RequestCatalogue | null> => {
+  if (asked.kind === 'bookSeries') {
+    return asked.seriesAsin === undefined ||
+      asked.seriesAsin === null ||
+      sources.describeBookSeriesForRequest === undefined
+      ? Promise.resolve(null)
+      : sources.describeBookSeriesForRequest(asked.seriesAsin);
+  }
+
   if (isBookRequest(asked.kind)) {
     return asked.openLibraryId === undefined || asked.openLibraryId === null
       ? Promise.resolve(null)

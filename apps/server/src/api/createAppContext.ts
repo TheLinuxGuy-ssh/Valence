@@ -279,6 +279,7 @@ const createAppContext = (options: CreateAppOptions) => {
     describeForRequest = () => Promise.resolve(null),
     describeMusicForRequest = () => Promise.resolve(null),
     describeBookForRequest = () => Promise.resolve(null),
+    describeBookSeriesForRequest = () => Promise.resolve(null),
     searchMusicCatalogue = () => Promise.resolve([]),
     missingAlbums = null,
     discovery = NO_DISCOVERY,
@@ -1166,7 +1167,7 @@ const createAppContext = (options: CreateAppOptions) => {
 
     const into = await libraryForRequest(kind, libraryId, isAnime);
 
-    if (isBookRequest(kind)) {
+    if (isBookRequest(kind) || kind === 'bookSeries') {
       return {
         kind: 'answered' as const,
         value: { choices: [], forcedId: null, fitting: [], into, isManaging: false },
@@ -1305,7 +1306,7 @@ const createAppContext = (options: CreateAppOptions) => {
       return { ...offered, kind: 'refused' };
     }
 
-    if (isBookRequest(asked.kind)) {
+    if (isBookRequest(asked.kind) || asked.kind === 'bookSeries') {
       return { kind: 'chosen', profileId: undefined };
     }
 
@@ -1349,7 +1350,12 @@ const createAppContext = (options: CreateAppOptions) => {
 
   const catalogueFor = (asked: Parameters<typeof catalogueForRequest>[1]) =>
     catalogueForRequest(
-      { describeForRequest, describeMusicForRequest, describeBookForRequest },
+      {
+        describeForRequest,
+        describeMusicForRequest,
+        describeBookForRequest,
+        describeBookSeriesForRequest,
+      },
       asked,
     );
 
@@ -1485,6 +1491,14 @@ const createAppContext = (options: CreateAppOptions) => {
         handOff: arrKindOf(chosen.kind) === null ? null : (chosen.fulfilment ?? null),
         ...(asked.kind === 'book' && (catalogue.narrations ?? []).length > 0
           ? { narrationsWanted: await narrationsWantedOf(catalogue.narrations ?? []) }
+          : {}),
+        ...(asked.kind === 'bookSeries'
+          ? {
+              seriesAsin: asked.seriesAsin ?? null,
+              companionsWanted: asked.companionsWanted ?? [],
+              keepsOneNarrator: asked.keepsOneNarrator ?? false,
+              seriesNarrators: [...(await discovery.lookup.seriesNarrators(catalogue.title))],
+            }
           : {}),
         origin: asked.origin,
         held:

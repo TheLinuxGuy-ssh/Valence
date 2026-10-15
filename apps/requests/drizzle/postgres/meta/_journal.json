@@ -295,6 +295,13 @@
       "when": 1792014610573,
       "tag": "0041_anime_knows_its_cours",
       "breakpoints": true
+    },
+    {
+      "idx": 42,
+      "version": "7",
+      "when": 1792025103555,
+      "tag": "0042_book_series_follow_their_books",
+      "breakpoints": true
     }
   ]
 }

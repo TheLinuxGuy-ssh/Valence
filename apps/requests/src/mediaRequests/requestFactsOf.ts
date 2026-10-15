@@ -19,6 +19,7 @@ const requestFactsOf = (catalogue: RequestCatalogue) => ({
   isEnded: catalogue.isEnded,
   ...(catalogue.narrations === undefined ? {} : { narrations: catalogue.narrations }),
   ...(catalogue.anime === undefined || catalogue.anime === null ? {} : { anime: catalogue.anime }),
+  ...(catalogue.books === undefined ? {} : { books: catalogue.books }),
   ...(catalogue.tvdbId === undefined || catalogue.tvdbId === null
     ? {}
     : { tvdbId: catalogue.tvdbId }),

@@ -250,6 +250,7 @@ const JudgementSchema = z.object({
     .array(z.object({ season: z.number().int().nonnegative(), episode: z.number().int() }))
     .max(5000)
     .optional(),
+  narration: z.string().nullish(),
 });
 
 type ProfileKind = (typeof PROFILE_KINDS)[number];

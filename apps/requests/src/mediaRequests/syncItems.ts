@@ -161,6 +161,8 @@ const wantedOf = (
             ]
           : [];
       });
+    case 'bookSeries':
+      return [];
     case 'book':
       return (request.bookFormats ?? ['ebook']).flatMap((format) =>
         (format === 'audiobook' && (request.narrationsWanted ?? []).length > 0

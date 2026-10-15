@@ -560,6 +560,7 @@ const ENGLISH = {
   'common.blocked': 'Blocked',
   'common.book': 'Book',
   'common.books': 'Books',
+  'common.bookSeries': 'Book series',
   'common.bornBornOn': 'Born {bornOn}',
   'common.brave': 'Brave',
   'common.bringBack': 'Restore',
@@ -1611,6 +1612,8 @@ const ENGLISH = {
   'contracts.schemas.mediaKind.song': 'Song',
   'contracts.schemas.mediaRequest.aBookIsAskedForBy':
     'Books are requested by their Open Library ID.',
+  'contracts.schemas.mediaRequest.aBookSeriesIsAskedForBy':
+    'A book series is asked for by its Audible series id.',
   'contracts.schemas.mediaRequest.aFilmOrSeriesIsAsked':
     'Films and series are requested by their TMDB ID.',
   'contracts.schemas.mediaRequest.musicIsAskedForByIts':
@@ -2707,6 +2710,8 @@ const ENGLISH = {
     'Among the newest releases, {said}.',
   'requests.mediaRequests.requestWorker.choseTitleTheBestOfForIt':
     'chose {title}, the best of {forIt} matches',
+  'requests.mediaRequests.requestWorker.filedFromThePack':
+    'Filed from {title}, a pack of its series fetched for another of its books',
   'requests.mediaRequests.requestWorker.filedOfTotalTracks':
     'Only {filed} of its {total} tracks came. Looking for a complete copy.',
   'requests.mediaRequests.requestWorker.filedSizeFromTitleIntoFolder':
@@ -2725,6 +2730,9 @@ const ENGLISH = {
     'It’s abridged: {have} against {want}.',
   'requests.mediaRequests.requestWorker.itIsHandedToAConnectedApp':
     'This request is sent to a connected app, which chooses its own releases.',
+  'requests.mediaRequests.requestWorker.itIsMissingParts.one': 'It’s missing part {parts}',
+  'requests.mediaRequests.requestWorker.itIsMissingParts.other':
+    'It’s missing {count} parts: {parts}',
   'requests.mediaRequests.requestWorker.itIsOutAndWanted': 'It’s been released and is wanted.',
   'requests.mediaRequests.requestWorker.itsDownloadWasTakenOutBefore':
     'Its download was removed before it finished, so it’s wanted again.',
@@ -2791,6 +2799,8 @@ const ENGLISH = {
     '{format}, preferred for ebooks (+{points})',
   'requests.profiles.judgeBookFormat.itIsAbridged':
     'It’s abridged, and only whole audiobooks are taken',
+  'requests.profiles.judgeBookFormat.itIsAnAdaptation':
+    'It’s a full-cast adaptation, not the book read aloud',
   'requests.profiles.judgeBookFormat.retail': 'Retail (+{points})',
   'requests.profiles.judgeBookFormat.scanned': 'Scanned (−{points})',
   'requests.profiles.judgeRelease.fifthChoice': '{quality}, the fifth preference',
@@ -4468,6 +4478,7 @@ const ENGLISH = {
   'screens.adminArea.refuseRequestDialog.shownToWhoeverAsked':
     'Shown to the person who requested it.',
   'screens.adminArea.releaseColumns.age': 'Age',
+  'screens.adminArea.releaseColumns.narration': 'Narration',
   'screens.adminArea.releaseColumns.pickedScore': 'Picked · {score}',
   'screens.adminArea.releaseColumns.scoresScore': 'Scores {score}',
   'screens.adminArea.releaseColumns.torrent': 'Torrent',
@@ -4869,6 +4880,8 @@ const ENGLISH = {
   'screens.adminArea.titlePage.askerStrip.everybodyWhoWantsIt': 'Everybody who wants it',
   'screens.adminArea.titlePage.automatically': 'Automatically',
   'screens.adminArea.titlePage.backToTheCatalogue': 'Back to the Catalogue',
+  'screens.adminArea.titlePage.bookFormats.partsWhereTheyStand.one': '{count} part, {stands}',
+  'screens.adminArea.titlePage.bookFormats.partsWhereTheyStand.other': '{count} parts, {stands}',
   'screens.adminArea.titlePage.declineEllipsis': 'Decline…',
   'screens.adminArea.titlePage.downloadRow.pausedEarlier':
     'Paused earlier, so it’s never given up on',
@@ -4936,6 +4949,14 @@ const ENGLISH = {
   'screens.adminArea.titlePage.seasonList.cours': 'Cours',
   'screens.adminArea.titlePage.seasonList.followName': 'Follow {name}',
   'screens.adminArea.titlePage.seasonList.heldOfTotal': '{held} / {total}',
+  'screens.adminArea.titlePage.seriesBookList.alsoInThisWorld': 'Also in this world',
+  'screens.adminArea.titlePage.seriesBookList.booksChanged': 'The series’ books are changed',
+  'screens.adminArea.titlePage.seriesBookList.fetchTitleToo': 'Fetch {title} too',
+  'screens.adminArea.titlePage.seriesBookList.getNewBooks': 'Get new books as they come out',
+  'screens.adminArea.titlePage.seriesBookList.keepOneNarrator':
+    'Keep one narrator across the series',
+  'screens.adminArea.titlePage.seriesBookList.openLibraryDoesNotKnowIt':
+    'Open Library doesn’t know this book, so it can’t be fetched on its own',
   'screens.adminArea.titlePage.stopDownloadDialog.blocksThisReleaseAndOpens':
     'Blocks this release and opens interactive search.',
   'screens.adminArea.titlePage.stopDownloadDialog.blocksThisReleaseAndSearchesAgain':
@@ -5106,11 +5127,14 @@ const ENGLISH = {
   'screens.artworkPicker.artworkTile.choosingThisPicture': 'Saving this artwork',
   'screens.artworkPicker.artworkTile.chosen': 'Chosen',
   'screens.artworkPicker.artworkTile.theCataloguesPick': 'Catalogue default',
+  'screens.askableDialog.andItsNewBooks':
+    'And each new one as it comes out. Books between the main ones can be added later.',
   'screens.askableDialog.askedNameForTitle': 'Requested {title} from {name}.',
   'screens.askableDialog.chooseQualityDialog.wellFetchTheBestReleaseThat':
     'We’ll download the best release that matches.',
   'screens.askableDialog.chooseQualityDialog.whichQualityForTitle': 'Which quality for {title}?',
   'screens.askableDialog.describeCatalogueCard.inLibrary': 'In library',
+  'screens.askableDialog.everyBookInSeries': 'Every book in {series}',
   'screens.askableDialog.fetchingItsDetails': 'Fetching its details…',
   'screens.askableDialog.noYearGiven': 'No year given',
   'screens.askableDialog.playASampleOfTitle': 'Play a sample of {title}',
