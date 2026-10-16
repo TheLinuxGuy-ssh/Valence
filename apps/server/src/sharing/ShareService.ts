@@ -23,14 +23,19 @@ type ResolvedShare = {
 
 type WithdrawnShare = {
   createdBy: string;
+  createdByProfileId: string | null;
   title: string;
 };
 
 type ShareService = {
-  create: (createdBy: string, asked: NewShare) => Promise<CreatedShare | null>;
-  list: (createdBy: string) => Promise<Share[]>;
+  create: (
+    createdBy: string,
+    asked: NewShare,
+    profileId: string | null,
+  ) => Promise<CreatedShare | null>;
+  list: (createdBy: string, onlyProfileId: string | null) => Promise<Share[]>;
   listEverybody: () => Promise<AdminShare[]>;
-  revoke: (createdBy: string, shareId: string) => Promise<boolean>;
+  revoke: (createdBy: string, shareId: string, onlyProfileId: string | null) => Promise<boolean>;
   revokeAnybody: (shareId: string) => Promise<WithdrawnShare | null>;
   resolve: (token: string) => Promise<ResolvedShare | null>;
   join: (shareId: string, joiner: string) => Promise<void>;

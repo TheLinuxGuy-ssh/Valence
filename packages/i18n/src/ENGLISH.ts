@@ -1227,6 +1227,7 @@ const ENGLISH = {
   'common.priority': 'Priority',
   'common.priorityIsAWholeNumberFrom': 'Priority must be a whole number from 1 to 50.',
   'common.profile': 'Profile',
+  'common.profileFromHousehold': '{profile} from {household}',
   'common.profiles': 'Profiles',
   'common.programmes': 'Programmes',
   'common.progress': 'Progress',
@@ -1670,6 +1671,7 @@ const ENGLISH = {
     'Includes the user and what they’re watching.',
   'contracts.schemas.webhook.openedValence': 'Opened Valence',
   'contracts.schemas.webhook.pluginReported': 'Plugin reported',
+  'contracts.schemas.webhook.profileChosen': 'Profile chosen',
   'contracts.schemas.webhook.rateLimitedAttemptsAreRefusedBefore':
     'Rate-limited attempts are blocked before they reach Valence.',
   'contracts.schemas.webhook.requestApproved': 'Request approved',
@@ -1690,6 +1692,8 @@ const ENGLISH = {
     'Sent when an installed plugin reports an event it declared, such as an import finishing.',
   'contracts.schemas.webhook.sentWhenAReleaseIsHanded':
     'Sent when a release is added to a download client.',
+  'contracts.schemas.webhook.sentWhenSomebodyChoosesWhoIsWatching':
+    'Sent when somebody picks who’s watching on a device, after signing in or switching profiles. Names the profile and the household.',
   'contracts.schemas.webhook.sentWhenSomebodyOpensValenceNot':
     'Sent when someone opens Valence (not when they sign in), with where they opened it from.',
   'contracts.schemas.webhook.signInRefused': 'Sign-in rejected',
@@ -1950,13 +1954,6 @@ const ENGLISH = {
   'error.buckets.noSuchBucket': 'No such bucket.',
   'error.buckets.thatBucketCouldNotBeRead':
     'That bucket couldn’t be read. It needs a name, a bucket and an access key, and a secret the first time.',
-  'error.children.childrenCannotAddChildren': 'A child’s account can’t add children of its own.',
-  'error.children.thatChildCouldNotBeRead':
-    'That child’s name or PIN couldn’t be read. A PIN is 4 to 8 digits.',
-  'error.children.thatIsNotYourChild': 'That isn’t one of your children’s accounts.',
-  'error.children.thatPinCouldNotBeRead': 'That PIN couldn’t be read. A PIN is 4 to 8 digits.',
-  'error.children.thatPinIsWrong': 'That isn’t the right PIN.',
-  'error.children.theAccountCouldNotBeMade': 'The child’s account couldn’t be made.',
   'error.collections.noSuchCollection': 'No such collection.',
   'error.collections.thatCollectionHasNoArtworkOf': 'That collection has no artwork of its own.',
   'error.collections.thatEntryIsNotInThatCollection': 'That item isn’t in that collection.',
@@ -2157,6 +2154,19 @@ const ENGLISH = {
   'error.profile.thatIsNotAChangeTo': 'That isn’t a valid change to a profile.',
   'error.profile.thatIsNotAnOrderOf': 'That isn’t a valid order of profiles.',
   'error.profile.thatIsNotAProfile': 'That isn’t a valid profile.',
+  'error.profiles.aKeyActsForOneProfile': 'An API key always acts for the profile that made it.',
+  'error.profiles.chooseANewPin': 'Choose a new PIN of 4 to 8 digits.',
+  'error.profiles.chooseWhoIsWatching': 'Choose who’s watching first.',
+  'error.profiles.enterThePin': 'Enter this profile’s PIN.',
+  'error.profiles.keysAreMadeInValence': 'API keys are made in Valence’s own settings.',
+  'error.profiles.onlyTheOwnerCanDoThat': 'Only the account’s owner can do that.',
+  'error.profiles.thatPinIsWrong': 'That isn’t the right PIN.',
+  'error.profiles.theOwnerHasNoLimits': 'The owner’s profile can’t be limited.',
+  'error.profiles.theOwnerProfileStays':
+    'The owner’s profile can’t be removed. Make another profile the owner first.',
+  'error.profiles.theOwnerProfileStaysOnItsAccount':
+    'The owner’s profile can’t be moved to an account of its own. Make another profile the owner first.',
+  'error.profiles.tooManyWrongPins': 'Too many wrong PINs. Try again in a little while.',
   'error.reencode.noSuchReEncode': 'No such re-encode.',
   'error.reencode.noSuchRendition': 'No such rendition.',
   'error.requests.askedButNotFetched':
@@ -2920,23 +2930,6 @@ const ENGLISH = {
   'requests.vpn.readGluetun.keyRefused': 'gluetun rejected the request. Check VPN_API_KEY',
   'requests.vpn.readGluetun.theTunnelIsStatus': 'The VPN tunnel is {status}',
   'screens.accountArea.aPIKeys': 'API keys',
-  'screens.accountArea.childrenPanel.aChildPicksTheirFace':
-    'A child picks their face on the way in and is through with a tap, or with a PIN if you set one. You decide what each may watch.',
-  'screens.accountArea.childrenPanel.addAChild': 'Add a child',
-  'screens.accountArea.childrenPanel.addChild': 'Add child',
-  'screens.accountArea.childrenPanel.children': 'Children',
-  'screens.accountArea.childrenPanel.fourToEightDigits': '4 to 8 digits',
-  'screens.accountArea.childrenPanel.newPin': 'New PIN',
-  'screens.accountArea.childrenPanel.pinIfAny': 'PIN (optional)',
-  'screens.accountArea.childrenPanel.readingYourChildren': 'Reading your children’s accounts',
-  'screens.accountArea.childrenPanel.saveNameSLibraries': 'Save {name}’s libraries',
-  'screens.accountArea.childrenPanel.setPin': 'Set PIN',
-  'screens.accountArea.childrenPanel.signsInWithAPin': 'Uses a PIN',
-  'screens.accountArea.childrenPanel.signsInWithATap': 'No PIN',
-  'screens.accountArea.childrenPanel.takeThePinAway': 'Remove PIN',
-  'screens.accountArea.childrenPanel.youHaveNoChildrenYet': 'You haven’t added any children yet.',
-  'screens.accountArea.childrenPanel.yourChildrenCouldNotBeRead':
-    'Your children’s accounts couldn’t be read.',
   'screens.accountArea.deviceList.countOtherDevicesWillBeSigned.one':
     '{count} other device will be signed out. This device stays signed in.',
   'screens.accountArea.deviceList.countOtherDevicesWillBeSigned.other':
@@ -3093,7 +3086,7 @@ const ENGLISH = {
   'screens.adminArea.accountsPanel.ageLimitInNameForName2':
     'Age rating limit in {name} for {name2}',
   'screens.adminArea.accountsPanel.aLimitAppliesToThisAccount':
-    'Limits apply to the whole account, including every profile on it. If a parent and a child share an account, give the child their own account and limit that instead.',
+    'Limits apply to the whole account, including every profile on it. To limit only a child, narrow their profile under Profiles instead.',
   'screens.adminArea.accountsPanel.allowUncertificatedThingsInNameFor':
     'Allow unrated titles in {name} for {name2}',
   'screens.adminArea.accountsPanel.ban': 'Ban',
@@ -5257,8 +5250,6 @@ const ENGLISH = {
   'screens.adminArea.watchHistoryCard.hideWhatNameWatched': 'Hide what {name} watched',
   'screens.adminArea.watchHistoryCard.nothingWatchedYet': 'Nobody has watched anything yet.',
   'screens.adminArea.watchHistoryCard.showWhatNameWatched': 'Show what {name} watched',
-  'screens.adminArea.wayInMessageRow.aHexCodeOrEmpty':
-    'A hex code such as #FF8800, or empty for the theme’s own colour.',
   'screens.adminArea.wayInMessageRow.messageCouldNotBeSaved': 'The message could not be saved.',
   'screens.adminArea.wayInMessageRow.messageOnTheWayIn': 'Message on the sign in page',
   'screens.adminArea.wayInMessageRow.messageRemoved': 'Message removed.',
@@ -5266,8 +5257,7 @@ const ENGLISH = {
   'screens.adminArea.wayInMessageRow.saveMessage': 'Save message',
   'screens.adminArea.wayInMessageRow.shownUnderWhoIsWatching':
     'Shown under “Who’s watching?” on every device, such as a welcome or the house rules.',
-  'screens.adminArea.wayInMessageRow.useASixDigitHexCode':
-    'Use a six digit hex code, such as #FF8800.',
+  'screens.adminArea.wayInMessageRow.useTheThemesColour': 'Use the theme’s colour',
   'screens.adminArea.webhookCreated': 'Webhook created.',
   'screens.adminArea.webhookDeleted': 'Webhook deleted.',
   'screens.adminArea.webhookFields.aFirstScanOfALarge':
@@ -5348,16 +5338,18 @@ const ENGLISH = {
   'screens.apiKeyPanel.whatIsThisKeyFor': 'What is this key for?',
   'screens.apiKeyPanel.yourKeysCouldNotBeRead': 'Couldn’t load your keys.',
   'screens.app.loadingInitialTitle': 'Loading {initialTitle}',
-  'screens.appShell.addAnotherAccount': 'Add another account',
   'screens.appShell.admin': 'Admin',
   'screens.appShell.chooseSomethingAtRandom': 'Choose something at random',
   'screens.appShell.getValenceForSystem': 'Get Valence for {system}',
+  'screens.appShell.manageProfiles': 'Manage profiles',
   'screens.appShell.myAccount': 'My account',
   'screens.appShell.myRequests': 'My requests',
   'screens.appShell.randomiser': 'Randomiser',
+  'screens.appShell.signInToAnotherAccount': 'Sign in to another account',
   'screens.appShell.someAnime': 'Some anime',
   'screens.appShell.somethingToListenTo': 'Something to listen to',
   'screens.appShell.somethingToRead': 'Something to read',
+  'screens.appShell.switchProfile': 'Switch profile',
   'screens.appShell.switchToName': 'Switch to {name}',
   'screens.appShell.valenceBackToTheStart': 'Valence home',
   'screens.arrAppsPanel.describeArrAppState.versionVersion': 'Version {version}',
@@ -5709,8 +5701,12 @@ const ENGLISH = {
     'Enter your username or the email address on your account, and Valence will send you a link to set a new password.',
   'screens.forgotPassword.usernameOrEmail': 'Username or email',
   'screens.getStarted.addAProfilePicture': 'Add a profile picture',
+  'screens.getStarted.addProfiles': 'Add profiles',
+  'screens.getStarted.addWhoWatchesWithYou': 'Add who watches with you',
   'screens.getStarted.browseFilms': 'Browse films',
   'screens.getStarted.discoverMore': 'Discover more',
+  'screens.getStarted.everybodyGetsTheirOwnProfile':
+    'Everybody gets their own profile, history and favourites, and you can give each a PIN.',
   'screens.getStarted.favouritesHaveARow': 'Favourites get a row of their own on the home page.',
   'screens.getStarted.findSomethingToWatch': 'Find something to watch',
   'screens.getStarted.finishedOfTotal': '{finished}/{total}',
@@ -5778,6 +5774,8 @@ const ENGLISH = {
     'Give the household a name.',
   'screens.householdOnboarding.whatIsWrongWithTheName.keepItToNAMEMAXCharacters':
     'Keep it to {NAME_MAX} characters.',
+  'screens.householdOnboarding.whoElseWatchesHere':
+    'Who else watches here? Each person gets a profile of their own, with their own history and favourites. You can add more later from your account.',
   'screens.householdOnboarding.youHaveAPasskeyForThisAccount':
     'You have a passkey for this account. You can add more or rename it later in your security settings.',
   'screens.householdOnboarding.yourAccountHasNoPasswordOrPasskey':
@@ -5786,6 +5784,38 @@ const ENGLISH = {
     'Your name, your family’s, or whatever you call the TV.',
   'screens.householdOnboarding.youSignedInAWhileAgo':
     'You signed in a while ago. Add a passkey from your account settings, where you can confirm it’s you.',
+  'screens.householdProfiles.allowRequests': 'Allow requests',
+  'screens.householdProfiles.anAccountHoldsSixProfiles': 'An account can hold 6 profiles.',
+  'screens.householdProfiles.anybodyCanThenChooseName':
+    'Anybody using a device signed in to this account can then choose {name} without a PIN.',
+  'screens.householdProfiles.changeThePin': 'Change the PIN',
+  'screens.householdProfiles.eachChangeIsKeptAsYouMakeIt': 'Each change is kept as you make it.',
+  'screens.householdProfiles.eachProfileKeepsItsOwn':
+    'Everybody on this account gets a profile of their own, with their own history, favourites and progress. As the account’s owner, only you can add, remove, lock or limit them.',
+  'screens.householdProfiles.everythingNameWatchedGoes':
+    'Everything {name} watched goes with the profile: history, progress, favourites, ratings and hidden items. This can’t be undone.',
+  'screens.householdProfiles.librariesAndAges': 'Libraries and ages',
+  'screens.householdProfiles.makeNameTheOwner': 'Make {name} the owner?',
+  'screens.householdProfiles.makeOwner': 'Make owner',
+  'screens.householdProfiles.nameCanNoLongerAsk':
+    '{name} can no longer ask for anything to be added, until you allow it again.',
+  'screens.householdProfiles.noRequests': 'No requests',
+  'screens.householdProfiles.owner': 'Owner',
+  'screens.householdProfiles.pinForName': 'PIN for {name}',
+  'screens.householdProfiles.removeNamesPin': 'Remove {name}’s PIN?',
+  'screens.householdProfiles.removeThePin': 'Remove the PIN',
+  'screens.householdProfiles.setAPin': 'Set a PIN',
+  'screens.householdProfiles.stopNameRequesting': 'Stop {name} requesting?',
+  'screens.householdProfiles.stopRequests': 'Stop requests',
+  'screens.householdProfiles.theAccountsOwnLimitsStillApply':
+    'Anything the whole account is limited from stays limited here too.',
+  'screens.householdProfiles.theOwnerCanChangeTheAccount':
+    'The owner can change the account, its sign-in and its other profiles, and holds the account’s role. {name} becomes the owner, and the current owner becomes an ordinary profile.',
+  'screens.householdProfiles.theProfilesCouldNotBeRead':
+    'The profiles on this account couldn’t be read.',
+  'screens.householdProfiles.theProfilesOnThisAccount':
+    'The profiles on this account. Changes here apply at once, and the owner can change them too.',
+  'screens.householdProfiles.whatNameCanWatch': 'What {name} can watch',
   'screens.immersiveMusic.titleImmersive': '{title}, immersive',
   'screens.importWizard.arrImportStep.addAMapping': 'Add a mapping',
   'screens.importWizard.arrImportStep.addAnotherApp': 'Add another app',
@@ -6606,7 +6636,6 @@ const ENGLISH = {
   'screens.profileGate.passkeyFirst.useAPasskey': 'Use a passkey',
   'screens.profileGate.passkeyFirst.useThePasskeyYouSignIn':
     'Use your {name} passkey to sign in to the app.',
-  'screens.profileGate.pin': 'PIN',
   'screens.profileGate.readingWhoIsHere': 'Loading profiles',
   'screens.profileGate.signIn': 'Sign in',
   'screens.profileGate.signInWithAUsername': 'Sign in with a username',
@@ -6771,6 +6800,8 @@ const ENGLISH = {
   'screens.requests.titlePartLooks.notAskedFor': 'Not asked for',
   'screens.requests.useCatalogueFilters.startS': '{start}s',
   'screens.requests.useSample.thereIsNoSampleOfAlbum': 'There’s no sample of {album} to play.',
+  'screens.requestsPage.anAdministratorCanAllowIt':
+    'An administrator can turn it on for your account.',
   'screens.requestsPage.backToDiscover': 'Back to Discover',
   'screens.requestsPage.booksDiscover.booksFound': 'Books found',
   'screens.requestsPage.booksDiscover.noBooksFound': 'No books found',
@@ -6804,6 +6835,7 @@ const ENGLISH = {
   'screens.requestsPage.nothingInTheCataloguesMatches':
     'Nothing in the catalogues matches “{query}”.',
   'screens.requestsPage.onItsWayShelf.statusPercent': '{status} · {percent}%',
+  'screens.requestsPage.requestingIsOff': 'Requesting is off',
   'screens.requestsPage.requestsList.clearAFilterOrSearchFor':
     'Clear a filter, or search for something else.',
   'screens.requestsPage.requestsList.findSomethingOnDiscoverOrSearch':
@@ -6815,6 +6847,8 @@ const ENGLISH = {
   'screens.requestsPage.searchDiscover': 'Search Discover',
   'screens.requestsPage.shelfMoreCard.seeMore': 'See more',
   'screens.requestsPage.studiosRail.studios': 'Studios',
+  'screens.requestsPage.theOwnerCanAllowIt':
+    'Whoever owns this account can turn it on for your profile, under Profiles.',
   'screens.requestsPage.titleShelf.seeAllOfTitle': 'See all of {title}',
   'screens.requestsPanel.describeRequestsSolver.cantStart': 'Can’t start',
   'screens.requestsPanel.describeRequestsSolver.failedProblem': 'Failed: {problem}.',
@@ -7233,6 +7267,16 @@ const ENGLISH = {
   'screens.welcomeToValence.householdIsReadyEverythingElseCan':
     '{household} is ready. You can change everything else whenever you like.',
   'screens.welcomeToValence.startWatching': 'Start watching',
+  'screens.whoIsWatching.choosePin': 'Choose a PIN',
+  'screens.whoIsWatching.enterThePasswordToChoose':
+    'Enter the account’s password, then choose a new PIN for {name}.',
+  'screens.whoIsWatching.forgotThePin': 'Forgot the PIN?',
+  'screens.whoIsWatching.fourToEightDigits': '4 to 8 digits.',
+  'screens.whoIsWatching.hasAPin': 'Has a PIN',
+  'screens.whoIsWatching.newPin': 'New PIN',
+  'screens.whoIsWatching.pin': 'PIN',
+  'screens.whoIsWatching.thosePinsDoNotMatch': 'Those PINs don’t match.',
+  'screens.whoIsWatching.typeThePinAgain': 'Type the PIN again',
   'screens.windowBar.goForward': 'Go forward',
   'screens.windowBar.maximise': 'Maximise',
   'screens.windowBar.minimise': 'Minimise',
@@ -7686,6 +7730,7 @@ const ENGLISH = {
     'The connection was declined. Go back to Valence and try again.',
   'server.plugins.youCanCloseThisAndReturn': 'You can close this and return to Valence.',
   'server.profile.thatProfileCouldNotBeAdded': 'Couldn’t add the profile.',
+  'server.profiles.aPinWasGuessedWrong': '{name}’s PIN was entered wrongly',
   'server.profiles.databaseProfileService.me': 'Me',
   'server.profiles.describePictureFault.aPictureHasToBeA':
     'The picture must be a JPEG, PNG, WebP, AVIF or GIF.',
@@ -7696,6 +7741,8 @@ const ENGLISH = {
   'server.profiles.describePictureFault.thatFileCouldNotBeRead':
     'Couldn’t read the file as a picture.',
   'server.profiles.movePhotographsOnce.itCouldNotBeMoved': 'Couldn’t move it.',
+  'server.profiles.somebodyGotNamesPinWrong':
+    'Somebody typed {name}’s PIN wrongly too many times, so Valence is making them wait before trying again. If that wasn’t somebody in your household, change the PIN.',
   'server.realtime.realtimeHandler.unknownDevice': 'Unknown device',
   'server.reencode.databaseReencodeService.aFileThatIsNoLonger':
     'A file that is no longer in the library',
@@ -7848,6 +7895,7 @@ const ENGLISH = {
   'server.webhooks.discordEmbedFor.mountPointHasRoomAgain': '{mountPoint} has free space again',
   'server.webhooks.discordEmbedFor.mountPointIsRunningOutOfRoom':
     '{mountPoint} is running out of space',
+  'server.webhooks.discordEmbedFor.nameIsWatching': '{name} is watching',
   'server.webhooks.discordEmbedFor.nameNowHasAnAccount': '{name} created an account',
   'server.webhooks.discordEmbedFor.nameSAccountWasDeleted': '{name}’s account was deleted',
   'server.webhooks.discordEmbedFor.nameSignedIn': '{name} signed in',
@@ -7883,6 +7931,9 @@ const ENGLISH = {
   'server.webhooks.formatWebhookBody.mountPointIsRunningOutOfRoom':
     '{mountPoint} is running out of space — {availableBytes} free of {totalBytes}.',
   'server.webhooks.formatWebhookBody.namedAndMore': '{named} and {count} more',
+  'server.webhooks.formatWebhookBody.nameIsWatchingOnDevice': '{name} is watching on {deviceLabel}',
+  'server.webhooks.formatWebhookBody.nameIsWatchingOnDeviceFromAddress':
+    '{name} is watching on {deviceLabel}, from {address}',
   'server.webhooks.formatWebhookBody.nameNoLongerHasRole': '{name} was removed from {role}.',
   'server.webhooks.formatWebhookBody.nameNowHasAnAccount': '{name} created an account.',
   'server.webhooks.formatWebhookBody.nameSAccountWasDeleted': '{name}’s account was deleted.',
@@ -7954,7 +8005,6 @@ const ENGLISH = {
   'tv.about.describeThisBuild.androidApiLevel': 'Android API {level}',
   'tv.about.describeThisBuild.valenceVersionCommit': 'Valence {version} ({commit})',
   'tv.account.allRequests': 'All requests',
-  'tv.account.chooseAnotherProfile': 'Choose another profile',
   'tv.account.madeForComputersSomeTvs':
     'It’s made for computers, so some TVs show a blank screen. You’ll be asked to keep it, and if you don’t within 10 seconds, Valence goes back to the TV layout.',
   'tv.account.stayOnTheTvLayout': 'Stay on the TV layout',

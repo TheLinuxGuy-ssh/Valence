@@ -2,7 +2,7 @@ import { Icon } from '@ValenceUI/Icon';
 import { lightsOfAColour } from '@ValenceScreens/library/lightsOfAColour';
 import { profileAvatarUrl } from '@ValenceContracts/schemas/ViewerProfile';
 import { useArtworkLights } from '@ValenceScreens/music/useArtworkLights';
-import { Logo } from '@ValenceUI/Logo';
+import { WayInMark } from '@ValenceScreens/components/WayInMark/WayInMark';
 import { TelevisionHandoff } from '@ValenceScreens/components/TelevisionHandoff/TelevisionHandoff';
 import { WayInBackground } from '@ValenceScreens/components/WayInBackground/WayInBackground';
 import { ForgotPassword } from '@ValenceScreens/components/ForgotPassword/ForgotPassword';
@@ -42,14 +42,12 @@ import { ProfileFace } from '@ValenceScreens/components/ProfileFace/ProfileFace'
 import { TwoFactorChallenge } from '@ValenceScreens/components/TwoFactorChallenge/TwoFactorChallenge';
 import { isPasskeySupported } from '@ValenceScreens/passkeys/isPasskeySupported';
 import { authenticateWithPasskey, signInWithUsernameOrEmail } from '@ValenceClient/session/auth';
-import type { ViewerProfile, WayInProfile } from '@ValenceContracts/schemas/ViewerProfile';
+import type { ViewerProfile } from '@ValenceContracts/schemas/ViewerProfile';
 import { PasskeyFirst } from './components/PasskeyFirst/PasskeyFirst';
 import type { ProfileGateProps } from './ProfileGate.types';
 import { Badge } from '@ValenceUI/Badge';
 import { useIsDemoServer } from '@ValenceClient/about/useIsDemoServer';
 import { say } from '@ValenceI18n/say';
-
-const OURS = 'valence';
 
 const PER_PAGE = 10;
 
@@ -126,7 +124,7 @@ const ProfileGate = ({
   const everyone = asking.data?.profiles ?? null;
   const splashscreen = asking.data?.splashscreen ?? null;
   const message = asking.data?.message ?? null;
-  const [chosen, setChosen] = useState<WayInProfile | null>(null);
+  const [chosen, setChosen] = useState<ViewerProfile | null>(null);
   const chosenFace = useRef<HTMLSpanElement>(null);
 
   /**
@@ -185,9 +183,6 @@ const ProfileGate = ({
     };
   }, []);
 
-  const isAPin = chosen?.signsInWith === 'pin';
-  const isATap = chosen?.signsInWith === 'nothing';
-  const isOurs = name.toLowerCase() === OURS;
   const facesRef = useRef(new Map<string, HTMLButtonElement>());
   const prefersReducedMotion = useReducedMotionConfig();
   const { theme, choose } = useTheme();
@@ -305,13 +300,7 @@ const ProfileGate = ({
     setIsSubmitting(true);
     setProblem(null);
 
-    settle(
-      await signInAsProfile(
-        chosen.id,
-        password,
-        isAPin ? say('error.children.thatPinIsWrong') : undefined,
-      ),
-    );
+    settle(await signInAsProfile(chosen.id, password));
   };
 
   const submitAddress = async () => {
@@ -412,31 +401,7 @@ const ProfileGate = ({
         />
       </motion.div>
 
-      <motion.p
-        layoutId="valence-mark"
-        initial={{ opacity: 0, scale: prefersReducedMotion === true ? 1 : 0.94 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{
-          opacity: { duration: 0.7, ease: 'easeOut' },
-          scale: { duration: 0.7, ease: 'easeOut' },
-          layout: move,
-        }}
-        className={cn('flex items-center gap-1', isTitleOver ? '' : 'absolute')}
-      >
-        {isOurs ? (
-          <Logo size={isTitleOver ? 44 : 128} isSolid label={name} />
-        ) : (
-          <span
-            className={cn(
-              'bg-gradient-to-br from-text via-text to-accent bg-clip-text font-semibold',
-              'tracking-[-0.05em] text-transparent',
-              isTitleOver ? 'text-[clamp(1.75rem,4vw,2.5rem)]' : 'text-[clamp(3rem,12vw,7rem)]',
-            )}
-          >
-            {name}
-          </span>
-        )}
-      </motion.p>
+      <WayInMark name={name} isSmall={isTitleOver} className={isTitleOver ? '' : 'absolute'} />
 
       {!isTitleOver ? null : asking.isError || isNaming ? (
         <div className="flex w-full max-w-sm flex-col items-center gap-6">
@@ -606,7 +571,7 @@ const ProfileGate = ({
                           setChosen(profile);
                           setProblem(null);
 
-                          if (isDemoServer || profile.signsInWith === 'nothing') {
+                          if (isDemoServer) {
                             setIsSubmitting(true);
                             void signInAsProfile(profile.id, '').then(settle);
                           }
@@ -697,13 +662,7 @@ const ProfileGate = ({
                 {chosen.name}
               </motion.h1>
 
-              {isATap ? (
-                problem === null ? (
-                  <Spinner label={say('screens.adminArea.settingsPanel.signingIn')} size="md" />
-                ) : (
-                  <p className="text-center text-sm text-danger">{problem}</p>
-                )
-              ) : needsCode ? (
+              {needsCode ? (
                 <motion.div
                   initial={{ opacity: 0, y: prefersReducedMotion === true ? 0 : 12 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -725,12 +684,13 @@ const ProfileGate = ({
                   }}
                 >
                   <TextField
-                    label={isAPin ? say('screens.profileGate.pin') : say('common.password')}
+                    label={say('common.password')}
                     type="password"
                     size="lg"
+
                     value={password}
                     onValueChange={setPassword}
-                    autoComplete={isAPin ? 'off' : 'current-password'}
+                    autoComplete="current-password"
                     {...(problem === null ? {} : { error: problem })}
                   />
 
@@ -745,7 +705,7 @@ const ProfileGate = ({
                     <Icon of={ChevronRightIcon} size={18} />
                   </Button>
 
-                  {isAPin || !isPasskeySupported() ? null : (
+                  {!isPasskeySupported() ? null : (
                     <Button
                       variant="ghost"
                       size="sm"
@@ -761,7 +721,7 @@ const ProfileGate = ({
                 </motion.form>
               )}
 
-              {needsCode || isAPin || isATap ? null : <ForgotPassword />}
+              {needsCode ? null : <ForgotPassword />}
 
               <motion.div
                 initial={{ opacity: 0 }}

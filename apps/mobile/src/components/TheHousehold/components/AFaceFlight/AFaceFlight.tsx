@@ -6,14 +6,15 @@ import { APicture } from '@ValenceMobile/components/APicture/APicture';
 import { FONTS } from '@ValenceMobile/theme/FONTS';
 import { EASINGS } from '@ValenceMobile/theme/EASINGS';
 import type { AFaceFlightProps } from './AFaceFlight.types';
+import { backdropOfAFace } from '@ValenceMobile/components/AFace/backdropOfAFace';
+import { useTheColours } from '@ValenceMobile/theme/useTheColours';
+import { FACE_ROUNDNESS } from '@ValenceMobile/components/AFace/FACE_ROUNDNESS';
 
 const LIFTS_BY = 18;
 
 const LIFTS_TO = 1.06;
 
 const LIFTS_OVER = 360;
-
-const ROUNDNESS = 0.06;
 
 const GIVES_UP_AFTER = 4000;
 
@@ -32,20 +33,24 @@ const styles = StyleSheet.create({
 });
 
 /**
- * Somebody's face on its way from the password to the account tab once they are in: lifted off
- * the screen, rounded into the circle the tab draws, and then sprung down into the tab's place,
- * where the tab's own face takes over from it in the same moment. It waits in the air until the tab says where it is, and
- * gives up and fades if it never does.
+ * Somebody's face on its way from the password once they are in: lifted off the screen, rounded
+ * into the circle the account tab draws, and sprung down into the tab's place, where the tab's own
+ * face takes over from it in the same moment. Where the phone first asks who is watching, it lands
+ * on their face there instead, easing back into its rounded square on the way down. It waits in the
+ * air until it is told where to land, and gives up and fades if it never is.
  *
  * @param profile - Whose face.
  * @param from - Where it was on the password screen.
  * @param to - Where the tab shows it, once that is known.
+ * @param isOntoATile - Whether it lands on a face drawn as a rounded square rather than the tab's
+ *   circle.
  * @param onLanded - Told once it has landed and faded, or given up.
  */
-const AFaceFlight = ({ profile, from, to, onLanded }: AFaceFlightProps) => {
+const AFaceFlight = ({ profile, from, to, isOntoATile, onLanded }: AFaceFlightProps) => {
+  const colours = useTheColours();
   const [moved] = useState(() => new Animated.ValueXY({ x: 0, y: 0 }));
   const [grown] = useState(() => new Animated.Value(1));
-  const [round] = useState(() => new Animated.Value(Math.round(from.width * ROUNDNESS)));
+  const [round] = useState(() => new Animated.Value(Math.round(from.width * FACE_ROUNDNESS)));
   const [seen] = useState(() => new Animated.Value(1));
   const [isLifted, setIsLifted] = useState(false);
   const [missing, setMissing] = useState(false);
@@ -100,6 +105,15 @@ const AFaceFlight = ({ profile, from, to, onLanded }: AFaceFlightProps) => {
       };
     }
 
+    if (isOntoATile) {
+      Animated.timing(round, {
+        toValue: Math.round(from.width * FACE_ROUNDNESS),
+        duration: LIFTS_OVER,
+        easing: EASINGS.inOutCubic,
+        useNativeDriver: false,
+      }).start();
+    }
+
     Animated.parallel([
       Animated.spring(moved, {
         toValue: {
@@ -123,7 +137,7 @@ const AFaceFlight = ({ profile, from, to, onLanded }: AFaceFlightProps) => {
     });
 
     return undefined;
-  }, [isLifted, to, from, moved, grown, seen, onLanded]);
+  }, [isLifted, to, isOntoATile, from, moved, grown, round, seen, onLanded]);
 
   return (
     <Animated.View
@@ -144,8 +158,12 @@ const AFaceFlight = ({ profile, from, to, onLanded }: AFaceFlightProps) => {
         style={[
           styles.face,
           {
-            backgroundColor:
-              picture?.isDrawn === false && !missing ? 'transparent' : profile.colour,
+            backgroundColor: backdropOfAFace(
+              profile.colour,
+              picture !== null && !missing,
+              colours.text,
+            ),
+            borderCurve: 'continuous',
             borderRadius: round,
           },
         ]}

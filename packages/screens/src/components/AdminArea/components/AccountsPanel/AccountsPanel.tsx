@@ -31,6 +31,8 @@ import { DialogFooter } from '@ValenceUI/DialogFooter';
 import { DialogTitle } from '@ValenceUI/DialogTitle';
 import { Switch } from '@ValenceUI/Switch';
 import { TabPanel } from '@ValenceUI/TabPanel';
+import { HouseholdProfiles } from '@ValenceScreens/components/HouseholdProfiles/HouseholdProfiles';
+import { LibraryReachList } from '@ValenceScreens/components/LibraryReachList/LibraryReachList';
 import { TabRow } from '@ValenceUI/TabRow';
 import { Tabs } from '@ValenceUI/Tabs';
 import { ScopedField } from '@ValenceUI/ScopedField';
@@ -81,7 +83,6 @@ import type { Avatar } from '@ValenceContracts/schemas/ViewerProfile';
 import type { AccountAvatarDraft } from './components/AccountAvatarPicker/AccountAvatarPicker.types';
 import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
 import { setCeiling, setLibraryAccess } from '@ValenceClient/admin/fetchLibraryAccess';
-import { LibraryReachList } from '@ValenceScreens/components/LibraryReachList/LibraryReachList';
 import { say } from '@ValenceI18n/say';
 import { sayCount } from '@ValenceI18n/sayCount';
 import { useAdminCommand } from '@ValenceScreens/admin/useAdminCommand';
@@ -119,7 +120,15 @@ const NO_ROLES: Role[] = [];
 
 const NO_SHELVES: LibraryReach[] = [];
 
-const EDIT_TABS = ['profile', 'signIn', 'devices', 'streaming', 'roles', 'libraries'] as const;
+const EDIT_TABS = [
+  'profile',
+  'profiles',
+  'signIn',
+  'devices',
+  'streaming',
+  'roles',
+  'libraries',
+] as const;
 
 type EditTab = (typeof EDIT_TABS)[number];
 
@@ -994,6 +1003,7 @@ const AccountsPanel = () => {
                     {
                       items: [
                         { id: 'profile', label: say('common.profile') },
+                        { id: 'profiles', label: say('common.profiles') },
                         { id: 'signIn', label: say('screens.adminArea.settingsPanel.signingIn') },
                         { id: 'devices', label: say('common.devices') },
                         {
@@ -1180,6 +1190,10 @@ const AccountsPanel = () => {
                 </div>
               </TabPanel>
 
+              <TabPanel value="profiles" travel={travel}>
+                <HouseholdProfiles accountId={accountId} />
+              </TabPanel>
+
               <TabPanel value="devices" travel={travel}>
                 <AccountDevices accountId={accountId} />
               </TabPanel>
@@ -1255,8 +1269,23 @@ const AccountsPanel = () => {
                   <LibraryReachList
                     shelves={draftLibraryAccess}
                     whose={picked.name}
-                    onChange={updateShelf}
+                    onChange={(shelf, changes) => {
+                      updateShelf(shelf.id, changes);
+                    }}
                   />
+
+                  {draftLibraryAccess.length === 0 ||
+                  draftLibraryAccess.some((shelf) => shelf.mayView) ? null : (
+                    <p className="pt-2 text-xs text-text-muted">
+                      {say('screens.adminArea.accountsPanel.theyCanReachNothingAtAll')}
+                    </p>
+                  )}
+
+                  {draftLibraryAccess.every((shelf) => shelf.maximumAge === null) ? null : (
+                    <p className="pt-2 text-xs text-text-muted">
+                      {say('screens.adminArea.accountsPanel.aLimitAppliesToThisAccount')}
+                    </p>
+                  )}
                 </FormField>
               </TabPanel>
             </DialogContent>

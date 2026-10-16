@@ -142,9 +142,67 @@ describe('AppShell', () => {
     expect(onSwitchAccount).toHaveBeenCalledWith('t2');
 
     await user.click(screen.getByRole('button', { name: 'Account' }));
-    await user.click(await screen.findByRole('menuitem', { name: 'Add another account' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Sign in to another account' }));
 
     expect(onAddAccount).toHaveBeenCalledOnce();
+  });
+
+  it('offers the owner the account’s profiles, to add or change them', async () => {
+    const user = userEvent.setup();
+    const onManageProfiles = vi.fn();
+
+    draw({ onManageProfiles });
+
+    await user.click(screen.getByRole('button', { name: 'Account' }));
+    await user.click(await screen.findByRole('menuitem', { name: 'Manage profiles' }));
+
+    expect(onManageProfiles).toHaveBeenCalledOnce();
+  });
+
+  it('offers nobody but the owner the account’s profiles', async () => {
+    const user = userEvent.setup();
+
+    draw();
+
+    await user.click(screen.getByRole('button', { name: 'Account' }));
+
+    expect(await screen.findAllByRole('menuitem')).not.toHaveLength(0);
+    expect(screen.queryByRole('menuitem', { name: 'Manage profiles' })).not.toBeInTheDocument();
+  });
+
+  it('lists the account’s profiles to move between, marking whoever is watching', async () => {
+    const user = userEvent.setup();
+    const onChooseProfile = vi.fn();
+
+    draw({
+      profiles: [
+        { id: 'p-1', name: 'Sam', face: null, isCurrent: true },
+        { id: 'p-2', name: 'Alex', face: null, isCurrent: false },
+      ],
+      onChooseProfile,
+    });
+
+    await user.click(screen.getByRole('button', { name: 'Account' }));
+
+    expect(await screen.findByRole('menuitem', { name: 'Sam' })).toHaveAttribute(
+      'aria-current',
+      'true',
+    );
+
+    await user.click(screen.getByRole('menuitem', { name: 'Alex' }));
+
+    expect(onChooseProfile).toHaveBeenCalledWith('p-2');
+  });
+
+  it('lists no profiles where there is nobody else', async () => {
+    const user = userEvent.setup();
+
+    draw({ profiles: [{ id: 'p-1', name: 'Sam', face: null, isCurrent: true }] });
+
+    await user.click(screen.getByRole('button', { name: 'Account' }));
+    await screen.findByRole('menuitem', { name: 'My account' });
+
+    expect(screen.queryByRole('menuitem', { name: 'Sam' })).not.toBeInTheDocument();
   });
 
   it('keeps My Account and Admin together, apart from the rest of the menu', async () => {

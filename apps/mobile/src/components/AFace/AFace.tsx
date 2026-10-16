@@ -13,12 +13,13 @@ import { LETTER_FACES } from '@ValenceMobile/theme/LETTER_FACES';
 import type { ViewStyle } from 'react-native';
 import type { Avatar } from '@ValenceContracts/schemas/ViewerProfile';
 import type { AFaceProps } from './AFace.types';
+import { backdropOfAFace } from '@ValenceMobile/components/AFace/backdropOfAFace';
+import { useTheColours } from '@ValenceMobile/theme/useTheColours';
+import { FACE_ROUNDNESS } from '@ValenceMobile/components/AFace/FACE_ROUNDNESS';
 
 const SIDE = 96;
 
 const LARGE_SIDE = 136;
-
-const ROUNDNESS = 0.06;
 
 const styles = StyleSheet.create({
   face: { alignItems: 'center', gap: 8 },
@@ -74,6 +75,7 @@ const framed = (avatar: Avatar | null, side: number): ViewStyle | null => {
  *   flying into its place.
  */
 const AFace = ({ profile, picked = null, isLarge = false, tileMotion }: AFaceProps) => {
+  const colours = useTheColours();
   const [told, setTold] = useState<{ uri: string; seen: 'here' | 'missing' } | null>(null);
   const found = thePictureFor(profile, picked);
   const seen =
@@ -100,8 +102,9 @@ const AFace = ({ profile, picked = null, isLarge = false, tileMotion }: AFacePro
         style={[
           styles.tile,
           {
-            backgroundColor: isShowing && !picture.isDrawn ? 'transparent' : profile.colour,
-            borderRadius: Math.round(side * ROUNDNESS),
+            backgroundColor: backdropOfAFace(profile.colour, isShowing, colours.text),
+            borderCurve: 'continuous',
+            borderRadius: Math.round(side * FACE_ROUNDNESS),
             height: side,
             width: side,
           },

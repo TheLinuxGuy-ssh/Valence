@@ -1,3 +1,6 @@
+import { ChooseProfile } from '@ValenceTv/screens/ChooseProfile/ChooseProfile';
+import { useProfileChoice } from '@ValenceClient/profiles/useProfileChoice';
+import { useServerHas } from '@ValenceClient/about/useServerHas';
 import { useCallback, useEffect, useState } from 'react';
 import type { ReactNode } from 'react';
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
@@ -105,6 +108,10 @@ const TheWayIn = () => {
     setFlights((was) => (was === null || was.face === null ? null : { ...was, mark: null }));
   }, []);
   const session = useQuery({ ...sessionQueries.who(), enabled: server !== null });
+  const asksWhoIsWatching = useServerHas('profiles.chosenPerSession') !== false;
+  const choice = useProfileChoice(
+    asksWhoIsWatching && server !== null ? (session.data?.id ?? null) : null,
+  );
 
   const toFaces = useCallback(() => {
     setStep({ kind: 'faces' });
@@ -178,6 +185,31 @@ const TheWayIn = () => {
             cache.clear();
             setServer(address);
           }}
+        />
+      );
+    }
+
+    if (session.data !== null && choice.state.kind === 'reading') {
+      return (
+        <View style={styles.waiting}>
+          <ActivityIndicator size="large" color={tokens.colours.text} />
+        </View>
+      );
+    }
+
+    if (session.data !== null && choice.state.kind === 'choosing') {
+      return (
+        <ChooseProfile
+          profiles={choice.state.profiles}
+          onChosen={choice.chose}
+          onSignOut={() => {
+            void signOutHere().finally(() => {
+              void cache.invalidateQueries();
+            });
+          }}
+          isArriving={flights !== null}
+          onFaceAt={landFace}
+          onMarkAt={landMark}
         />
       );
     }

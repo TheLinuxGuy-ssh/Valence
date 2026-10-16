@@ -12,6 +12,21 @@ type ProfileRequest = {
   prefersBestCopy?: boolean;
 };
 
+type ProfileStanding = {
+  id: string;
+  userId: string;
+  name: string;
+  isOwner: boolean;
+  mayRequest: boolean;
+  pinHash: string | null;
+  pinFailures: number;
+  pinLockedUntil: Date | null;
+};
+
+type PinTry =
+  | { kind: 'locked'; until: Date }
+  | { kind: 'counted'; failures: number; lockedUntil: Date | null };
+
 type ProfileService = {
   list: (userId: string) => Promise<ViewerProfile[]>;
   ensureDefault: (userId: string, name: string) => Promise<ViewerProfile>;
@@ -24,6 +39,16 @@ type ProfileService = {
   listEveryone: () => Promise<ViewerProfile[]>;
   findSignIn: (profileId: string) => Promise<{ email: string; username: string | null } | null>;
   accountOf: (profileId: string) => Promise<string | null>;
+  standingOf: (profileId: string) => Promise<ProfileStanding | null>;
+  setPin: (profileId: string, pinHash: string | null) => Promise<void>;
+  setPinTries: (profileId: string, failures: number, lockedUntil: Date | null) => Promise<void>;
+  claimAPinTry: (
+    profileId: string,
+    at: Date,
+    lockFor: (failures: number) => Date | null,
+  ) => Promise<PinTry | null>;
+  setMayRequest: (profileId: string, mayRequest: boolean) => Promise<void>;
+  handOver: (userId: string, profileId: string) => Promise<boolean>;
   savePhoto: (
     userId: string,
     profileId: string,
@@ -31,4 +56,4 @@ type ProfileService = {
   ) => Promise<PictureFault | null>;
 };
 
-export type { ProfileService };
+export type { PinTry, ProfileRequest, ProfileService, ProfileStanding };

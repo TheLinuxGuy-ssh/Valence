@@ -29,11 +29,12 @@ import {
   Home as HomeFilledIcon,
   Inbox as InboxFilledIcon,
   Laptop as LaptopFilledIcon,
+  LogIn as LogInFilledIcon,
   LogOut as LogOutFilledIcon,
-  UserPlus as UserPlusFilledIcon,
+  UserCog as UserCogFilledIcon,
   Users as UsersFilledIcon,
   MusicNote as MusicNoteFilledIcon,
-  Question as QuestionFilledIcon,
+  CircleQuestion as CircleQuestionFilledIcon,
   Search as SearchFilledIcon,
   Settings as SettingsFilledIcon,
   Tv as TvFilledIcon,
@@ -209,6 +210,10 @@ const SECTION_LABELS: Record<ShellSection, string> = {
  * @param otherAccounts - The other accounts signed in on this browser, offered to move to.
  * @param onSwitchAccount - Told which of them to move to.
  * @param onAddAccount - Told to sign another account in beside this one.
+ * @param profiles - The account's profiles, listed at the top of the account menu to move between,
+ *   where it has more than one.
+ * @param onChooseProfile - Told which of them to move to.
+ * @param onManageProfiles - Told to open the account's profiles, offered to the account's owner.
  * @param onSurprise - Told to choose something at random, optionally from one kind of library.
  * @param libraryKinds - Which kinds of library there are, which decides whether the dice offer a
  *   menu or simply act.
@@ -250,6 +255,9 @@ const AppShell = ({
   otherAccounts = [],
   onSwitchAccount,
   onAddAccount,
+  profiles = [],
+  onChooseProfile,
+  onManageProfiles,
   onSurprise,
   libraryKinds,
   libraryChoices = {},
@@ -449,6 +457,37 @@ const AppShell = ({
           look={accountName === undefined ? 'face' : 'pill'}
           trigger={face}
           groups={[
+            ...(profiles.length < 2 && onManageProfiles === undefined
+              ? []
+              : [
+                  {
+                    items: [
+                      ...(profiles.length < 2
+                        ? []
+                        : profiles.map((profile) => ({
+                            id: `profile-${profile.id}`,
+                            label: profile.name,
+                            icon: profile.face,
+                            isCurrent: profile.isCurrent,
+                            onChoose: () => {
+                              if (!profile.isCurrent) {
+                                onChooseProfile?.(profile.id);
+                              }
+                            },
+                          }))),
+                      ...(onManageProfiles === undefined
+                        ? []
+                        : [
+                            {
+                              id: 'manage-profiles',
+                              label: say('screens.appShell.manageProfiles'),
+                              icon: <Icon of={UserCogFilledIcon} size={16} />,
+                              onChoose: onManageProfiles,
+                            },
+                          ]),
+                    ],
+                  },
+                ]),
             ...[
               [
                 ...(onOpenFavourites === undefined
@@ -492,7 +531,7 @@ const AppShell = ({
                 {
                   id: 'help',
                   label: say('common.help'),
-                  icon: <Icon of={QuestionFilledIcon} size={16} />,
+                  icon: <Icon of={CircleQuestionFilledIcon} size={16} />,
                   onChoose: () => {
                     window.open(HELP_ADDRESS, '_blank', 'noopener,noreferrer');
                   },
@@ -514,7 +553,6 @@ const AppShell = ({
               .filter((items) => items.length > 0)
               .map((items) => ({ items })),
             {
-              name: say('common.theme'),
               items: [],
               control: (
                 <SegmentedRow
@@ -534,7 +572,6 @@ const AppShell = ({
               ),
             },
             {
-              name: say('common.movement'),
               items: [],
               control: (
                 <SegmentedRow
@@ -571,8 +608,8 @@ const AppShell = ({
                         : [
                             {
                               id: 'add-account',
-                              label: say('screens.appShell.addAnotherAccount'),
-                              icon: <Icon of={UserPlusFilledIcon} size={16} />,
+                              label: say('screens.appShell.signInToAnotherAccount'),
+                              icon: <Icon of={LogInFilledIcon} size={16} />,
                               onChoose: onAddAccount,
                             },
                           ]),

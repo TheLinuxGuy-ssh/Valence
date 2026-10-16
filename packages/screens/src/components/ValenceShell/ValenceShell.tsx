@@ -6,6 +6,8 @@ import { Outlet, useNavigate } from '@tanstack/react-router';
 import { AnimatePresence, motion } from 'motion/react';
 import { groupVariants } from '@ValenceUI/animations/reveal';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { switchToProfile } from '@ValenceClient/profiles/switchToProfile';
+import { profileQueries } from '@ValenceClient/query/profileQueries';
 import { AppShell } from '@ValenceScreens/components/AppShell/AppShell';
 import { ShowDialog } from '@ValenceScreens/components/ShowDialog/ShowDialog';
 import { MediaDetailDialog } from '@ValenceScreens/components/MediaDetailDialog/MediaDetailDialog';
@@ -80,6 +82,7 @@ import { useRequestableKinds } from '@ValenceClient/requests/useRequestableKinds
  */
 const ValenceShell = () => {
   const cache = useQueryClient();
+  const profileList = useQuery(profileQueries.list());
   const { place, go, replace, hrefOf } = usePlace();
   const navigate = useNavigate();
   const [sendingToTv, setSendingToTv] = useState<{ media: MediaSummary; seconds: number } | null>(
@@ -350,6 +353,26 @@ const ValenceShell = () => {
         onAddAccount={() => {
           setAddingAnotherAccount(true);
         }}
+        profiles={(profileList.data?.profiles ?? []).map((profile) => ({
+          id: profile.id,
+          name: profile.name,
+          face: <ProfileFace profile={profile} className="size-5 shrink-0 text-[0.5rem]" />,
+          isCurrent: profile.id === watcher?.id,
+        }))}
+        onChooseProfile={(profileId) => {
+          const profile = profileList.data?.profiles.find((each) => each.id === profileId);
+
+          if (profile !== undefined) {
+            void switchToProfile(cache, profile);
+          }
+        }}
+        {...(watcher?.isOwner === true
+          ? {
+              onManageProfiles: () => {
+                go({ account: 'profiles' });
+              },
+            }
+          : {})}
         {...(watcher === null
           ? {}
           : {

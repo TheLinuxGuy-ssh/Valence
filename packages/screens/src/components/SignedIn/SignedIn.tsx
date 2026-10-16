@@ -15,6 +15,8 @@ import { HouseholdOnboarding } from '@ValenceScreens/components/HouseholdOnboard
 import { AnnouncementBanner } from '@ValenceScreens/components/AnnouncementBanner/AnnouncementBanner';
 import { GetStartedHost } from '@ValenceScreens/components/GetStartedHost/GetStartedHost';
 import { ProfileGate } from '@ValenceScreens/components/ProfileGate/ProfileGate';
+import { WhoIsWatching } from '@ValenceScreens/components/WhoIsWatching/WhoIsWatching';
+import { useProfileChoice } from '@ValenceClient/profiles/useProfileChoice';
 import { SetupWizard } from '@ValenceScreens/components/SetupWizard/SetupWizard';
 import { SplashScreen } from '@ValenceUI/SplashScreen';
 import { shellContext } from '@ValenceClient/shell/shellContext';
@@ -25,6 +27,7 @@ import { useWatchParty } from '@ValenceClient/party/useWatchParty';
 import { setHomeLights } from '@ValenceScreens/library/homeLights';
 import { PARTY_NOTICE_LINGERS_MS } from '@ValenceClient/party/PARTY_NOTICE_LINGERS_MS';
 import { profileQueries } from '@ValenceClient/query/profileQueries';
+import { useEndListeningWithTheProfile } from '@ValenceClient/profiles/useEndListeningWithTheProfile';
 import { householdQueries } from '@ValenceClient/query/householdQueries';
 import { platformInUse } from '@ValenceClient/platform/installPlatform';
 import {
@@ -50,6 +53,7 @@ import { signedInOnThisPage } from '@ValenceScreens/phone/signedInOnThisPage';
 import type { SignedInProps } from './SignedIn.types';
 import { say } from '@ValenceI18n/say';
 import type { ViewerProfile } from '@ValenceContracts/schemas/ViewerProfile';
+import { useSignOut } from '@ValenceScreens/session/useSignOut';
 
 const SPLASH_LEAVES_AT_MOST_MS = 1500;
 
@@ -133,13 +137,20 @@ const SignedIn = ({ title }: SignedInProps) => {
   const isFinishingSetup =
     serverSetup.data?.isFlowOpen === true && mine.data?.isAdministrator === true;
 
-  const watched = useQuery({ ...viewingQueries.progress(), enabled: user !== null });
+  const choice = useProfileChoice(user?.id ?? null);
+  const signOut = useSignOut();
+
+  const watched = useQuery({
+    ...viewingQueries.progress(),
+    enabled: user !== null && choice.state.kind === 'chosen',
+  });
 
   const isWaiting =
     session.isPending ||
     isPageReading ||
     (user !== null &&
-      (settingUp.isPending ||
+      (choice.state.kind === 'reading' ||
+        settingUp.isPending ||
         serverSetup.isPending ||
         (serverSetup.data?.isFlowOpen === true && mine.isPending)));
 
@@ -209,6 +220,8 @@ const SignedIn = ({ title }: SignedInProps) => {
   const watching = useQuery({ ...profileQueries.watching(), enabled: user !== null });
 
   const watcher = watching.data ?? null;
+
+  useEndListeningWithTheProfile(user?.id ?? null, watcher?.id ?? null);
 
   const everyone = useQuery({
     ...sessionQueries.everyone(),
@@ -449,7 +462,17 @@ const SignedIn = ({ title }: SignedInProps) => {
                 void refresh();
               }}
             />
-          ) : unfinished === null ? (
+          ) : choice.state.kind === 'reading' ? null : choice.state.kind === 'choosing' ? (
+            <WhoIsWatching
+              name={title}
+              profiles={choice.state.profiles}
+              askingFor={choice.state.askingFor}
+              onChosen={choice.chose}
+              onSignOut={() => {
+                void signOut();
+              }}
+            />
+          ) : unfinished === null || watcher?.isOwner === false ? (
             <>
               <Outlet />
 

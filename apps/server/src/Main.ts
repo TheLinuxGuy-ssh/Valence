@@ -85,7 +85,12 @@ import { createAccount } from '@ValenceServer/auth/createAccount';
 import { createAccountWithoutPassword } from '@ValenceServer/accounts/createAccountWithoutPassword';
 import type { AccountWithoutPasswordRequest } from '@ValenceServer/accounts/createAccountWithoutPassword';
 import { createDatabaseSetupLinkService } from '@ValenceServer/accounts/setupLinks/createDatabaseSetupLinkService';
-import { createDatabaseChildAccountService } from '@ValenceServer/children/createDatabaseChildAccountService';
+import { createDatabaseChosenProfiles } from '@ValenceServer/profiles/createDatabaseChosenProfiles';
+import { readActing } from '@ValenceServer/profiles/acting/readActing';
+import { householdNameOf } from '@ValenceServer/household/householdNameOf';
+import { askerFieldsOf } from '@ValenceServer/webhooks/askerFieldsOf';
+import { narrowToProfile } from '@ValenceServer/profiles/acting/narrowToProfile';
+import { createDatabaseProfileLimits } from '@ValenceServer/profiles/limits/createDatabaseProfileLimits';
 import { createBucketMounts } from '@ValenceServer/buckets/createBucketMounts';
 import { createRcloneMachinery } from '@ValenceServer/buckets/createRcloneMachinery';
 import { StoredBucketsSchema } from '@ValenceContracts/schemas/Bucket';
@@ -182,6 +187,7 @@ import type { LibraryKind, ScanResult } from '@ValenceContracts/schemas/Library'
 import { isMusicRequest } from '@ValenceContracts/functions/isMusicRequest';
 import { askersOf } from '@ValenceContracts/functions/askersOf';
 import { askersKeptBelow } from '@ValenceServer/requests/arrivals/askersKeptBelow';
+import { askingProfilesOf } from '@ValenceServer/requests/arrivals/askingProfilesOf';
 import { createAnimeDescriber } from '@ValenceServer/requests/anime/createAnimeDescriber';
 import { createDatabaseAnimeIds } from '@ValenceServer/requests/anime/createDatabaseAnimeIds';
 import type { CourOrder } from '@ValenceContracts/schemas/Anime';
@@ -214,6 +220,7 @@ import type {
   MediaRequestKind,
   MusicRequestKind,
   RequestCatalogue,
+  Requester,
   VideoRequestKind,
 } from '@ValenceContracts/schemas/MediaRequest';
 import { getConnInfo } from '@hono/node-server/conninfo';
@@ -664,9 +671,18 @@ const readLibraryBytes = async (): Promise<number> => {
 
 const storedPermissions = createDatabasePermissionService(db);
 
+const chosenProfiles = createDatabaseChosenProfiles(db);
+
 const realtime = createRealtimeRegistry({
   entitlements: createEntitlements({
-    resolve: (accountId) => storedPermissions.resolve(accountId),
+    resolve: async (accountId, profileId) => {
+      const standing = profileId === null ? null : await profileService.standingOf(profileId);
+
+      return narrowToProfile(await storedPermissions.resolve(accountId), {
+        mustChoose: standing === null || standing.userId !== accountId,
+        profile: standing,
+      });
+    },
     now: () => Date.now(),
     ttlMs: REALTIME_ENTITLEMENT_TTL_MS,
   }),
@@ -755,7 +771,7 @@ const requestPasswordReset = createPasswordResetRequests({
 });
 
 /**
- * Reads what an account is called, for the events that say who they are about.
+ * Reads what an account's household is called, for the events that say who they are about.
  *
  * @param accountId - Whose name to read, or null where nobody is signed in.
  * @returns The name, or null where nobody is signed in or the account has since gone.
@@ -765,13 +781,14 @@ const nameOfAccount = async (accountId: string | null): Promise<string | null> =
     return null;
   }
 
-  const named = await db
-    .select({ name: user.name })
+  const [named] = await db
+    .select({ name: user.name, household: userProfile.displayName })
     .from(user)
+    .leftJoin(userProfile, eq(userProfile.userId, user.id))
     .where(eq(user.id, accountId))
     .limit(1);
 
-  return named[0]?.name ?? null;
+  return named === undefined ? null : householdNameOf(named);
 };
 
 /**
@@ -1624,16 +1641,22 @@ if (requestsClient !== null) {
 }
 
 /**
- * Tells the requests service what every account is called now, so the requests it keeps name whoever
- * asked as they are called today rather than as they were called when they asked.
+ * Tells the requests service what every household and profile is called now, so the requests it
+ * keeps name whoever asked as they are called today rather than as they were called when they asked,
+ * and hand a removed profile's asks back to its account.
  */
 const tellRequestsWhoIsWho = async () => {
   if (requestsClient === null) {
     return;
   }
 
+  const households = await db
+    .select({ id: user.id, name: user.name, household: userProfile.displayName })
+    .from(user)
+    .leftJoin(userProfile, eq(userProfile.userId, user.id));
   const told = await requestsClient.renameAskers(
-    await db.select({ id: user.id, name: user.name }).from(user),
+    households.map((row) => ({ id: row.id, name: householdNameOf(row) })),
+    await db.select({ profileId: viewerProfile.id, name: viewerProfile.name }).from(viewerProfile),
   );
 
   if (told.kind === 'answered' && told.value > 0) {
@@ -3405,6 +3428,7 @@ const tellOfLinkedArrivals = async (): Promise<void> => {
       link: LINKS_TO_ARRIVALS[request.kind](found.mediaId),
       vapid: await readPushKeys(),
       only: untold,
+      profilesOf: askingProfilesOf(askersOf(request)),
       onProblem: (reason) => {
         log.error('requests', `telling those who asked for ${request.title}: ${reason}`);
       },
@@ -3451,6 +3475,7 @@ const tellOfArrival = async (filed: MediaRequest, mediaId: string): Promise<void
     data: {
       title: filed.title,
       requestedBy: requestedBy.name,
+      ...askerFieldsOf(requestedBy),
       mediaId,
       request: await describeForWebhooks(filed),
     },
@@ -3459,7 +3484,7 @@ const tellOfArrival = async (filed: MediaRequest, mediaId: string): Promise<void
   const keptBelow = askersKeptBelow(filed, profiles?.kind === 'answered' ? profiles.value : []);
   const told = new Set(keptBelow.map((asker) => asker.id));
   const vapid = await readPushKeys();
-  const tell = (only: string[], body: Said) =>
+  const tell = (only: string[], body: Said, askers: readonly Requester[]) =>
     notifyHousehold({
       store: notifications,
       event: 'requests.available',
@@ -3468,6 +3493,7 @@ const tellOfArrival = async (filed: MediaRequest, mediaId: string): Promise<void
       link: LINKS_TO_ARRIVALS[filed.kind](mediaId),
       vapid,
       only,
+      profilesOf: askingProfilesOf(askers),
       onProblem: (reason) => {
         log.error('requests', `telling those who asked for ${filed.title}: ${reason}`);
       },
@@ -3485,6 +3511,7 @@ const tellOfArrival = async (filed: MediaRequest, mediaId: string): Promise<void
       .map((asker) => asker.id)
       .filter((id) => !told.has(id)),
     saying('server.main.titleWhichYouAskedForIs', { title: filed.title }),
+    askersOf(filed),
   );
 
   for (const asker of keptBelow) {
@@ -3495,6 +3522,7 @@ const tellOfArrival = async (filed: MediaRequest, mediaId: string): Promise<void
         current: filed.profileName ?? '',
         asked: asker.profileName ?? '',
       }),
+      [asker],
     );
   }
 };
@@ -3527,6 +3555,7 @@ const tellOfVersion = async (
     link: LINKS_TO_ARRIVALS[filed.kind](mediaId),
     vapid: await readPushKeys(),
     only: askers.map((asker) => asker.id),
+    profilesOf: askingProfilesOf(askers),
     onProblem: (reason) => {
       log.error('requests', `telling those who asked for ${filed.title} again: ${reason}`);
     },
@@ -4309,10 +4338,12 @@ const app = createApp({
   email: emailService,
   subtitleFinder,
   requestPasswordReset,
-  sayALinkWasWithdrawn: async ({ accountId, title, byName }) => {
+  onNamesChanged: tellRequestsWhoIsWhoLater,
+  sayALinkWasWithdrawn: async ({ accountId, profileId, title, byName }) => {
     await notifyHousehold({
       store: notifications,
       event: 'sharing.withdrawn',
+      ...(profileId === null ? {} : { profilesOf: new Map([[accountId, [profileId]]]) }),
       title: saying('server.main.aLinkYouHandedOutWas'),
       body: saying('server.main.byNameWithdrewYourLinkToTitle', { byName, title }),
       link: null,
@@ -4519,7 +4550,8 @@ const app = createApp({
   },
   setupLinks,
   createAccountWithoutPassword: addAccountWithoutPassword,
-  children: createDatabaseChildAccountService(db),
+  chosenProfiles,
+  profileLimits: createDatabaseProfileLimits(db),
   buckets: bucketMounts,
   discordIdOf,
   editAccount: async (userId, changes) => {
@@ -4694,6 +4726,9 @@ const app = createApp({
           link: `/music?listen=playlist:${playlist.id}:request`,
           vapid: await readPushKeys(),
           only: [viewer.accountId],
+          ...(viewer.profileId === null
+            ? {}
+            : { profilesOf: new Map([[viewer.accountId, [viewer.profileId]]]) }),
           onProblem: (reason) => {
             log.warn('requests', `saying a playlist's albums were found: ${reason}`);
           },
@@ -4764,7 +4799,6 @@ const realtimeHandler = createRealtimeHandler({
   registry: realtime,
   newId: () => randomUUID(),
   now: () => Date.now(),
-  ownsProfile: (accountId, profileId) => profileService.belongsTo(accountId, profileId),
   party: partyBinding,
   relay: partyRelayClient,
   presence: {
@@ -4880,6 +4914,7 @@ const tellOfBeingAskedAlong = async (serverId: string, ask: AskedAlong): Promise
       link: `/watch/${mediaId}?party=${encodeURIComponent(`${LINKED_PARTY}${serverId}~${ask.partyId}`)}`,
       vapid: await readPushKeys(),
       only: [accountId],
+      profilesOf: new Map([[accountId, [profile.id]]]),
       onProblem: (reason) => {
         log.error('server', `linked party invite: ${reason}`);
       },
@@ -4940,6 +4975,7 @@ const askSomebodyToTheParty = async (
     link: isListening ? `/music?party=${party.id}` : `/watch/${party.mediaId}?party=${party.id}`,
     vapid: await readPushKeys(),
     only: [accountId],
+    profilesOf: new Map([[accountId, [profileId]]]),
     onProblem: (reason) => {
       log.error('server', `party invite: ${reason}`);
     },
@@ -5208,6 +5244,15 @@ app.get(
     }
 
     const accountId = account?.id ?? null;
+    const actingProfileId =
+      account === null
+        ? null
+        : ((
+            await readActing(
+              { auth, profiles: profileService, chosen: chosenProfiles },
+              context.req.raw.headers,
+            )
+          )?.profile?.id ?? null);
     const address = callerOf(context);
 
     if (signedIn !== null) {
@@ -5221,7 +5266,7 @@ app.get(
         session = realtimeHandler.open(
           {
             accountId,
-            profileId: null,
+            profileId: actingProfileId,
             guestOf: who?.guestOf ?? null,
             viaShare: who?.shareId ?? null,
             address,

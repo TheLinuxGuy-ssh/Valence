@@ -76,6 +76,9 @@ const ViewerProfileSchema = z.object({
   showsWhatIamWatching: z.boolean().default(false),
   discordPresence: DiscordPresenceSchema.default(DEFAULT_DISCORD_PRESENCE),
   prefersBestCopy: z.boolean().default(false),
+  isOwner: z.boolean().default(false),
+  hasPin: z.boolean().default(false),
+  mayRequest: z.boolean().default(true),
   createdAt: z.string(),
   updatedAt: z.string(),
 });
@@ -90,14 +93,13 @@ const ViewerProfileRequestSchema = z.object({
   prefersBestCopy: z.boolean().optional(),
 });
 
-const ViewerProfileListSchema = z.object({ profiles: z.array(ViewerProfileSchema) });
-
-const WayInProfileSchema = ViewerProfileSchema.extend({
-  signsInWith: z.enum(['password', 'pin', 'nothing']).optional(),
+const ViewerProfileListSchema = z.object({
+  profiles: z.array(ViewerProfileSchema),
+  chosenProfileId: z.string().nullish(),
 });
 
-const WayInSchema = z.object({
-  profiles: z.array(WayInProfileSchema),
+const WayInSchema = ViewerProfileListSchema.extend({
+  profiles: z.array(ViewerProfileSchema.extend({ pictureUrl: z.string().optional() })),
   splashscreen: z.string().nullish(),
   message: WayInMessageSchema.nullish(),
 });
@@ -116,28 +118,32 @@ const profileInitial = (name: string): string => (name.trim()[0] ?? '?').toUpper
  * Builds the address a profile's picture is served from, carrying the profile's own last-updated
  * time as part of the query so that changing the picture changes the address. Without that a
  * browser shows the old face until its cache expires, which is long after somebody has changed it
- * and gone looking for the new one.
+ * and gone looking for the new one. A face the server gave an address of its own — a household on
+ * the way in, drawn from the household's picture rather than any profile's — is read from there.
  *
  * @param profile - The profile being drawn, with the time it was last changed.
  * @returns The address to load the picture from.
  */
-const profileAvatarUrl = (profile: { id: string; updatedAt: string }): string =>
+const profileAvatarUrl = (profile: {
+  id: string;
+  updatedAt: string;
+  pictureUrl?: string | undefined;
+}): string =>
+  profile.pictureUrl ??
   `/api/profiles/${profile.id}/avatar?v=${encodeURIComponent(profile.updatedAt)}`;
 
 type Avatar = z.infer<typeof AvatarSchema>;
 type PhotoFrame = z.infer<typeof PhotoFrameSchema>;
 type ViewerProfile = z.infer<typeof ViewerProfileSchema>;
-type WayInProfile = z.infer<typeof WayInProfileSchema>;
 type ProfileColour = z.infer<typeof ProfileColourSchema>;
 
-export type { Avatar, PhotoFrame, ProfileColour, ViewerProfile, WayInProfile };
+export type { Avatar, PhotoFrame, ProfileColour, ViewerProfile };
 
 export {
   ViewerProfileSchema,
   ViewerProfileRequestSchema,
   ViewerProfileListSchema,
   WayInSchema,
-  WayInProfileSchema,
   ProfileColourSchema,
   PROFILE_COLOURS,
   AvatarSchema,
