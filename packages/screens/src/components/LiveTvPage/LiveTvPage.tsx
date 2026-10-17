@@ -1,3 +1,5 @@
+import { Tv as EmptyTvIcon } from '@keyline-icons/react/fill';
+import { NothingHere } from '@ValenceUI/NothingHere';
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { CouldNotRead } from '@ValenceUI/CouldNotRead';
@@ -17,7 +19,7 @@ import { groupsOf } from '@ValenceClient/live/groupsOf';
 import { SegmentedRow } from '@ValenceUI/SegmentedRow';
 import { LiveChannelTable } from '@ValenceScreens/components/LiveTvPage/components/LiveChannelTable/LiveChannelTable';
 import { readLiveView, saveLiveView } from '@ValenceScreens/live/liveViewPreference';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { say } from '@ValenceI18n/say';
 
 const { all: ALL, favourites: FAVOURITES, onAir: ON_AIR } = LIVE_SHOWING;
@@ -77,9 +79,12 @@ const LiveTvPage = () => {
 
   if (chosen === null) {
     return (
-      <p className="mx-auto max-w-md px-4 py-24 text-center text-sm text-text-muted">
-        {say('screens.liveTvPage.noChannelsYet')}
-      </p>
+      <NothingHere
+        of={EmptyTvIcon}
+        title={say('screens.liveTvPage.noLiveChannelsYet')}
+        detail={say('screens.liveTvPage.noChannelsAndHowToAddThem')}
+        fills
+      />
     );
   }
 

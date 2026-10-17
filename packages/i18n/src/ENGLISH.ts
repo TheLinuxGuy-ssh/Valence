@@ -1940,6 +1940,9 @@ const ENGLISH = {
   'error.arrApps.thatIsNotAChangeToAConnectedApp': 'That isn’t a valid change to a connected app.',
   'error.arrApps.thatIsNotAConnectedApp': 'That isn’t a valid connected app.',
   'error.arrImport.thatIsNotASetupToBringIn': 'That isn’t a setup Valence can import.',
+  'error.backups.noCopyByThatName': 'There is no backup by that name.',
+  'error.backups.theDumpToolIsNotInstalled':
+    '{tool} is not installed on this server, so no backup could be taken.',
   'error.book.noCoverForThatBook': 'No cover for that book.',
   'error.book.noSuchChapter': 'No such chapter.',
   'error.book.noSuchPage': 'No such page.',
@@ -2997,7 +3000,7 @@ const ENGLISH = {
   'screens.accountArea.sharePanel.youHaveNotHandedOutAny':
     'You haven’t created any share links. Share something from its page to create one.',
   'screens.accountArea.sharePanel.yourLinks': 'Your share links',
-  'screens.accountDialog.admin': 'admin',
+  'screens.accountDialog.admin': 'Admin',
   'screens.accountDialog.useTheTvLayout': 'Use the TV layout',
   'screens.accountDialog.yourAccount': 'Your account',
   'screens.accountsPanel.accountAvatarPicker.aPhotographOneOfTheDrawn':
@@ -3049,6 +3052,34 @@ const ENGLISH = {
     'There are no collections yet. Create a new one for this title.',
   'screens.addToCollectionDialog.titleIsInANewCollection': 'Added {title} to a new collection.',
   'screens.addToCollectionDialog.titleIsNowInName': 'Added {title} to {name}.',
+  'screens.admin.auditActionNames.accountBanned': 'Account banned',
+  'screens.admin.auditActionNames.accountChanged': 'Account changed',
+  'screens.admin.auditActionNames.accountCreated': 'Account added',
+  'screens.admin.auditActionNames.accountRemoved': 'Account removed',
+  'screens.admin.auditActionNames.accountRolesChanged': 'Roles changed',
+  'screens.admin.auditActionNames.accountSessionEnded': 'Device signed out',
+  'screens.admin.auditActionNames.accountSignedOutEverywhere': 'Signed out everywhere',
+  'screens.admin.auditActionNames.accountUnbanned': 'Ban lifted',
+  'screens.admin.auditActionNames.backupRemoved': 'Backup deleted',
+  'screens.admin.auditActionNames.backupTaken': 'Backup taken',
+  'screens.admin.auditActionNames.filesMoved': 'File moved',
+  'screens.admin.auditActionNames.filesRemoved': 'File deleted',
+  'screens.admin.auditActionNames.filesRenamed': 'File renamed',
+  'screens.admin.auditActionNames.libraryAdded': 'Library added',
+  'screens.admin.auditActionNames.libraryChanged': 'Library changed',
+  'screens.admin.auditActionNames.libraryRemoved': 'Library removed',
+  'screens.admin.auditActionNames.libraryReset': 'Library rebuilt',
+  'screens.admin.auditActionNames.mediaRemoved': 'Title deleted',
+  'screens.admin.auditActionNames.pluginChanged': 'Plugin changed',
+  'screens.admin.auditActionNames.pluginInstalled': 'Plugin installed',
+  'screens.admin.auditActionNames.pluginRemoved': 'Plugin removed',
+  'screens.admin.auditActionNames.roleCreated': 'Role created',
+  'screens.admin.auditActionNames.roleRemoved': 'Role removed',
+  'screens.admin.auditActionNames.settingsChanged': 'Settings changed',
+  'screens.admin.auditActionNames.shareWithdrawn': 'Link withdrawn',
+  'screens.admin.auditActionNames.webhookAdded': 'Webhook added',
+  'screens.admin.auditActionNames.webhookChanged': 'Webhook changed',
+  'screens.admin.auditActionNames.webhookRemoved': 'Webhook removed',
   'screens.admin.describeLogLevel.debug': 'Debug',
   'screens.admin.describeLogLevel.errors': 'Errors',
   'screens.admin.describeLogLevel.info': 'Info',
@@ -3063,6 +3094,32 @@ const ENGLISH = {
     'Transcoding — the server is transcoding the video in real time',
   'screens.admin.indexerPrivacy.semiPrivate': 'Semi-private',
   'screens.admin.nameOfSession.unknownViewer': 'Unknown viewer',
+  'screens.admin.reasonNames.anamorphicVideoNotSupported': 'The device can’t play anamorphic video',
+  'screens.admin.reasonNames.audioBitrateAboveLimit': 'The sound’s bitrate is above the limit',
+  'screens.admin.reasonNames.audioChannelsAboveLimit': 'More sound channels than the device takes',
+  'screens.admin.reasonNames.audioCodecNotSupported': 'The device can’t play the sound format',
+  'screens.admin.reasonNames.audioProfileNotSupported': 'The device can’t play the sound’s profile',
+  'screens.admin.reasonNames.audioSampleRateNotSupported':
+    'The device can’t play the sound’s sample rate',
+  'screens.admin.reasonNames.clientSupportsSource': 'The device plays the file as it is',
+  'screens.admin.reasonNames.containerNotSupported': 'The device can’t open the file’s container',
+  'screens.admin.reasonNames.interlacedVideoNotSupported': 'The device can’t play interlaced video',
+  'screens.admin.reasonNames.refFramesNotSupported': 'Too many reference frames for the device',
+  'screens.admin.reasonNames.subtitleFormatNotSupported':
+    'The device can’t show the subtitle format',
+  'screens.admin.reasonNames.subtitleNotCarryableInContainer':
+    'The subtitles can’t travel in the stream',
+  'screens.admin.reasonNames.userForcedTranscode': 'Somebody chose a lower quality',
+  'screens.admin.reasonNames.videoBitrateAboveLimit': 'The video’s bitrate is above the limit',
+  'screens.admin.reasonNames.videoCodecNotSupported': 'The device can’t play the video format',
+  'screens.admin.reasonNames.videoFramerateNotSupported': 'The device can’t play the frame rate',
+  'screens.admin.reasonNames.videoLevelNotSupported': 'The device can’t play the video’s level',
+  'screens.admin.reasonNames.videoNotSegmentable': 'The video can’t be split up for streaming',
+  'screens.admin.reasonNames.videoProfileNotSupported': 'The device can’t play the video’s profile',
+  'screens.admin.reasonNames.videoRangeNotSupported': 'The device can’t show HDR',
+  'screens.admin.reasonNames.videoResolutionAboveLimit':
+    'The picture is larger than the device allows',
+  'screens.admin.reasonNames.videoRotationNotSupported': 'The device can’t turn the video',
   'screens.adminArea.accelerationOptions.aMDNeedsTheProprietaryDriver':
     'AMD, requires the proprietary driver',
   'screens.adminArea.accelerationOptions.aMF': 'AMF',
@@ -3203,9 +3260,13 @@ const ENGLISH = {
   'screens.adminArea.addTriggerDialog.triggerType': 'Trigger type',
   'screens.adminArea.addTriggerDialog.unit': 'Unit',
   'screens.adminArea.adminSections.activity': 'Activity',
+  'screens.adminArea.adminSections.auditLog': 'Audit log',
+  'screens.adminArea.adminSections.backups': 'Backups',
   'screens.adminArea.adminSections.content': 'Content',
   'screens.adminArea.adminSections.import': 'Import',
   'screens.adminArea.adminSections.overview': 'Overview',
+  'screens.adminArea.adminSections.statistics': 'Statistics',
+  'screens.adminArea.adminSections.updates': 'Updates',
   'screens.adminArea.adminSetupGuide.addAMetadataKey': 'Add a metadata key',
   'screens.adminArea.adminSetupGuide.aLibraryIsAFolderOf':
     'A library is a folder of one type of media: films, shows, music or books. Add the folder and Valence does the rest.',
@@ -3359,12 +3420,49 @@ const ENGLISH = {
     'Couldn’t search the indexers. Try again.',
   'screens.adminArea.askForMediaDialog.youPickFromWhatTheIndexers':
     'You choose a release from your indexers before anything is downloaded.{LATER_PICKS}',
+  'screens.adminArea.auditPanel.aboutTheAuditLog': 'About the audit log',
+  'screens.adminArea.auditPanel.everyChange': 'Every change',
+  'screens.adminArea.auditPanel.everyChangeAnAdministratorMakes':
+    'Every change made to accounts, roles, settings, libraries, files, links, plugins, webhooks and backups, with who made it and when.',
+  'screens.adminArea.auditPanel.nothingHasBeenChangedYet': 'Nothing has been changed yet.',
+  'screens.adminArea.auditPanel.onWhat': 'On what',
+  'screens.adminArea.auditPanel.readFurtherBack': 'Read further back',
+  'screens.adminArea.auditPanel.readingTheAuditLog': 'Reading the audit log…',
+  'screens.adminArea.auditPanel.somebodySinceRemoved': 'Somebody since removed',
+  'screens.adminArea.auditPanel.theAuditLogCouldNotBeRead': 'The audit log could not be read.',
+  'screens.adminArea.auditPanel.whichChanges': 'Which changes',
   'screens.adminArea.authorUnknown': 'Author unknown',
   'screens.adminArea.backgroundJobs.backgroundJobs': 'Background jobs',
   'screens.adminArea.backgroundJobs.nothingQueued': 'No jobs queued.',
   'screens.adminArea.backgroundJobs.readingTheQueue': 'Loading the queue…',
   'screens.adminArea.backgroundJobs.theQueueCouldNotBeRead':
     'Couldn’t load the queue from the server.',
+  'screens.adminArea.backupsPanel.aboutBackups': 'About backups',
+  'screens.adminArea.backupsPanel.aCopyOfTheWholeDatabase':
+    'A copy of the whole database: every account, profile, watch history, request, setting and plugin setting.',
+  'screens.adminArea.backupsPanel.aCopyOfTheWholeDatabaseKeptIn':
+    'A copy of the whole database: every account, profile, watch history, request, setting and plugin setting. Kept in {folder}, with the newest {kept} from the schedule and from before each upgrade. Ones taken by hand stay until you delete them. Download one now and then to keep it off this machine.',
+  'screens.adminArea.backupsPanel.backedUpTheDatabase': 'Backed up the database.',
+  'screens.adminArea.backupsPanel.backingUpTheDatabase': 'Backing up the database…',
+  'screens.adminArea.backupsPanel.backUpNow': 'Back up now',
+  'screens.adminArea.backupsPanel.backupsCannotBeTakenHere': 'Backups can’t be taken here',
+  'screens.adminArea.backupsPanel.beforeAnUpgrade': 'Before an upgrade',
+  'screens.adminArea.backupsPanel.byHand': 'By hand',
+  'screens.adminArea.backupsPanel.deletedTheBackup': 'Deleted the backup.',
+  'screens.adminArea.backupsPanel.deleteThisBackup': 'Delete this backup?',
+  'screens.adminArea.backupsPanel.itIsRemovedFromTheBackupFolder':
+    'It is removed from the backup folder and cannot be put back afterwards.',
+  'screens.adminArea.backupsPanel.noBackupsYet':
+    'No backups yet. One is taken every week, and before every upgrade.',
+  'screens.adminArea.backupsPanel.onTheSchedule': 'On the schedule',
+  'screens.adminArea.backupsPanel.putItBack': 'Put it back',
+  'screens.adminArea.backupsPanel.readingTheBackups': 'Reading the backups…',
+  'screens.adminArea.backupsPanel.taken': 'Taken',
+  'screens.adminArea.backupsPanel.theBackupCouldNotBeDeleted': 'The backup could not be deleted.',
+  'screens.adminArea.backupsPanel.theBackupCouldNotBeTaken': 'The backup could not be taken.',
+  'screens.adminArea.backupsPanel.theBackupsCouldNotBeRead': 'The backups could not be read.',
+  'screens.adminArea.backupsPanel.toolIsNotInstalled':
+    '{tool} is not installed beside this server. It comes with the Valence Docker image; install it where Valence runs to take backups.',
   'screens.adminArea.brandCard.accent': 'Accent colour',
   'screens.adminArea.brandCard.accentDetail':
     "The colour buttons, highlights and the emails' button are drawn in.",
@@ -3408,6 +3506,13 @@ const ENGLISH = {
   'screens.adminArea.bucketDialog.secretAccessKey': 'Secret access key',
   'screens.adminArea.bucketDialog.service': 'Service',
   'screens.adminArea.bucketDialog.wasabi': 'Wasabi',
+  'screens.adminArea.busyHoursGrid.count.plays.one': '{count} play',
+  'screens.adminArea.busyHoursGrid.count.plays.other': '{count} plays',
+  'screens.adminArea.busyHoursGrid.dayAtHour': '{day} at {hour}',
+  'screens.adminArea.busyHoursGrid.dayAtHourStarted': '{day} at {hour} · {started}',
+  'screens.adminArea.busyHoursGrid.labelBusiest': '{label}. Busiest on {day} at {hour}.',
+  'screens.adminArea.busyHoursGrid.mostlyWatched': 'Mostly watched',
+  'screens.adminArea.busyHoursGrid.nothingWasStarted': 'Nothing was started in this range.',
   'screens.adminArea.cacheBreakdown.countingWhatIsOnTheDisk': 'Calculating disk usage.',
   'screens.adminArea.cacheBreakdown.keptByValence': 'Kept by Valence, not counting the library',
   'screens.adminArea.cacheBreakdown.whatLabelMeans': 'What {label} means',
@@ -3839,6 +3944,7 @@ const ENGLISH = {
   'screens.adminArea.fileDetails.count.folders.other': '{count} folders',
   'screens.adminArea.fileDetails.count.selected.one': '{count} chosen',
   'screens.adminArea.fileDetails.count.selected.other': '{count} chosen',
+  'screens.adminArea.fileDetails.resizeTheDetails': 'Resize the details',
   'screens.adminArea.fileDetails.together': 'Together',
   'screens.adminArea.filesPanel.changed': 'Changed',
   'screens.adminArea.filesPanel.chooseEverythingHere': 'Choose everything here',
@@ -4354,6 +4460,7 @@ const ENGLISH = {
   'screens.adminArea.matchPicker.searchForAFilm': 'Search for a film',
   'screens.adminArea.matchPicker.searchForASeries': 'Search for a series',
   'screens.adminArea.mediaPanel.chooseArtwork': 'Choose artwork…',
+  'screens.adminArea.mediaPanel.couldNotBeRead': 'Couldn’t be read',
   'screens.adminArea.mediaPanel.deleteEveryEpisodeOfName': 'Delete every episode of {name}?',
   'screens.adminArea.mediaPanel.deleteFile': 'Delete file',
   'screens.adminArea.mediaPanel.deleteFile2': 'Delete file…',
@@ -4393,6 +4500,7 @@ const ENGLISH = {
     'Couldn’t load the libraries from the server. This doesn’t mean they’re empty.',
   'screens.adminArea.mediaPanel.thereIsNoLibraryYetAdd':
     'There are no libraries yet. Add one on the Libraries page.',
+  'screens.adminArea.mediaPanel.thereTwice': 'There twice',
   'screens.adminArea.mediaPanel.unmatched': 'Unmatched',
   'screens.adminArea.mediaPanel.whichTitles': 'Which titles',
   'screens.adminArea.mediaPanel.willRebuild': 'Will rebuild',
@@ -4400,6 +4508,9 @@ const ENGLISH = {
   'screens.adminArea.mediaRequestsPanel.hideWhatTitleIsMadeOf': 'Collapse {title}',
   'screens.adminArea.mediaRequestsPanel.showWhatTitleIsMadeOf': 'Expand {title}',
   'screens.adminArea.memory': 'Memory',
+  'screens.adminArea.mostWatchedList.hours': '{hours} h',
+  'screens.adminArea.mostWatchedList.mostWatched': 'Most watched',
+  'screens.adminArea.mostWatchedList.nothingWasWatched': 'Nothing was watched in this range.',
   'screens.adminArea.moveToLibraryDialog.moveNameToAnotherLibrary':
     'Move {name} to another library',
   'screens.adminArea.moveToLibraryDialog.moveToAnotherLibrary': 'Move to another library',
@@ -4410,6 +4521,13 @@ const ENGLISH = {
     'There’s no other library of films or shows to move this into.',
   'screens.adminArea.musicMatchList.foundInMusicBrainz': 'Found in MusicBrainz',
   'screens.adminArea.nameCouldNotBeScanned': 'Couldn’t scan {name}.',
+  'screens.adminArea.needsYouCard.aNewReleaseIsOut': 'A new release is out',
+  'screens.adminArea.needsYouCard.downloadsThatFailed': 'Downloads that failed',
+  'screens.adminArea.needsYouCard.jobsThatFailedToday': 'Jobs that failed today',
+  'screens.adminArea.needsYouCard.libraryProblems': 'Library problems',
+  'screens.adminArea.needsYouCard.requestsToApprove': 'Requests to approve',
+  'screens.adminArea.needsYouCard.valenceIsUpToDate': 'Valence is up to date',
+  'screens.adminArea.needsYouCard.waitingOnYou': 'Waiting on you',
   'screens.adminArea.noAlbumIsBeingCorrected': 'No album is being corrected.',
   'screens.adminArea.noBookIsBeingCorrected': 'No book is being corrected.',
   'screens.adminArea.notEveryLibraryCouldBeRead': 'Couldn’t rescan every library.',
@@ -4463,6 +4581,14 @@ const ENGLISH = {
   'screens.adminArea.overviewPanel.whatIsOn': 'What',
   'screens.adminArea.overviewPanel.whoAndWhere': 'Who and where',
   'screens.adminArea.pausedThatStream': 'Paused that stream.',
+  'screens.adminArea.playbackModeShare.everyPlayWentAsTheFileLies':
+    'Every play went as the file lies.',
+  'screens.adminArea.playbackModeShare.howPlaysReachedTheirDevices':
+    'How plays reached their devices',
+  'screens.adminArea.playbackModeShare.nothingWasPlayedInThisRange':
+    'Nothing was played in this range.',
+  'screens.adminArea.playbackModeShare.whyItWasConverted': 'Why it was converted',
+  'screens.adminArea.playbackModeShare.whyPlaysWereConverted': 'Why plays were converted',
   'screens.adminArea.pluginsPanel.chooseAVpluginFileAndIts':
     'Choose a .vplugin file, plus its .sig file if it has one.',
   'screens.adminArea.pluginsPanel.installedPlugins': 'Installed plugins',
@@ -4735,6 +4861,7 @@ const ENGLISH = {
   'screens.adminArea.requestsPanel.atAddressLastCheckedWhenProblem':
     'At {address}. Last checked {when}. {problem}.',
   'screens.adminArea.requestsPanel.checkedTheRequests': 'Checked the requests.',
+  'screens.adminArea.requestsPanel.checkingTheRequests': 'Checking the requests…',
   'screens.adminArea.requestsPanel.checkNow': 'Check now',
   'screens.adminArea.requestsPanel.cloudflareSolver': 'Cloudflare solver',
   'screens.adminArea.requestsPanel.countFailing.one': '{count} failing',
@@ -4757,6 +4884,20 @@ const ENGLISH = {
   'screens.adminArea.requestsPanel.vPN': 'VPN',
   'screens.adminArea.requestsPanel.whichVersionOfTheRequestsService':
     'Which version of the requests service is running.',
+  'screens.adminArea.restoreBackupDialog.everythingWrittenSinceItWasTaken':
+    'Everything written since it was taken is lost, so this can’t be done while Valence is running.',
+  'screens.adminArea.restoreBackupDialog.putTheCopyBack': 'Put the copy back',
+  'screens.adminArea.restoreBackupDialog.putThisBackupBack': 'Put this backup back',
+  'screens.adminArea.restoreBackupDialog.runThisBesideYourComposeFile':
+    'Run this in the folder that holds your compose file.',
+  'screens.adminArea.restoreBackupDialog.startTheReleaseFromBeforeTheUpgrade':
+    'Start the release from before the upgrade it was taken ahead of; a newer one changes the database again.',
+  'screens.adminArea.restoreBackupDialog.startTheSameRelease':
+    'Start the release that was running when it was taken.',
+  'screens.adminArea.restoreBackupDialog.startValenceAgain': 'Start Valence again',
+  'screens.adminArea.restoreBackupDialog.stopValence': 'Stop Valence',
+  'screens.adminArea.restoreBackupDialog.theDatabaseCannotBeReplaced':
+    'The database can’t be replaced while the server is using it.',
   'screens.adminArea.resumedThatStream': 'Resumed that stream.',
   'screens.adminArea.rolesPanel.aHigherRankManagesALower':
     'A higher rank can manage lower ranks. No one can change a role at or above their own rank.',
@@ -4998,6 +5139,26 @@ const ENGLISH = {
   'screens.adminArea.someOfThisCouldNotBeRead':
     'Some data couldn’t be loaded from the server, so parts of this page may be missing rather than empty.',
   'screens.adminArea.startedReEncoding': 'Started re-encoding.',
+  'screens.adminArea.statisticsPanel.addedEachWeek': 'Added each week',
+  'screens.adminArea.statisticsPanel.anUnknownDevice': 'An unknown device',
+  'screens.adminArea.statisticsPanel.aRemovedProfile': 'A removed profile',
+  'screens.adminArea.statisticsPanel.asTheFileLies': 'As the file lies',
+  'screens.adminArea.statisticsPanel.busiestTimes': 'Busiest times',
+  'screens.adminArea.statisticsPanel.byDevice': 'By device',
+  'screens.adminArea.statisticsPanel.hoursWatched': 'Hours watched',
+  'screens.adminArea.statisticsPanel.howThingsPlayed': 'How things played',
+  'screens.adminArea.statisticsPanel.mostActive': 'Most active',
+  'screens.adminArea.statisticsPanel.peopleWatching': 'People watching',
+  'screens.adminArea.statisticsPanel.playsEachDay': 'Plays each day',
+  'screens.adminArea.statisticsPanel.readingTheStatistics': 'Reading the statistics…',
+  'screens.adminArea.statisticsPanel.theStatisticsCouldNotBeRead':
+    'The statistics could not be read.',
+  'screens.adminArea.statisticsPanel.titlesAdded': 'Titles added',
+  'screens.adminArea.statisticsPanel.titlesWatched': 'Titles watched',
+  'screens.adminArea.statisticsRangeChoice.howFarBackToLook': 'How far back to look',
+  'screens.adminArea.statisticsRangeChoice.last30Days': 'Last 30 days',
+  'screens.adminArea.statisticsRangeChoice.last90Days': 'Last 90 days',
+  'screens.adminArea.statisticsRangeChoice.lastYear': 'Last year',
   'screens.adminArea.statStrip.aboutLabel': 'About {label}',
   'screens.adminArea.stoppedThatStream': 'Stopped that stream.',
   'screens.adminArea.stoppedTheReEncode': 'Stopped the re-encode.',
@@ -5201,6 +5362,39 @@ const ENGLISH = {
   'screens.adminArea.titlePage.trackTable.track': 'Track',
   'screens.adminArea.titlePage.trackTable.tracks': 'Tracks',
   'screens.adminArea.transcoder': 'Transcoder',
+  'screens.adminArea.updatesPanel.aBackupIsTakenBeforeTheDatabaseChanges':
+    'A backup is taken before the new release changes the database, so you can go back.',
+  'screens.adminArea.updatesPanel.anUpdateIsOut': 'An update is out',
+  'screens.adminArea.updatesPanel.cameOutWhen': 'Came out {when}',
+  'screens.adminArea.updatesPanel.checkingForUpdatesIsOff': 'Checking for updates is off',
+  'screens.adminArea.updatesPanel.couldNotCheck': 'Could not check',
+  'screens.adminArea.updatesPanel.fetchTheNewRelease': 'Fetch the new release',
+  'screens.adminArea.updatesPanel.howToUpdate': 'How to update',
+  'screens.adminArea.updatesPanel.lastChecked': 'Last checked',
+  'screens.adminArea.updatesPanel.lookingForUpdates': 'Looking for updates…',
+  'screens.adminArea.updatesPanel.newestRelease': 'Newest release',
+  'screens.adminArea.updatesPanel.noReleaseNotesYet': 'No release notes to show yet.',
+  'screens.adminArea.updatesPanel.readItOnGitHub': 'Read it on GitHub',
+  'screens.adminArea.updatesPanel.releaseEntry.byAuthor': '@{name}',
+  'screens.adminArea.updatesPanel.releaseEntry.fixed': 'Fixed',
+  'screens.adminArea.updatesPanel.releaseEntry.hideWhatChangedInVersion':
+    'Hide what changed in {version}',
+  'screens.adminArea.updatesPanel.releaseEntry.newer': 'Newer',
+  'screens.adminArea.updatesPanel.releaseEntry.noNotesForThisRelease':
+    'No notes were written for this release.',
+  'screens.adminArea.updatesPanel.releaseEntry.otherChanges': 'Other changes',
+  'screens.adminArea.updatesPanel.releaseEntry.pullNumber': '#{number}',
+  'screens.adminArea.updatesPanel.releaseEntry.showWhatChangedInVersion':
+    'Show what changed in {version}',
+  'screens.adminArea.updatesPanel.startItInPlaceOfThisOne': 'Start it in place of this one',
+  'screens.adminArea.updatesPanel.thisServerRuns': 'This server runs',
+  'screens.adminArea.updatesPanel.thisServerWasStartedWithChecksOff':
+    'This server was started with CHECK_FOR_UPDATES=false, so it never asks GitHub. Remove it to be told when a release is out.',
+  'screens.adminArea.updatesPanel.upToDate': 'Up to date',
+  'screens.adminArea.updatesPanel.whatsNew': 'What’s new',
+  'screens.adminArea.updatesPanel.whatsNewInVersion': 'What’s new in {version}',
+  'screens.adminArea.updatesPanel.whetherAnUpdateIsOutCouldNotBeRead':
+    'Whether an update is out could not be read.',
   'screens.adminArea.uploadMediaDialog.chooseAFolder': 'Choose a folder',
   'screens.adminArea.uploadMediaDialog.chooseAFolderToUpload': 'Choose a folder to upload',
   'screens.adminArea.uploadMediaDialog.chooseFilesToUpload': 'Choose files to upload',
@@ -5310,12 +5504,17 @@ const ENGLISH = {
     'This is the only time it’s shown. Give it to the receiver so it can verify that deliveries really come from Valence. If you lose it, delete this webhook and create a new one.',
   'screens.adminArea.webhookTurnedOff': 'Webhook turned off.',
   'screens.adminArea.webhookTurnedOn': 'Webhook turned on.',
+  'screens.adminArea.whatsNewCard.askedForByName': 'Asked for by {name}',
+  'screens.adminArea.whatsNewCard.nothingHasArrivedYet': 'Nothing has arrived yet.',
   'screens.adminArea.whyThereIsNoFigure': 'Why there is no figure',
   'screens.adminPage.adminSearch.findAPage': 'Find a page',
   'screens.adminPage.adminSearch.general': 'General',
   'screens.adminPage.adminSearch.searchTheAdminArea': 'Search the admin area',
   'screens.adminPage.backToValence': 'Back to Valence',
+  'screens.adminPage.pinToTheSidebar': 'Pin {name} to the sidebar',
   'screens.adminPage.readingWhatYouMayDo': 'Checking your permissions',
+  'screens.adminPage.resizeTheSidebar': 'Resize the sidebar',
+  'screens.adminPage.unpinFromTheSidebar': 'Unpin {name} from the sidebar',
   'screens.adminPage.valenceVersion': 'Valence {version}',
   'screens.albumTracks.discNumber': 'Disc {number}',
   'screens.announcementBanner.announcement': 'Announcement',
@@ -5338,7 +5537,6 @@ const ENGLISH = {
   'screens.apiKeyPanel.whatIsThisKeyFor': 'What is this key for?',
   'screens.apiKeyPanel.yourKeysCouldNotBeRead': 'Couldn’t load your keys.',
   'screens.app.loadingInitialTitle': 'Loading {initialTitle}',
-  'screens.appShell.admin': 'Admin',
   'screens.appShell.chooseSomethingAtRandom': 'Choose something at random',
   'screens.appShell.getValenceForSystem': 'Get Valence for {system}',
   'screens.appShell.manageProfiles': 'Manage profiles',
@@ -5597,6 +5795,7 @@ const ENGLISH = {
   'screens.downloadsPanel.downloadQueueTable.nowNamedFromTheRelease':
     'Now, named from the release.',
   'screens.downloadsPanel.downloadQueueTable.onceItHasDownloaded': 'When the download finishes.',
+  'screens.downloadsPanel.downloadQueueTable.states.processing': 'Processing',
   'screens.downloadsPanel.giveUpRulesList.aMagnetThatNeverLearnsWhat':
     'A magnet link that never fetches its file list, usually because there are no seeders.',
   'screens.downloadsPanel.giveUpRulesList.aTorrentHoldingNothingValenceCould':
@@ -5613,8 +5812,6 @@ const ENGLISH = {
   'screens.downloadsPanel.giveUpRulesList.tooSlow': 'Too slow',
   'screens.downloadsPanel.giveUpRulesList.unrecognisedFiles': 'Unrecognised files',
   'screens.downloadsPanel.giveUpRulesList.whatCouldNotBeSaved': 'Couldn’t save {what}.',
-  'screens.downloadsPanel.giveUpRulesList.whenADownloadRunsIntoOne':
-    'When a download hits one of these, Valence removes it, blocklists the release for that request, and searches for the next best release.',
   'screens.downloadsPanel.giveUpRulesList.whenDownloadsAreGivenUpOnCouldNotBeRead':
     'Couldn’t load the download failure rules.',
   'screens.encodingPanel.describeSaving.costsAboutValue': 'Costs about {value}',
@@ -6116,10 +6313,11 @@ const ENGLISH = {
   'screens.liveTvPage.list': 'List',
   'screens.liveTvPage.liveNowNoGuide': 'Live now · no guide',
   'screens.liveTvPage.nextTimeTitle': 'Next at {time}: {title}',
-  'screens.liveTvPage.noChannelsYet':
-    'There are no live TV channels yet. An admin can add a stream, a playlist or a tuner under Server → Live TV.',
+  'screens.liveTvPage.noChannelsAndHowToAddThem':
+    'An admin can add a stream, a playlist or a tuner under Server → Live TV.',
   'screens.liveTvPage.noFavouritesYet':
     'You haven’t kept any channels yet. Star one to find it here.',
+  'screens.liveTvPage.noLiveChannelsYet': 'No live TV channels yet',
   'screens.liveTvPage.notAllDay': 'Not 24/7',
   'screens.liveTvPage.notWorking': 'Not working',
   'screens.liveTvPage.offAir': 'Off air',
@@ -6153,6 +6351,7 @@ const ENGLISH = {
   'screens.logExplorer.logLine.showLogDetails': 'Show log details',
   'screens.logExplorer.logLine.traceThisJob': 'Trace this job',
   'screens.logExplorer.timeInZone': 'Time ({zone})',
+  'screens.logLevelBadge.error': 'Error',
   'screens.lyricLines.end': 'End',
   'screens.lyricLines.sync': 'Sync',
   'screens.mediaDetailDialog.editions': 'Editions',
@@ -6305,6 +6504,7 @@ const ENGLISH = {
   'screens.observabilityPage.jobHistory.searchByJobLibraryErrorOr':
     'Search by job, library, error or run ID',
   'screens.observabilityPage.jobHistory.searchJobRuns': 'Search job runs',
+  'screens.observabilityPage.jobHistory.theWholeServer': 'The whole server',
   'screens.observabilityPage.jobHistory.tookElapsed': 'took {elapsed}',
   'screens.observabilityPage.jobHistory.traceThisRun': 'Trace this run',
   'screens.observabilityPage.jobHistory.unpinFromTheTop': 'Unpin',
@@ -6433,7 +6633,7 @@ const ENGLISH = {
   'screens.pageProblem.describeProblem.itMayHaveBeenMovedOr':
     'It may have been moved or deleted. Go to the home page and look for it from there.',
   'screens.pageProblem.describeProblem.somethingOnThisPageWentWrong':
-    'Something went wrong on this page. The rest of Valence is still working, so try again or go to another page.',
+    'Something went wrong on this page. Try again, and if it keeps happening, tell whoever runs this Valence.',
   'screens.pageProblem.describeProblem.theServerMayBeRestartingOr':
     'The server may be restarting, or this device may be offline. Check the connection and try again.',
   'screens.pageProblem.describeProblem.thisPageBelongsToAnOlder':
@@ -7482,6 +7682,7 @@ const ENGLISH = {
     '{name} rejected the API key. Check you copied all of it.',
   'server.jobs.jobDefinitions.asksEveryLiveChannelWhetherItIs':
     'Asks every live TV channel’s stream for a moment of pictures, so the guide can show which are on air, off air, blocked or gone.',
+  'server.jobs.jobDefinitions.backUpTheDatabase': 'Back up the database',
   'server.jobs.jobDefinitions.bringEverythingAcross': 'Import from Jellyfin, Emby or Plex',
   'server.jobs.jobDefinitions.bringRequestsUpToDateWith': 'Sync requests with the catalogue',
   'server.jobs.jobDefinitions.bringsPeopleWatchingAndLibrariesAcross':
@@ -7503,6 +7704,8 @@ const ENGLISH = {
   'server.jobs.jobDefinitions.cleanUpSessions': 'Clean up sessions',
   'server.jobs.jobDefinitions.clearOutOldDownloads': 'Clear out old downloads',
   'server.jobs.jobDefinitions.clearsExpiredSignIns': 'Clears expired sign-ins.',
+  'server.jobs.jobDefinitions.copiesTheWholeDatabaseIntoTheBackupFolder':
+    'Copies the whole database into the backup folder, keeping the newest few.',
   'server.jobs.jobDefinitions.deletesCachedArtworkAndBookPages':
     'Deletes cached artwork and book pages that aren’t used.',
   'server.jobs.jobDefinitions.deletesEveryLibraryItemAndRebuilds':
@@ -7854,6 +8057,10 @@ const ENGLISH = {
   'server.surfaces.cleanSurface.thePluginSentSomethingValenceDoes':
     'The plugin sent something Valence can’t display. The details are in the server log.',
   'server.surfaces.cleanSurface.thisCouldNotBeShown': 'Couldn’t show this',
+  'server.updates.createUpdateChecker.githubAnsweredStatus':
+    'GitHub answered {status} when asked for the newest release.',
+  'server.updates.createUpdateChecker.githubCouldNotBeReached':
+    'GitHub could not be reached to look for a newer release.',
   'server.webhooks.closedValence': '{viewer} closed Valence on {device}.',
   'server.webhooks.closedValenceAfter': '{viewer} closed Valence on {device} after {span}.',
   'server.webhooks.deliverWebhook.theDeliveryCouldNotBeMade': 'Couldn’t deliver the webhook.',
@@ -8150,6 +8357,7 @@ const ENGLISH = {
   'ui.appliedFilters.removeSaid': 'Remove {said}',
   'ui.backToTop.backToTop': 'Back to top',
   'ui.colourPicker.valueColourValue2Bright': '{value}% saturation, {value2}% brightness',
+  'ui.commandPalette.escape': 'Esc',
   'ui.couldNotRead.theServerMayBeUnreachable':
     'The server may be unreachable, or your session may have expired.',
   'ui.dataTable.filter': 'Filter',
@@ -8166,6 +8374,7 @@ const ENGLISH = {
   'ui.pageDots.showPage': 'Show page {page}',
   'ui.rail.backAPageOfTitle': 'Back a page of {title}',
   'ui.rail.forwardAPageOfTitle': 'Forward a page of {title}',
+  'ui.sidebarGroup.labelWaiting': '{label}, {count} waiting',
   'ui.siteFooter.builtWith': 'Built with',
   'ui.siteFooter.changelog': 'Changelog',
   'ui.siteFooter.community': 'Community',

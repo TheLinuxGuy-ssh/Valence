@@ -1,3 +1,4 @@
+import { rowActionsColumn } from '@ValenceUI/DataTable/rowActionsColumn';
 import { failureOfRefusal } from '@ValenceScreens/admin/failureOf';
 import { tellOutcome } from '@ValenceScreens/admin/tellOutcome';
 import { PanelCardInfo } from '@ValenceScreens/components/PanelCardInfo/PanelCardInfo';
@@ -8,14 +9,12 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bin as BinFilledIcon,
   Download as DownloadFilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Pen as PenFilledIcon,
   Plug as PlugFilledIcon,
   Plus as PlusFilledIcon,
   ToggleOff as ToggleOffIcon,
   ToggleOn as ToggleOnIcon,
 } from '@keyline-icons/react/fill';
-import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { Badge } from '@ValenceUI/Badge';
 import { ConfirmDialog } from '@ValenceUI/ConfirmDialog';
 import { CouldNotRead } from '@ValenceUI/CouldNotRead';
@@ -29,7 +28,7 @@ import {
   removeArrApp,
   testArrApp,
 } from '@ValenceClient/requests/fetchArrApps';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { HowToFix } from '@ValenceScreens/components/HowToFix/HowToFix';
 import { ARR_APP_NAMES } from '@ValenceScreens/components/AdminArea/ARR_APP_NAMES';
 import { ArrAppDialog } from '@ValenceScreens/components/AdminArea/components/ArrAppDialog/ArrAppDialog';
@@ -180,83 +179,66 @@ const ArrAppsPanel = () => {
           );
         },
       },
-      {
-        id: 'act',
-        header: '',
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="flex justify-end">
-            <ActionMenu
-              label={say('common.actionsForName', { name: row.original.name })}
-              trigger={<Icon of={MoreHorizontalIcon} size={16} />}
-              groups={[
-                {
-                  items: [
+      rowActionsColumn(
+        (item) => item.name,
+        (item) => [
+          {
+            items: [
+              {
+                id: 'change',
+                label: say('common.change'),
+                icon: <Icon of={PenFilledIcon} size={15} />,
+                onChoose: () => {
+                  setEditing(item);
+                },
+              },
+              {
+                id: 'test',
+                label: say('common.test'),
+                icon: <Icon of={PlugFilledIcon} size={15} />,
+                isDisabled: busyId !== null,
+                onChoose: () => {
+                  test(item);
+                },
+              },
+              ...(item.kind === 'prowlarr'
+                ? [
                     {
-                      id: 'change',
-                      label: say('common.change'),
-                      icon: <Icon of={PenFilledIcon} size={15} />,
-                      onChoose: () => {
-                        setEditing(row.original);
-                      },
-                    },
-                    {
-                      id: 'test',
-                      label: say('common.test'),
-                      icon: <Icon of={PlugFilledIcon} size={15} />,
+                      id: 'import',
+                      label: say('screens.adminArea.indexersPanel.importFromProwlarr'),
+                      icon: <Icon of={DownloadFilledIcon} size={15} />,
                       isDisabled: busyId !== null,
                       onChoose: () => {
-                        test(row.original);
+                        importIndexers(item);
                       },
                     },
-                    ...(row.original.kind === 'prowlarr'
-                      ? [
-                          {
-                            id: 'import',
-                            label: say('screens.adminArea.indexersPanel.importFromProwlarr'),
-                            icon: <Icon of={DownloadFilledIcon} size={15} />,
-                            isDisabled: busyId !== null,
-                            onChoose: () => {
-                              importIndexers(row.original);
-                            },
-                          },
-                        ]
-                      : []),
-                    {
-                      id: 'switch',
-                      label: row.original.isEnabled
-                        ? say('common.switchOff')
-                        : say('common.switchOn'),
-                      icon: (
-                        <Icon
-                          of={row.original.isEnabled ? ToggleOffIcon : ToggleOnIcon}
-                          size={15}
-                        />
-                      ),
-                      onChoose: () => {
-                        switchOnOrOff(row.original);
-                      },
-                    },
-                  ],
+                  ]
+                : []),
+              {
+                id: 'switch',
+                label: item.isEnabled ? say('common.switchOff') : say('common.switchOn'),
+                icon: <Icon of={item.isEnabled ? ToggleOffIcon : ToggleOnIcon} size={15} />,
+                onChoose: () => {
+                  switchOnOrOff(item);
                 },
-                {
-                  items: [
-                    {
-                      id: 'remove',
-                      label: say('screens.adminArea.arrAppsPanel.disconnect'),
-                      icon: <Icon of={BinFilledIcon} size={15} />,
-                      isDestructive: true,
-                      onChoose: () => {
-                        setRemoving(row.original);
-                      },
-                    },
-                  ],
+              },
+            ],
+          },
+          {
+            items: [
+              {
+                id: 'remove',
+                label: say('screens.adminArea.arrAppsPanel.disconnect'),
+                icon: <Icon of={BinFilledIcon} size={15} />,
+                isDestructive: true,
+                onChoose: () => {
+                  setRemoving(item);
                 },
-              ]}
-            />
-          </span>
-        ),
-      },
+              },
+            ],
+          },
+        ],
+      ),
     ];
   }, [busyId, reread]);
 

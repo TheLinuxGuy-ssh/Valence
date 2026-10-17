@@ -1,7 +1,4 @@
-import {
-  MoreHorizontal as MoreHorizontalIcon,
-  Search as SearchFilledIcon,
-} from '@keyline-icons/react/fill';
+import { Search as SearchFilledIcon } from '@keyline-icons/react/fill';
 import { useMemo } from 'react';
 import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { DataTable } from '@ValenceUI/DataTable';
@@ -71,6 +68,7 @@ const ShelfTable = ({ label, items, toolbar, emptyMessage, onOpenFolder }: Shelf
       },
       {
         id: 'added',
+        meta: { hidesOnPhones: true },
         header: say('common.added'),
         accessorFn: (item) => item.addedAt,
         cell: ({ row }) => (
@@ -90,7 +88,6 @@ const ShelfTable = ({ label, items, toolbar, emptyMessage, onOpenFolder }: Shelf
             <span className="flex justify-end">
               <ActionMenu
                 label={say('common.actionsForName', { name: row.original.name })}
-                trigger={<Icon of={MoreHorizontalIcon} size={16} />}
                 groups={[
                   {
                     items: [

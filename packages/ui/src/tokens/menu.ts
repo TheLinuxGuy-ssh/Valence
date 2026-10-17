@@ -1,6 +1,6 @@
 const MENU = {
   content: [
-    'z-50 valence-menu min-w-52 overflow-hidden rounded-[1.25rem] p-2 text-sm text-text outline-none',
+    'z-50 valence-menu min-w-52 overflow-hidden rounded-[calc(var(--radius-lg)+0.5rem)] p-2 text-sm text-text outline-none',
     'coarse:min-w-72 coarse:p-2.5 coarse:text-base',
   ].join(' '),
   group: 'relative z-10 flex flex-col',
@@ -11,7 +11,7 @@ const MENU = {
     'bg-[var(--menu-surface)] text-[0.8125rem] font-medium text-text-muted',
   ].join(' '),
   item: [
-    'flex min-h-9 cursor-default items-center gap-3 rounded-[0.625rem] px-3 py-1.5 outline-none',
+    'flex min-h-9 cursor-default items-center gap-3 rounded-lg px-3 py-1.5 outline-none',
     'coarse:gap-4 coarse:px-4 coarse:py-3.5',
     'data-[disabled]:cursor-not-allowed data-[disabled]:opacity-40',
   ].join(' '),

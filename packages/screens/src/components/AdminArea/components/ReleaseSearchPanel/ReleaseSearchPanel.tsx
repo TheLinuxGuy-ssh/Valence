@@ -4,7 +4,6 @@ import {
   ChevronsUpDown as ChevronsUpDownIcon,
   Download as DownloadFilledIcon,
   Link2 as Link2FilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Send as SendFilledIcon,
   SquareArrowUpRight as SquareArrowUpRightFilledIcon,
 } from '@keyline-icons/react/fill';
@@ -27,7 +26,7 @@ import { LIBRARY_KINDS } from '@ValenceContracts/schemas/Library';
 import type { LibraryKind } from '@ValenceContracts/schemas/Library';
 import type { StringKey } from '@ValenceI18n/StringKey';
 import { downloadFile } from '@ValenceScreens/admin/downloadFile';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { releaseColumns } from '@ValenceScreens/components/AdminArea/releaseColumns';
 import { IndexerReportList } from '@ValenceScreens/components/AdminArea/components/IndexerReportList/IndexerReportList';
 import { inReleaseOrder } from './inReleaseOrder';
@@ -214,7 +213,6 @@ const ReleaseSearchPanel = ({
             <span className="flex justify-end">
               <ActionMenu
                 label={say('common.actionsForTitle', { title })}
-                trigger={<Icon of={MoreHorizontalIcon} size={16} />}
                 groups={[
                   {
                     items: [

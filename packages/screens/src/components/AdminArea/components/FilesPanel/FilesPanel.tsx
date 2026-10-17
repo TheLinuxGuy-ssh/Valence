@@ -10,7 +10,6 @@ import {
   Folder as FolderIcon,
   FolderOpen as FolderOpenFilledIcon,
   FolderPlus as FolderPlusFilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Move as MoveFilledIcon,
   PenLine as PenLineFilledIcon,
 } from '@keyline-icons/react/fill';
@@ -29,7 +28,7 @@ import { changeLibraryFile } from '@ValenceClient/admin/changeLibraryFile';
 import { adminQueries } from '@ValenceClient/query/adminQueries';
 import { RequestFailed } from '@ValenceClient/query/RequestFailed';
 import { formatBytes } from '@ValenceCore/functions/formatBytes';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { LeaveOutDialog } from '@ValenceScreens/components/AdminArea/components/LeaveOutDialog/LeaveOutDialog';
 import type { LeaveOutTarget } from '@ValenceScreens/components/AdminArea/components/LeaveOutDialog/LeaveOutDialog.types';
 import { libraryHolding } from './libraryHolding';
@@ -317,7 +316,6 @@ const FilesPanel = ({
             <span className="flex justify-end">
               <ActionMenu
                 label={say('common.actionsForName', { name: row.original.name })}
-                trigger={<Icon of={MoreHorizontalIcon} size={16} />}
                 groups={[
                   {
                     items: [
@@ -386,7 +384,6 @@ const FilesPanel = ({
         <TextField
           label={say('screens.adminArea.filesPanel.findAFileOrFolder')}
           isLabelHidden
-          size="sm"
           type="search"
           placeholder={
             at === null

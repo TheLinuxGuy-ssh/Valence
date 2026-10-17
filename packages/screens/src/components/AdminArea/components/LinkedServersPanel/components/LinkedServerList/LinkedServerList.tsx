@@ -1,3 +1,5 @@
+import { Server as EmptyServerIcon } from '@keyline-icons/react/fill';
+import { NothingHere } from '@ValenceUI/NothingHere';
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Badge } from '@ValenceUI/Badge';
@@ -6,7 +8,7 @@ import { ConfirmDialog } from '@ValenceUI/ConfirmDialog';
 import { notify } from '@ValenceUI/notify';
 import { ServerFace } from '@ValenceScreens/components/AdminArea/components/LinkedServersPanel/components/ServerFace/ServerFace';
 import { serverPictureUrl } from '@ValenceClient/linking/serverPictureUrl';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { answerLinkedServer } from '@ValenceClient/admin/answerLinkedServer';
 import { unlinkServer } from '@ValenceClient/admin/unlinkServer';
 import { saidWhen } from '@ValenceClient/format/saidWhen';
@@ -128,9 +130,11 @@ const LinkedServerList = ({ servers, managing, onManage }: LinkedServerListProps
       />
 
       {servers.length === 0 ? (
-        <p className="px-4 py-6 text-sm text-text-muted">
-          {say('screens.adminArea.linkedServersPanel.noServersAreLinkedYet')}
-        </p>
+        <NothingHere
+          of={EmptyServerIcon}
+          title={say('screens.adminArea.linkedServersPanel.noServersAreLinkedYet')}
+          isCompact
+        />
       ) : (
         <ul className="flex flex-col divide-y divide-[var(--surface-line)]">
           {servers.map((server) => {

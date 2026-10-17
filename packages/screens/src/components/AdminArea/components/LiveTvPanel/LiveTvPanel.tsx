@@ -1,13 +1,12 @@
+import { rowActionsColumn } from '@ValenceUI/DataTable/rowActionsColumn';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Bin as BinFilledIcon,
   Calendar as CalendarFilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Plus as PlusFilledIcon,
   RefreshCw as RefreshCwFilledIcon,
 } from '@keyline-icons/react/fill';
-import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { Badge } from '@ValenceUI/Badge';
 import { ConfirmDialog } from '@ValenceUI/ConfirmDialog';
 import { CouldNotRead } from '@ValenceUI/CouldNotRead';
@@ -22,7 +21,7 @@ import { failureOfRefusal } from '@ValenceScreens/admin/failureOf';
 import { LiveGuideDialog } from '@ValenceScreens/components/AdminArea/components/LiveTvPanel/components/LiveGuideDialog/LiveGuideDialog';
 import { AddLiveSourceDialog } from '@ValenceScreens/components/AdminArea/components/LiveTvPanel/components/AddLiveSourceDialog/AddLiveSourceDialog';
 import { describeSince } from '@ValenceScreens/components/AdminArea/describeSince';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { PanelCardAction } from '@ValenceScreens/components/PanelCardAction/PanelCardAction';
 import { sayAgain } from '@ValenceI18n/sayAgain';
 import { sayCount } from '@ValenceI18n/sayCount';
@@ -95,73 +94,63 @@ const LiveTvPanel = () => {
         </span>
       ),
     },
-    {
-      id: 'act',
-      header: '',
-      enableSorting: false,
-      cell: ({ row }) => (
-        <span className="flex justify-end">
-          <ActionMenu
-            label={say('common.actionsForName', { name: row.original.name })}
-            trigger={<Icon of={MoreHorizontalIcon} size={16} />}
-            groups={[
-              {
-                items: [
-                  {
-                    id: 'read',
-                    label: say('screens.adminArea.linkedServersPanel.readAgainNow'),
-                    icon: <Icon of={RefreshCwFilledIcon} size={15} />,
-                    isDisabled: reading !== null,
-                    onChoose: () => {
-                      setReading(row.original.id);
-                      void refreshLiveSource(row.original.id)
-                        .then(async (sent) => {
-                          tellOutcome(
-                            say('screens.adminArea.liveTvPanel.readNameCountChannels', {
-                              name: row.original.name,
-                              count: String(sent.value?.channelCount ?? 0),
-                            }),
-                            failureOfRefusal(sent.refusal),
-                          );
-                          await reread();
-                        })
-                        .finally(() => {
-                          setReading(null);
-                        });
-                    },
-                  },
-                ],
+    rowActionsColumn(
+      (item) => item.name,
+      (item) => [
+        {
+          items: [
+            {
+              id: 'read',
+              label: say('screens.adminArea.linkedServersPanel.readAgainNow'),
+              icon: <Icon of={RefreshCwFilledIcon} size={15} />,
+              isDisabled: reading !== null,
+              onChoose: () => {
+                setReading(item.id);
+                void refreshLiveSource(item.id)
+                  .then(async (sent) => {
+                    tellOutcome(
+                      say('screens.adminArea.liveTvPanel.readNameCountChannels', {
+                        name: item.name,
+                        count: String(sent.value?.channelCount ?? 0),
+                      }),
+                      failureOfRefusal(sent.refusal),
+                    );
+                    await reread();
+                  })
+                  .finally(() => {
+                    setReading(null);
+                  });
               },
-              {
-                items: [
-                  {
-                    id: 'guide',
-                    label: say('screens.adminArea.liveTvPanel.guideAddressesMenu'),
-                    icon: <Icon of={CalendarFilledIcon} size={15} />,
-                    onChoose: () => {
-                      setGuiding(row.original);
-                    },
-                  },
-                ],
+            },
+          ],
+        },
+        {
+          items: [
+            {
+              id: 'guide',
+              label: say('screens.adminArea.liveTvPanel.guideAddressesMenu'),
+              icon: <Icon of={CalendarFilledIcon} size={15} />,
+              onChoose: () => {
+                setGuiding(item);
               },
-              {
-                items: [
-                  {
-                    id: 'remove',
-                    label: say('common.forget'),
-                    icon: <Icon of={BinFilledIcon} size={15} />,
-                    isDestructive: true,
-                    onChoose: () => {
-                      setRemoving(row.original);
-                    },
-                  },
-                ],
+            },
+          ],
+        },
+        {
+          items: [
+            {
+              id: 'remove',
+              label: say('common.forget'),
+              icon: <Icon of={BinFilledIcon} size={15} />,
+              isDestructive: true,
+              onChoose: () => {
+                setRemoving(item);
               },
-            ]}
-          />
-        </span>
-      ),
-    },
+            },
+          ],
+        },
+      ],
+    ),
   ];
 
   return (

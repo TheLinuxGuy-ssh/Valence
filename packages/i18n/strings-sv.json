@@ -8335,6 +8335,16 @@
     "context": "An error the requests service answers with (HTTP 400) when asked to bring in a Radarr, Sonarr, Lidarr, Prowlarr or Overseerr setup in a shape it cannot read (from `createArrImportRoutes`)."
   },
   {
+    "handler": "error.backups.noCopyByThatName",
+    "text": "There is no backup by that name.",
+    "context": "An error the server answers with (HTTP 404) in the app on the server (from `serveBackups`)."
+  },
+  {
+    "handler": "error.backups.theDumpToolIsNotInstalled",
+    "text": "{tool} is not installed on this server, so no backup could be taken.",
+    "context": "An error the server answers with (HTTP 503) in the app on the server (from `serveBackups`). {tool} names the database's dump program."
+  },
+  {
     "handler": "error.book.noCoverForThatBook",
     "text": "No cover for that book.",
     "context": "An error the server answers with (HTTP 404) in the app on the server (from `serveBook`)."
@@ -12425,6 +12435,146 @@
     "context": "Confirms a film or programme was put into a collection. {title} is the film or programme, {name} the collection."
   },
   {
+    "handler": "screens.admin.auditActionNames.accountBanned",
+    "text": "Account banned",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountChanged",
+    "text": "Account changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountCreated",
+    "text": "Account added",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountRemoved",
+    "text": "Account removed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountRolesChanged",
+    "text": "Roles changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountSessionEnded",
+    "text": "Device signed out",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountSignedOutEverywhere",
+    "text": "Signed out everywhere",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.accountUnbanned",
+    "text": "Ban lifted",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.backupRemoved",
+    "text": "Backup deleted",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.backupTaken",
+    "text": "Backup taken",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.filesMoved",
+    "text": "File moved",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.filesRemoved",
+    "text": "File deleted",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.filesRenamed",
+    "text": "File renamed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.libraryAdded",
+    "text": "Library added",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.libraryChanged",
+    "text": "Library changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.libraryRemoved",
+    "text": "Library removed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.libraryReset",
+    "text": "Library rebuilt",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.mediaRemoved",
+    "text": "Title deleted",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.pluginChanged",
+    "text": "Plugin changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.pluginInstalled",
+    "text": "Plugin installed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.pluginRemoved",
+    "text": "Plugin removed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.roleCreated",
+    "text": "Role created",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.roleRemoved",
+    "text": "Role removed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.settingsChanged",
+    "text": "Settings changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.shareWithdrawn",
+    "text": "Link withdrawn",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.webhookAdded",
+    "text": "Webhook added",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.webhookChanged",
+    "text": "Webhook changed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
+    "handler": "screens.admin.auditActionNames.webhookRemoved",
+    "text": "Webhook removed",
+    "context": "A kind of change in the admin area’s audit log."
+  },
+  {
     "handler": "screens.admin.describeLogLevel.debug",
     "text": "Debug",
     "context": "The label in the admin (from `describeLogLevel`)."
@@ -12473,6 +12623,116 @@
     "handler": "screens.admin.nameOfSession.unknownViewer",
     "text": "Unknown viewer",
     "context": "Shown in the admin (from `nameOfSession`)."
+  },
+  {
+    "handler": "screens.admin.reasonNames.anamorphicVideoNotSupported",
+    "text": "The device can’t play anamorphic video",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.audioBitrateAboveLimit",
+    "text": "The sound’s bitrate is above the limit",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.audioChannelsAboveLimit",
+    "text": "More sound channels than the device takes",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.audioCodecNotSupported",
+    "text": "The device can’t play the sound format",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.audioProfileNotSupported",
+    "text": "The device can’t play the sound’s profile",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.audioSampleRateNotSupported",
+    "text": "The device can’t play the sound’s sample rate",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.clientSupportsSource",
+    "text": "The device plays the file as it is",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.containerNotSupported",
+    "text": "The device can’t open the file’s container",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.interlacedVideoNotSupported",
+    "text": "The device can’t play interlaced video",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.refFramesNotSupported",
+    "text": "Too many reference frames for the device",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.subtitleFormatNotSupported",
+    "text": "The device can’t show the subtitle format",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.subtitleNotCarryableInContainer",
+    "text": "The subtitles can’t travel in the stream",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.userForcedTranscode",
+    "text": "Somebody chose a lower quality",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoBitrateAboveLimit",
+    "text": "The video’s bitrate is above the limit",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoCodecNotSupported",
+    "text": "The device can’t play the video format",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoFramerateNotSupported",
+    "text": "The device can’t play the frame rate",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoLevelNotSupported",
+    "text": "The device can’t play the video’s level",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoNotSegmentable",
+    "text": "The video can’t be split up for streaming",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoProfileNotSupported",
+    "text": "The device can’t play the video’s profile",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoRangeNotSupported",
+    "text": "The device can’t show HDR",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoResolutionAboveLimit",
+    "text": "The picture is larger than the device allows",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
+  },
+  {
+    "handler": "screens.admin.reasonNames.videoRotationNotSupported",
+    "text": "The device can’t turn the video",
+    "context": "Why a play could not be sent to a device as the file lies, in the admin area's statistics."
   },
   {
     "handler": "screens.adminArea.accelerationOptions.aMDNeedsTheProprietaryDriver",
@@ -13025,6 +13285,16 @@
     "context": "The label in the admin area (from `adminSections`)."
   },
   {
+    "handler": "screens.adminArea.adminSections.auditLog",
+    "text": "Audit log",
+    "context": "An item in the admin sidebar, under Activity: who changed what on the server."
+  },
+  {
+    "handler": "screens.adminArea.adminSections.backups",
+    "text": "Backups",
+    "context": "An item in the admin sidebar, under System: copies of the database."
+  },
+  {
     "handler": "screens.adminArea.adminSections.content",
     "text": "Content",
     "context": "The label in the admin area (from `adminSections`)."
@@ -13038,6 +13308,16 @@
     "handler": "screens.adminArea.adminSections.overview",
     "text": "Overview",
     "context": "The label in the admin area (from `adminSections`)."
+  },
+  {
+    "handler": "screens.adminArea.adminSections.statistics",
+    "text": "Statistics",
+    "context": "An item in the admin sidebar, under Activity: what was watched and how."
+  },
+  {
+    "handler": "screens.adminArea.adminSections.updates",
+    "text": "Updates",
+    "context": "An item in the admin sidebar, under System: whether a newer release of Valence is out."
   },
   {
     "handler": "screens.adminArea.adminSetupGuide.addAMetadataKey",
@@ -13595,6 +13875,56 @@
     "context": "Shown in the ask for media dialog in the admin area. {LATER_PICKS} is filled in by the app."
   },
   {
+    "handler": "screens.adminArea.auditPanel.aboutTheAuditLog",
+    "text": "About the audit log",
+    "context": "Read out for the information mark on the audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.everyChange",
+    "text": "Every change",
+    "context": "The choice that shows every kind of change. In the admin area’s audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.everyChangeAnAdministratorMakes",
+    "text": "Every change made to accounts, roles, settings, libraries, files, links, plugins, webhooks and backups, with who made it and when.",
+    "context": "Explains the admin area’s audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.nothingHasBeenChangedYet",
+    "text": "Nothing has been changed yet.",
+    "context": "Shown when the audit log is empty."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.onWhat",
+    "text": "On what",
+    "context": "A column heading: what the change was made to. In the admin area’s audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.readFurtherBack",
+    "text": "Read further back",
+    "context": "A button that loads older changes. In the admin area’s audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.readingTheAuditLog",
+    "text": "Reading the audit log…",
+    "context": "Shown while the audit log loads."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.somebodySinceRemoved",
+    "text": "Somebody since removed",
+    "context": "Who made a change, when their account no longer exists. In the admin area’s audit log."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.theAuditLogCouldNotBeRead",
+    "text": "The audit log could not be read.",
+    "context": "Shown when the audit log failed to load."
+  },
+  {
+    "handler": "screens.adminArea.auditPanel.whichChanges",
+    "text": "Which changes",
+    "context": "Read out for the choice of which kind of change to show. In the admin area’s audit log."
+  },
+  {
     "handler": "screens.adminArea.authorUnknown",
     "text": "Author unknown",
     "context": "Shown in the admin area."
@@ -13618,6 +13948,111 @@
     "handler": "screens.adminArea.backgroundJobs.theQueueCouldNotBeRead",
     "text": "Couldn’t load the queue from the server.",
     "context": "Text shown in the background jobs in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.aboutBackups",
+    "text": "About backups",
+    "context": "Read out for the information mark on the backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.aCopyOfTheWholeDatabase",
+    "text": "A copy of the whole database: every account, profile, watch history, request, setting and plugin setting.",
+    "context": "Explains backups. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.aCopyOfTheWholeDatabaseKeptIn",
+    "text": "A copy of the whole database: every account, profile, watch history, request, setting and plugin setting. Kept in {folder}, with the newest {kept} from the schedule and from before each upgrade. Ones taken by hand stay until you delete them. Download one now and then to keep it off this machine.",
+    "context": "Explains backups. {folder} is where they are kept and {kept} how many of each are kept. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.backedUpTheDatabase",
+    "text": "Backed up the database.",
+    "context": "A message once a backup has been taken. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.backingUpTheDatabase",
+    "text": "Backing up the database…",
+    "context": "A message while a backup is being taken, on the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.backUpNow",
+    "text": "Back up now",
+    "context": "A button that takes a backup of the database at once. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.backupsCannotBeTakenHere",
+    "text": "Backups can’t be taken here",
+    "context": "A warning on the backups page when the database’s dump program is missing."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.beforeAnUpgrade",
+    "text": "Before an upgrade",
+    "context": "Why a backup was taken: just before an upgrade changed the database. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.byHand",
+    "text": "By hand",
+    "context": "Why a backup was taken: somebody asked for it. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.deletedTheBackup",
+    "text": "Deleted the backup.",
+    "context": "A message once a backup has been deleted."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.deleteThisBackup",
+    "text": "Delete this backup?",
+    "context": "The title of the dialog that confirms deleting a backup."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.itIsRemovedFromTheBackupFolder",
+    "text": "It is removed from the backup folder and cannot be put back afterwards.",
+    "context": "Explains what deleting a backup does."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.noBackupsYet",
+    "text": "No backups yet. One is taken every week, and before every upgrade.",
+    "context": "Shown when there are no backups. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.onTheSchedule",
+    "text": "On the schedule",
+    "context": "Why a backup was taken: the weekly schedule. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.putItBack",
+    "text": "Put it back",
+    "context": "An action on a backup. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.readingTheBackups",
+    "text": "Reading the backups…",
+    "context": "Shown while the backups page loads."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.taken",
+    "text": "Taken",
+    "context": "A column heading: when a backup was taken. On the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.theBackupCouldNotBeDeleted",
+    "text": "The backup could not be deleted.",
+    "context": "A message when a backup could not be deleted."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.theBackupCouldNotBeTaken",
+    "text": "The backup could not be taken.",
+    "context": "A message when a backup failed, on the admin area’s backups page."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.theBackupsCouldNotBeRead",
+    "text": "The backups could not be read.",
+    "context": "Shown when the backups page failed to load."
+  },
+  {
+    "handler": "screens.adminArea.backupsPanel.toolIsNotInstalled",
+    "text": "{tool} is not installed beside this server. It comes with the Valence Docker image; install it where Valence runs to take backups.",
+    "context": "Explains the warning. {tool} names the dump program. On the admin area’s backups page."
   },
   {
     "handler": "screens.adminArea.brandCard.accent",
@@ -13788,6 +14223,41 @@
     "handler": "screens.adminArea.bucketDialog.wasabi",
     "text": "Wasabi",
     "context": "A choice of S3-compatible service in the bucket dialog."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.count.plays.one",
+    "text": "{count} play",
+    "context": "How many plays were started in an hour."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.count.plays.other",
+    "text": "{count} plays",
+    "context": "How many plays were started in an hour."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.dayAtHour",
+    "text": "{day} at {hour}",
+    "context": "The heading of the card that opens over an hour in the grid of the week’s busy hours. {day} and {hour} say which."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.dayAtHourStarted",
+    "text": "{day} at {hour} · {started}",
+    "context": "Under the grid of the week’s busy hours, for the hour pointed at. {started} is how many plays, such as “3 plays”."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.labelBusiest",
+    "text": "{label}. Busiest on {day} at {hour}.",
+    "context": "Read out for the grid of the week’s busy hours. {label} says what it shows, {day} and {hour} when it was busiest."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.mostlyWatched",
+    "text": "Mostly watched",
+    "context": "A heading over what was watched most in an hour, in the card over the grid of the week’s busy hours."
+  },
+  {
+    "handler": "screens.adminArea.busyHoursGrid.nothingWasStarted",
+    "text": "Nothing was started in this range.",
+    "context": "Under the grid of the week’s busy hours, when nothing was watched."
   },
   {
     "handler": "screens.adminArea.cacheBreakdown.countingWhatIsOnTheDisk",
@@ -15353,6 +15823,11 @@
     "handler": "screens.adminArea.fileDetails.count.selected.other",
     "text": "{count} chosen",
     "context": "In the side of the admin’s file manager that says what is chosen. How many files and folders are chosen."
+  },
+  {
+    "handler": "screens.adminArea.fileDetails.resizeTheDetails",
+    "text": "Resize the details",
+    "context": "In the side of the admin’s file manager that says what is chosen. Read out for the edge that is dragged to make the side wider or narrower."
   },
   {
     "handler": "screens.adminArea.fileDetails.together",
@@ -17295,6 +17770,11 @@
     "context": "The label in the media panel in the admin area."
   },
   {
+    "handler": "screens.adminArea.mediaPanel.couldNotBeRead",
+    "text": "Couldn’t be read",
+    "context": "A choice of which titles the admin area’s media page lists: files that could not be read."
+  },
+  {
     "handler": "screens.adminArea.mediaPanel.deleteEveryEpisodeOfName",
     "text": "Delete every episode of {name}?",
     "context": "Shown in the media panel in the admin area. {name} is filled in by the app."
@@ -17450,6 +17930,11 @@
     "context": "Text shown in the media panel in the admin area."
   },
   {
+    "handler": "screens.adminArea.mediaPanel.thereTwice",
+    "text": "There twice",
+    "context": "A choice of which titles the admin area’s media page lists: titles that are in a library more than once."
+  },
+  {
     "handler": "screens.adminArea.mediaPanel.unmatched",
     "text": "Unmatched",
     "context": "Shown in the media panel in the admin area."
@@ -17485,6 +17970,21 @@
     "context": "The label in the admin area."
   },
   {
+    "handler": "screens.adminArea.mostWatchedList.hours",
+    "text": "{hours} h",
+    "context": "How long something was watched for, in hours. {hours} is a number such as 2.5."
+  },
+  {
+    "handler": "screens.adminArea.mostWatchedList.mostWatched",
+    "text": "Most watched",
+    "context": "A card the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.mostWatchedList.nothingWasWatched",
+    "text": "Nothing was watched in this range.",
+    "context": "Shown in a list of titles or people when nothing was watched, the admin area's statistics."
+  },
+  {
     "handler": "screens.adminArea.moveToLibraryDialog.moveNameToAnotherLibrary",
     "text": "Move {name} to another library",
     "context": "The dialog, in the admin’s list of media, that moves a film or programme filed in the wrong library into another. Its title. {name} is the film, programme or file."
@@ -17518,6 +18018,41 @@
     "handler": "screens.adminArea.nameCouldNotBeScanned",
     "text": "Couldn’t scan {name}.",
     "context": "Shown in the admin area. {name} is filled in by the app."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.aNewReleaseIsOut",
+    "text": "A new release is out",
+    "context": "On the admin overview’s Waiting on you card, above the newer release’s number."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.downloadsThatFailed",
+    "text": "Downloads that failed",
+    "context": "A count on the admin overview’s Waiting on you card."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.jobsThatFailedToday",
+    "text": "Jobs that failed today",
+    "context": "A count on the admin overview’s Waiting on you card: jobs that failed in the last day."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.libraryProblems",
+    "text": "Library problems",
+    "context": "A count on the admin overview’s Waiting on you card."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.requestsToApprove",
+    "text": "Requests to approve",
+    "context": "A count on the admin overview’s Waiting on you card."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.valenceIsUpToDate",
+    "text": "Valence is up to date",
+    "context": "On the admin overview’s Waiting on you card, when the newest release is running."
+  },
+  {
+    "handler": "screens.adminArea.needsYouCard.waitingOnYou",
+    "text": "Waiting on you",
+    "context": "The card at the top of the admin overview that counts what needs an administrator."
   },
   {
     "handler": "screens.adminArea.noAlbumIsBeingCorrected",
@@ -17758,6 +18293,31 @@
     "handler": "screens.adminArea.pausedThatStream",
     "text": "Paused that stream.",
     "context": "Shown in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.playbackModeShare.everyPlayWentAsTheFileLies",
+    "text": "Every play went as the file lies.",
+    "context": "Shown when the server converted nothing, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.playbackModeShare.howPlaysReachedTheirDevices",
+    "text": "How plays reached their devices",
+    "context": "Read out for the chart of how plays were delivered, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.playbackModeShare.nothingWasPlayedInThisRange",
+    "text": "Nothing was played in this range.",
+    "context": "Shown in place of the chart of how plays were delivered, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.playbackModeShare.whyItWasConverted",
+    "text": "Why it was converted",
+    "context": "The heading over the reasons the server converted plays, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.playbackModeShare.whyPlaysWereConverted",
+    "text": "Why plays were converted",
+    "context": "Read out for the list of reasons the server converted plays, the admin area's statistics."
   },
   {
     "handler": "screens.adminArea.pluginsPanel.chooseAVpluginFileAndIts",
@@ -18795,6 +19355,11 @@
     "context": "A short message shown once something is done in the requests panel in the admin area."
   },
   {
+    "handler": "screens.adminArea.requestsPanel.checkingTheRequests",
+    "text": "Checking the requests…",
+    "context": "A message while the requests service is being checked, on the admin area’s requests page."
+  },
+  {
     "handler": "screens.adminArea.requestsPanel.checkNow",
     "text": "Check now",
     "context": "Text shown in the requests panel in the admin area."
@@ -18873,6 +19438,51 @@
     "handler": "screens.adminArea.requestsPanel.whichVersionOfTheRequestsService",
     "text": "Which version of the requests service is running.",
     "context": "The description of a setting row in the requests panel in the admin area."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.everythingWrittenSinceItWasTaken",
+    "text": "Everything written since it was taken is lost, so this can’t be done while Valence is running.",
+    "context": "Explains restoring. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.putTheCopyBack",
+    "text": "Put the copy back",
+    "context": "A step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.putThisBackupBack",
+    "text": "Put this backup back",
+    "context": "The title of the dialog. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.runThisBesideYourComposeFile",
+    "text": "Run this in the folder that holds your compose file.",
+    "context": "Explains a step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.startTheReleaseFromBeforeTheUpgrade",
+    "text": "Start the release from before the upgrade it was taken ahead of; a newer one changes the database again.",
+    "context": "Explains a step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.startTheSameRelease",
+    "text": "Start the release that was running when it was taken.",
+    "context": "Explains a step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.startValenceAgain",
+    "text": "Start Valence again",
+    "context": "A step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.stopValence",
+    "text": "Stop Valence",
+    "context": "A step. In the dialog that explains how to put a backup back."
+  },
+  {
+    "handler": "screens.adminArea.restoreBackupDialog.theDatabaseCannotBeReplaced",
+    "text": "The database can’t be replaced while the server is using it.",
+    "context": "Explains a step. In the dialog that explains how to put a backup back."
   },
   {
     "handler": "screens.adminArea.resumedThatStream",
@@ -19790,6 +20400,101 @@
     "context": "Shown in the admin area."
   },
   {
+    "handler": "screens.adminArea.statisticsPanel.addedEachWeek",
+    "text": "Added each week",
+    "context": "A chart of how many titles arrived each week, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.anUnknownDevice",
+    "text": "An unknown device",
+    "context": "A device that did not say what it was, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.aRemovedProfile",
+    "text": "A removed profile",
+    "context": "In the admin area’s statistics, for watching by a profile that has since been removed."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.asTheFileLies",
+    "text": "As the file lies",
+    "context": "A column heading: the share of plays sent to a device without converting them, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.busiestTimes",
+    "text": "Busiest times",
+    "context": "A card showing the busiest hours of the week, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.byDevice",
+    "text": "By device",
+    "context": "A card listing how plays went on each device, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.hoursWatched",
+    "text": "Hours watched",
+    "context": "A figure the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.howThingsPlayed",
+    "text": "How things played",
+    "context": "A card showing how plays reached their devices, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.mostActive",
+    "text": "Most active",
+    "context": "A card listing the profiles that watched most, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.peopleWatching",
+    "text": "People watching",
+    "context": "A figure: how many profiles watched something, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.playsEachDay",
+    "text": "Plays each day",
+    "context": "A chart the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.readingTheStatistics",
+    "text": "Reading the statistics…",
+    "context": "Shown while the admin area’s statistics load."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.theStatisticsCouldNotBeRead",
+    "text": "The statistics could not be read.",
+    "context": "Shown when the admin area’s statistics failed to load."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.titlesAdded",
+    "text": "Titles added",
+    "context": "The series in the chart of titles that arrived each week, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsPanel.titlesWatched",
+    "text": "Titles watched",
+    "context": "A figure: how many different titles were watched, the admin area's statistics."
+  },
+  {
+    "handler": "screens.adminArea.statisticsRangeChoice.howFarBackToLook",
+    "text": "How far back to look",
+    "context": "Read out for the choice of how far back the admin area’s statistics look."
+  },
+  {
+    "handler": "screens.adminArea.statisticsRangeChoice.last30Days",
+    "text": "Last 30 days",
+    "context": "A choice of how far back the admin area’s statistics look."
+  },
+  {
+    "handler": "screens.adminArea.statisticsRangeChoice.last90Days",
+    "text": "Last 90 days",
+    "context": "A choice of how far back the admin area’s statistics look."
+  },
+  {
+    "handler": "screens.adminArea.statisticsRangeChoice.lastYear",
+    "text": "Last year",
+    "context": "A choice of how far back the admin area’s statistics look."
+  },
+  {
     "handler": "screens.adminArea.statStrip.aboutLabel",
     "text": "About {label}",
     "context": "The label of a icon in the stat strip in the admin area. {label} is filled in by the app."
@@ -20585,6 +21290,141 @@
     "context": "Text shown in the admin area."
   },
   {
+    "handler": "screens.adminArea.updatesPanel.aBackupIsTakenBeforeTheDatabaseChanges",
+    "text": "A backup is taken before the new release changes the database, so you can go back.",
+    "context": "Explains a step. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.anUpdateIsOut",
+    "text": "An update is out",
+    "context": "A badge when a newer release is out. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.cameOutWhen",
+    "text": "Came out {when}",
+    "context": "When the newest release came out. {when} is such as “2 days ago”. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.checkingForUpdatesIsOff",
+    "text": "Checking for updates is off",
+    "context": "A note when the server was told not to check. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.couldNotCheck",
+    "text": "Could not check",
+    "context": "A warning when GitHub could not be asked. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.fetchTheNewRelease",
+    "text": "Fetch the new release",
+    "context": "A step. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.howToUpdate",
+    "text": "How to update",
+    "context": "A card with the update commands. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.lastChecked",
+    "text": "Last checked",
+    "context": "A figure: when GitHub was last asked. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.lookingForUpdates",
+    "text": "Looking for updates…",
+    "context": "Shown while the updates page loads."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.newestRelease",
+    "text": "Newest release",
+    "context": "A figure. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.noReleaseNotesYet",
+    "text": "No release notes to show yet.",
+    "context": "Shown when there are no release notes. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.readItOnGitHub",
+    "text": "Read it on GitHub",
+    "context": "A link to the release on GitHub. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.byAuthor",
+    "text": "@{name}",
+    "context": "Who wrote a change, by their GitHub handle. {name} is the handle. In the changelog on the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.fixed",
+    "text": "Fixed",
+    "context": "Heading over the fixes in one release, in the changelog on the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.hideWhatChangedInVersion",
+    "text": "Hide what changed in {version}",
+    "context": "Label for folding one release in the changelog. {version} is the release. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.newer",
+    "text": "Newer",
+    "context": "A badge on a release newer than the one this server runs, in the changelog on the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.noNotesForThisRelease",
+    "text": "No notes were written for this release.",
+    "context": "Shown inside a release in the changelog when it has no notes. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.otherChanges",
+    "text": "Other changes",
+    "context": "Heading over changes in one release that are neither features nor fixes, in the changelog on the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.pullNumber",
+    "text": "#{number}",
+    "context": "A link to the pull request a change came from. {number} is its number. In the changelog on the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.releaseEntry.showWhatChangedInVersion",
+    "text": "Show what changed in {version}",
+    "context": "Label for opening one release in the changelog. {version} is the release. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.startItInPlaceOfThisOne",
+    "text": "Start it in place of this one",
+    "context": "A step. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.thisServerRuns",
+    "text": "This server runs",
+    "context": "A figure: the release this server runs. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.thisServerWasStartedWithChecksOff",
+    "text": "This server was started with CHECK_FOR_UPDATES=false, so it never asks GitHub. Remove it to be told when a release is out.",
+    "context": "Explains the note. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.upToDate",
+    "text": "Up to date",
+    "context": "A badge when the server runs the newest release. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.whatsNew",
+    "text": "What’s new",
+    "context": "A card with the newest release’s notes. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.whatsNewInVersion",
+    "text": "What’s new in {version}",
+    "context": "A card with the newest release’s notes. {version} is the release. On the admin area’s updates page."
+  },
+  {
+    "handler": "screens.adminArea.updatesPanel.whetherAnUpdateIsOutCouldNotBeRead",
+    "text": "Whether an update is out could not be read.",
+    "context": "Shown when the updates page failed to load."
+  },
+  {
     "handler": "screens.adminArea.uploadMediaDialog.chooseAFolder",
     "text": "Choose a folder",
     "context": "Text shown in the upload media dialog in the admin area."
@@ -20990,6 +21830,16 @@
     "context": "Shown in the admin area."
   },
   {
+    "handler": "screens.adminArea.whatsNewCard.askedForByName",
+    "text": "Asked for by {name}",
+    "context": "Under a requested title that has arrived, on the admin overview. {name} is who asked."
+  },
+  {
+    "handler": "screens.adminArea.whatsNewCard.nothingHasArrivedYet",
+    "text": "Nothing has arrived yet.",
+    "context": "Shown on the admin overview’s What’s new card when nothing has."
+  },
+  {
     "handler": "screens.adminArea.whyThereIsNoFigure",
     "text": "Why there is no figure",
     "context": "Text shown in the admin area."
@@ -21015,9 +21865,24 @@
     "context": "The label of a button in the admin page."
   },
   {
+    "handler": "screens.adminPage.pinToTheSidebar",
+    "text": "Pin {name} to the sidebar",
+    "context": "A button beside an admin page’s title. {name} is the page."
+  },
+  {
     "handler": "screens.adminPage.readingWhatYouMayDo",
     "text": "Checking your permissions",
     "context": "The label of a spinner in the admin page."
+  },
+  {
+    "handler": "screens.adminPage.resizeTheSidebar",
+    "text": "Resize the sidebar",
+    "context": "On the admin area. Read out for the edge of the sidebar that is dragged to make it wider or narrower."
+  },
+  {
+    "handler": "screens.adminPage.unpinFromTheSidebar",
+    "text": "Unpin {name} from the sidebar",
+    "context": "A button beside an admin page’s title. {name} is the page."
   },
   {
     "handler": "screens.adminPage.valenceVersion",
@@ -21113,11 +21978,6 @@
     "handler": "screens.app.loadingInitialTitle",
     "text": "Loading {initialTitle}",
     "context": "The label of a splash screen in the app. {initialTitle} is filled in by the app."
-  },
-  {
-    "handler": "screens.appShell.admin",
-    "text": "Admin",
-    "context": "The label in the app shell."
   },
   {
     "handler": "screens.appShell.chooseSomethingAtRandom",
@@ -22160,6 +23020,11 @@
     "context": "Shown in the download queue table in the downloads panel."
   },
   {
+    "handler": "screens.downloadsPanel.downloadQueueTable.states.processing",
+    "text": "Processing",
+    "context": "A state of a download, in the filter on the state column of the admin area’s download queue."
+  },
+  {
     "handler": "screens.downloadsPanel.giveUpRulesList.aMagnetThatNeverLearnsWhat",
     "text": "A magnet link that never fetches its file list, usually because there are no seeders.",
     "context": "The description of a wait row in the give up rules list in the downloads panel."
@@ -22208,11 +23073,6 @@
     "handler": "screens.downloadsPanel.giveUpRulesList.whatCouldNotBeSaved",
     "text": "Couldn’t save {what}.",
     "context": "Shown in the give up rules list in the downloads panel. {what} is filled in by the app."
-  },
-  {
-    "handler": "screens.downloadsPanel.giveUpRulesList.whenADownloadRunsIntoOne",
-    "text": "When a download hits one of these, Valence removes it, blocklists the release for that request, and searches for the next best release.",
-    "context": "Text shown in the give up rules list in the downloads panel."
   },
   {
     "handler": "screens.downloadsPanel.giveUpRulesList.whenDownloadsAreGivenUpOnCouldNotBeRead",
@@ -24185,14 +25045,19 @@
     "context": "Under the live TV player, what follows on the channel. {time} is a clock time, {title} the programme."
   },
   {
-    "handler": "screens.liveTvPage.noChannelsYet",
-    "text": "There are no live TV channels yet. An admin can add a stream, a playlist or a tuner under Server → Live TV.",
-    "context": "Shown on the live TV page when no channels have been added."
+    "handler": "screens.liveTvPage.noChannelsAndHowToAddThem",
+    "text": "An admin can add a stream, a playlist or a tuner under Server → Live TV.",
+    "context": "Under the heading on the live TV page when there are no channels, saying how to add some."
   },
   {
     "handler": "screens.liveTvPage.noFavouritesYet",
     "text": "You haven’t kept any channels yet. Star one to find it here.",
     "context": "Shown in the live TV guide when the favourites filter is on and nothing is kept."
+  },
+  {
+    "handler": "screens.liveTvPage.noLiveChannelsYet",
+    "text": "No live TV channels yet",
+    "context": "The heading on the live TV page when nobody has added a channel."
   },
   {
     "handler": "screens.liveTvPage.notAllDay",
@@ -24358,6 +25223,11 @@
     "handler": "screens.logExplorer.timeInZone",
     "text": "Time ({zone})",
     "context": "The heading of the time column in the server log. {zone} is the reader's own time zone, such as BST."
+  },
+  {
+    "handler": "screens.logLevelBadge.error",
+    "text": "Error",
+    "context": "The level of a log record for something that went wrong, on its badge in a log list."
   },
   { "handler": "screens.lyricLines.end", "text": "End", "context": "Shown in the lyric lines." },
   {
@@ -25034,6 +25904,11 @@
     "handler": "screens.observabilityPage.jobHistory.searchJobRuns",
     "text": "Search job runs",
     "context": "The label of a text field in the job history in the observability page."
+  },
+  {
+    "handler": "screens.observabilityPage.jobHistory.theWholeServer",
+    "text": "The whole server",
+    "context": "In the filter on the subject column of the job history: runs not about one library."
   },
   {
     "handler": "screens.observabilityPage.jobHistory.tookElapsed",
@@ -29591,6 +30466,11 @@
     "context": "Description of the scheduled job that checks every live TV channel."
   },
   {
+    "handler": "server.jobs.jobDefinitions.backUpTheDatabase",
+    "text": "Back up the database",
+    "context": "The label in the jobs on the server (from `jobDefinitions`)."
+  },
+  {
     "handler": "server.jobs.jobDefinitions.bringEverythingAcross",
     "text": "Import from Jellyfin, Emby or Plex",
     "context": "The label of the import job in the jobs list on the server."
@@ -29673,6 +30553,11 @@
   {
     "handler": "server.jobs.jobDefinitions.clearsExpiredSignIns",
     "text": "Clears expired sign-ins.",
+    "context": "The description in the jobs on the server (from `jobDefinitions`)."
+  },
+  {
+    "handler": "server.jobs.jobDefinitions.copiesTheWholeDatabaseIntoTheBackupFolder",
+    "text": "Copies the whole database into the backup folder, keeping the newest few.",
     "context": "The description in the jobs on the server (from `jobDefinitions`)."
   },
   {
@@ -30951,6 +31836,16 @@
     "context": "Shown in the surfaces on the server (from `cleanSurface`)."
   },
   {
+    "handler": "server.updates.createUpdateChecker.githubAnsweredStatus",
+    "text": "GitHub answered {status} when asked for the newest release.",
+    "context": "Why the admin area could not say whether a newer release is out (from `createUpdateChecker`). {status} is the HTTP status GitHub answered with."
+  },
+  {
+    "handler": "server.updates.createUpdateChecker.githubCouldNotBeReached",
+    "text": "GitHub could not be reached to look for a newer release.",
+    "context": "Why the admin area could not say whether a newer release is out (from `createUpdateChecker`)."
+  },
+  {
     "handler": "server.webhooks.closedValence",
     "text": "{viewer} closed Valence on {device}.",
     "context": "A webhook message sent when somebody closes Valence. {viewer} is who; {device} is the device, such as Firefox on Windows."
@@ -32201,6 +33096,11 @@
     "context": "Shown in the colour picker. {value} is filled in by the app; {value2} is filled in by the app."
   },
   {
+    "handler": "ui.commandPalette.escape",
+    "text": "Esc",
+    "context": "The key that closes the command palette, shown as a key cap."
+  },
+  {
     "handler": "ui.couldNotRead.theServerMayBeUnreachable",
     "text": "The server may be unreachable, or your session may have expired.",
     "context": "Shown after a sentence saying something could not be read from the server, above a button to try again."
@@ -32260,6 +33160,11 @@
     "handler": "ui.rail.forwardAPageOfTitle",
     "text": "Forward a page of {title}",
     "context": "The label of a button in the rail. {title} is filled in by the app."
+  },
+  {
+    "handler": "ui.sidebarGroup.labelWaiting",
+    "text": "{label}, {count} waiting",
+    "context": "Read out for a sidebar item with things waiting behind it. {label} is the item, {count} how many."
   },
   {
     "handler": "ui.siteFooter.builtWith",

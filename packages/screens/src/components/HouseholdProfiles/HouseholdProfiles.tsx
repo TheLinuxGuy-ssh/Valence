@@ -1,9 +1,10 @@
+import { PanelCard } from '@ValenceUI/PanelCard';
+import { PanelCardInfo } from '@ValenceScreens/components/PanelCardInfo/PanelCardInfo';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   Crown as CrownFilledIcon,
   Lock as LockFilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Pen as PenFilledIcon,
   Bin as BinFilledIcon,
   Film as FilmFilledIcon,
@@ -84,20 +85,26 @@ const HouseholdProfiles = ({ accountId }: HouseholdProfilesProps) => {
   const { profiles } = list.data;
 
   return (
-    <section className="flex flex-col gap-3">
-      <p className="text-sm leading-relaxed text-text-muted">
-        {accountId === undefined
-          ? say('screens.householdProfiles.eachProfileKeepsItsOwn')
-          : say('screens.householdProfiles.theProfilesOnThisAccount')}
-      </p>
-
+    <PanelCard
+      title={say('common.profiles')}
+      isFlush
+      actions={
+        <PanelCardInfo
+          label={say('common.aboutName', { name: say('common.profiles') })}
+          detail={
+            accountId === undefined
+              ? say('screens.householdProfiles.eachProfileKeepsItsOwn')
+              : say('screens.householdProfiles.theProfilesOnThisAccount')
+          }
+        />
+      }
+    >
       <ProfileRoster
         profiles={profiles}
         menuFor={(profile) => (
           <ActionMenu
             label={say('common.changeName', { name: profile.name })}
             align="end"
-            trigger={<Icon of={MoreHorizontalIcon} size={16} />}
             groups={[
               {
                 items: [
@@ -335,7 +342,7 @@ const HouseholdProfiles = ({ accountId }: HouseholdProfilesProps) => {
           });
         }}
       />
-    </section>
+    </PanelCard>
   );
 };
 

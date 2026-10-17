@@ -9,7 +9,6 @@ import {
   Copy as CopyIcon,
   Link as LinkFilledIcon,
   Mail as MailFilledIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Plus as PlusFilledIcon,
   Plus as PlusIcon,
   RefreshCw as RefreshCwIcon,
@@ -81,7 +80,7 @@ import type { Role } from '@ValenceContracts/schemas/Permission';
 import type { LibraryReach } from '@ValenceContracts/schemas/LibraryAccess';
 import type { Avatar } from '@ValenceContracts/schemas/ViewerProfile';
 import type { AccountAvatarDraft } from './components/AccountAvatarPicker/AccountAvatarPicker.types';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { setCeiling, setLibraryAccess } from '@ValenceClient/admin/fetchLibraryAccess';
 import { say } from '@ValenceI18n/say';
 import { sayCount } from '@ValenceI18n/sayCount';
@@ -659,7 +658,6 @@ const AccountsPanel = () => {
 
               <ActionMenu
                 label={say('common.actionsForName', { name: account.name })}
-                trigger={<Icon of={MoreHorizontalIcon} size={16} />}
                 groups={[
                   {
                     items: [

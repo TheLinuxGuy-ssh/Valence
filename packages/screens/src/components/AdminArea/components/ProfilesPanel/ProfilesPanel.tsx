@@ -1,3 +1,4 @@
+import { rowActionsColumn } from '@ValenceUI/DataTable/rowActionsColumn';
 import { failureOfRefusal } from '@ValenceScreens/admin/failureOf';
 import { tellOutcome } from '@ValenceScreens/admin/tellOutcome';
 import { PanelCardAction } from '@ValenceScreens/components/PanelCardAction/PanelCardAction';
@@ -8,12 +9,10 @@ import {
   ArrowUp as ArrowUpFilledIcon,
   Bin as BinFilledIcon,
   GripVertical as GripVerticalIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Pen as PenFilledIcon,
   Plus as PlusFilledIcon,
   SearchList as SearchListFilledIcon,
 } from '@keyline-icons/react/fill';
-import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { ReleaseSearchDialog } from '@ValenceScreens/components/AdminArea/components/ReleaseSearchDialog/ReleaseSearchDialog';
 import { ConfirmDialog } from '@ValenceUI/ConfirmDialog';
 import { CouldNotRead } from '@ValenceUI/CouldNotRead';
@@ -29,7 +28,7 @@ import { useRequestableKinds } from '@ValenceClient/requests/useRequestableKinds
 import { isEveryLibraryHandedOff } from '@ValenceClient/requests/isEveryLibraryHandedOff';
 import { removeProfile, reorderProfiles } from '@ValenceClient/requests/fetchProfiles';
 import { TableSection } from '@ValenceScreens/components/AdminArea/components/TableSection/TableSection';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { ProfileEditor } from '@ValenceScreens/components/AdminArea/components/ProfileEditor/ProfileEditor';
 import { describeAskers } from './describeAskers';
 import { describeProfile } from './describeProfile';
@@ -190,6 +189,7 @@ const ProfilesPanel = () => {
       },
       {
         id: 'upgrades',
+        meta: { hidesOnPhones: true },
         header: say('common.upgrades'),
         accessorFn: (profile) => describeProfile(profile).upgrades,
         cell: ({ row }) => (
@@ -198,6 +198,7 @@ const ProfilesPanel = () => {
       },
       {
         id: 'askers',
+        meta: { hidesOnPhones: true },
         header: say('common.whoCanUseIt'),
         accessorFn: (profile) => describeAskers(profile),
         cell: ({ row }) => (
@@ -206,6 +207,7 @@ const ProfilesPanel = () => {
       },
       {
         id: 'libraries',
+        meta: { hidesOnPhones: true },
         header: say('common.usedFor'),
         accessorFn: (profile) => profile.libraryIds.length,
         cell: ({ row }) => (
@@ -218,79 +220,69 @@ const ProfilesPanel = () => {
           </span>
         ),
       },
-      {
-        id: 'act',
-        header: '',
-        enableSorting: false,
-        cell: ({ row }) => (
-          <span className="flex justify-end">
-            <ActionMenu
-              label={say('common.actionsForName', { name: row.original.name })}
-              trigger={<Icon of={MoreHorizontalIcon} size={16} />}
-              groups={[
-                {
-                  items: [
-                    {
-                      id: 'change',
-                      label: say('common.change'),
-                      icon: <Icon of={PenFilledIcon} size={15} />,
-                      onChoose: () => {
-                        setEditing(row.original);
-                      },
-                    },
-                    ...(moveProfile(profiles.data ?? [], row.original.id, -1) === null
-                      ? []
-                      : [
-                          {
-                            id: 'up',
-                            label: say('common.moveUp'),
-                            icon: <Icon of={ArrowUpFilledIcon} size={15} />,
-                            onChoose: () => {
-                              move(row.original, -1);
-                            },
-                          },
-                        ]),
-                    ...(moveProfile(profiles.data ?? [], row.original.id, 1) === null
-                      ? []
-                      : [
-                          {
-                            id: 'down',
-                            label: say('common.moveDown'),
-                            icon: <Icon of={ArrowDownFilledIcon} size={15} />,
-                            onChoose: () => {
-                              move(row.original, 1);
-                            },
-                          },
-                        ]),
-                    {
-                      id: 'try',
-                      label: say('screens.adminArea.profilesPanel.tryIt'),
-                      detail: say('screens.adminArea.profilesPanel.searchesTheIndexersAndShows'),
-                      icon: <Icon of={SearchListFilledIcon} size={15} />,
-                      onChoose: () => {
-                        setTrying(row.original);
-                      },
-                    },
-                  ],
+      rowActionsColumn(
+        (item) => item.name,
+        (item) => [
+          {
+            items: [
+              {
+                id: 'change',
+                label: say('common.change'),
+                icon: <Icon of={PenFilledIcon} size={15} />,
+                onChoose: () => {
+                  setEditing(item);
                 },
-                {
-                  items: [
+              },
+              ...(moveProfile(profiles.data ?? [], item.id, -1) === null
+                ? []
+                : [
                     {
-                      id: 'remove',
-                      label: say('common.forget'),
-                      icon: <Icon of={BinFilledIcon} size={15} />,
-                      isDestructive: true,
+                      id: 'up',
+                      label: say('common.moveUp'),
+                      icon: <Icon of={ArrowUpFilledIcon} size={15} />,
                       onChoose: () => {
-                        setRemoving(row.original);
+                        move(item, -1);
                       },
                     },
-                  ],
+                  ]),
+              ...(moveProfile(profiles.data ?? [], item.id, 1) === null
+                ? []
+                : [
+                    {
+                      id: 'down',
+                      label: say('common.moveDown'),
+                      icon: <Icon of={ArrowDownFilledIcon} size={15} />,
+                      onChoose: () => {
+                        move(item, 1);
+                      },
+                    },
+                  ]),
+              {
+                id: 'try',
+                label: say('screens.adminArea.profilesPanel.tryIt'),
+                detail: say('screens.adminArea.profilesPanel.searchesTheIndexersAndShows'),
+                icon: <Icon of={SearchListFilledIcon} size={15} />,
+                onChoose: () => {
+                  setTrying(item);
                 },
-              ]}
-            />
-          </span>
-        ),
-      },
+              },
+            ],
+          },
+          {
+            items: [
+              {
+                id: 'remove',
+                label: say('common.forget'),
+                icon: <Icon of={BinFilledIcon} size={15} />,
+                isDestructive: true,
+                onChoose: () => {
+                  setRemoving(item);
+                },
+              },
+            ],
+          },
+        ],
+      ),
     ],
     [named, profiles.data, move],
   );

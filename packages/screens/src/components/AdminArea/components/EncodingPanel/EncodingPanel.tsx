@@ -12,7 +12,7 @@ import { RefreshCw as RefreshCwFilledIcon, Tape as TapeIcon } from '@keyline-ico
 import { describeEncodeProgress } from '@ValenceClient/admin/describeEncodeProgress';
 import { describeReencodeState } from '@ValenceClient/admin/describeReencodeState';
 import { formatBytes } from '@ValenceCore/functions/formatBytes';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { sortReencodes } from './sortReencodes';
 import { useAdminCommand } from '@ValenceScreens/admin/useAdminCommand';
 import type { DataTableColumn } from '@ValenceUI/DataTable.types';
@@ -270,9 +270,11 @@ const EncodingPanel = ({
 
       <PanelCard title={say('common.inProgress')}>
         {underWay.length === 0 ? (
-          <p className="text-sm text-text-muted">
-            {say('screens.adminArea.encodingPanel.nothingIsBeingEncoded')}
-          </p>
+          <NothingHere
+            of={RefreshCwFilledIcon}
+            title={say('screens.adminArea.encodingPanel.nothingIsBeingEncoded')}
+            isCompact
+          />
         ) : (
           <ul className="flex flex-col gap-3">
             {underWay.map((one) => (

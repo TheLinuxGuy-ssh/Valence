@@ -10,7 +10,7 @@ import { Icon } from '@ValenceUI/Icon';
 import { ServerFace } from '@ValenceScreens/components/AdminArea/components/LinkedServersPanel/components/ServerFace/ServerFace';
 import { changeServerPicture } from '@ValenceClient/admin/changeServerPicture';
 import { serverPictureUrl } from '@ValenceClient/linking/serverPictureUrl';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { changeLinkIdentity } from '@ValenceClient/admin/changeLinkIdentity';
 import { groupFingerprint } from '@ValenceClient/linking/groupFingerprint';
 import { adminQueries } from '@ValenceClient/query/adminQueries';
@@ -89,7 +89,7 @@ const ThisServerCard = ({ identity }: ThisServerCardProps) => {
             pending={uploading}
             className="size-10 text-base"
           />
-          <p className="min-w-0 flex-1 text-xs leading-relaxed text-text-muted">
+          <p className="min-w-0 flex-1 basis-48 text-xs leading-relaxed text-text-muted">
             {say('screens.adminArea.linkedServersPanel.howOtherServersSeeThisOne')}
           </p>
           <span className="flex items-center gap-2">

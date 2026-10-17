@@ -1,6 +1,5 @@
 import {
   MessageSquare as MessageSquareIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Pause as PauseFilledIcon,
   Play as PlayFilledIcon,
   Stop as StopIcon,
@@ -139,6 +138,7 @@ const SessionTable = ({
     },
     {
       id: 'device',
+      meta: { hidesOnPhones: true },
       header: say('common.device'),
       accessorFn: (shown) => shown.session.deviceLabel,
       cell: ({ row }) =>
@@ -178,6 +178,7 @@ const SessionTable = ({
     },
     {
       id: 'progress',
+      meta: { hidesOnPhones: true },
       header: say('common.progress'),
       enableSorting: false,
       cell: ({ row }) => {
@@ -200,6 +201,7 @@ const SessionTable = ({
     },
     {
       id: 'delivery',
+      meta: { hidesOnPhones: true },
       header: say('tv.player.streamStats.delivery'),
       enableSorting: false,
       cell: ({ row }) => {
@@ -237,7 +239,6 @@ const SessionTable = ({
           <span className="flex justify-end">
             <ActionMenu
               label={say('common.actionsForName', { name: nameOfSession(session) })}
-              trigger={<Icon of={MoreHorizontalIcon} size={16} />}
               groups={[
                 {
                   items: [

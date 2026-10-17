@@ -1,11 +1,11 @@
+import { DownloadProgress } from '@ValenceScreens/components/AdminArea/components/DownloadsPanel/components/DownloadProgress/DownloadProgress';
+import { PanelCardInfo } from '@ValenceScreens/components/PanelCardInfo/PanelCardInfo';
 import { useMemo } from 'react';
 import { HowToFix } from '@ValenceScreens/components/HowToFix/HowToFix';
 import type { ReactNode } from 'react';
 import {
   Bin as BinFilledIcon,
   Folders as FoldersFilledIcon,
-  Info as InfoIcon,
-  MoreHorizontal as MoreHorizontalIcon,
   Pause as PauseFilledIcon,
   Play as PlayFilledIcon,
 } from '@keyline-icons/react/fill';
@@ -14,9 +14,7 @@ import { Checkbox } from '@ValenceUI/Checkbox';
 import { FormattedNumber } from '@ValenceUI/FormattedNumber';
 import { Badge } from '@ValenceUI/Badge';
 import { DataTable } from '@ValenceUI/DataTable';
-import { HoverCard } from '@ValenceUI/HoverCard';
 import { Icon } from '@ValenceUI/Icon';
-import { ProgressBar } from '@ValenceUI/ProgressBar';
 import { Spinner } from '@ValenceUI/Spinner';
 import { Tooltip } from '@ValenceUI/Tooltip';
 import { FormattedBytes } from '@ValenceScreens/components/FormattedBytes/FormattedBytes';
@@ -28,9 +26,21 @@ import { PAUSABLE_STATES } from '@ValenceScreens/components/AdminArea/components
 import { speedsOf } from '@ValenceScreens/components/AdminArea/components/DownloadsPanel/speedsOf';
 import { describeTimeLeft } from '@ValenceScreens/components/AdminArea/components/DownloadsPanel/describeTimeLeft';
 import type { DataTableColumn } from '@ValenceUI/DataTable.types';
-import type { QueuedDownload } from '@ValenceContracts/schemas/DownloadQueue';
+import { QUEUED_DOWNLOAD_STATES } from '@ValenceContracts/schemas/DownloadQueue';
+import type { QueuedDownload, QueuedDownloadState } from '@ValenceContracts/schemas/DownloadQueue';
 import type { DownloadQueueTableProps } from './DownloadQueueTable.types';
 import { say } from '@ValenceI18n/say';
+
+const STATE_NAMES: Readonly<Record<QueuedDownloadState, string>> = {
+  queued: say('common.queued'),
+  metadata: say('screens.downloadsPanel.describeDownloadState.fetchingMetadata'),
+  downloading: say('common.downloading'),
+  stalled: say('common.stalled'),
+  paused: say('common.paused'),
+  processing: say('screens.downloadsPanel.downloadQueueTable.states.processing'),
+  done: say('common.done'),
+  failed: say('common.failed'),
+};
 
 /**
  * Says how much of a download has arrived, in the size it is going to be.
@@ -160,6 +170,12 @@ const DownloadQueueTable = ({
         id: 'state',
         header: say('common.state'),
         accessorFn: (download) => describeDownloadState(download).label,
+        filterFn: (row, _columnId, filterValue) => row.original.state === filterValue,
+        meta: {
+          filterOptions: QUEUED_DOWNLOAD_STATES.filter((state) =>
+            downloads.some((download) => download.state === state),
+          ).map((state) => ({ id: state, label: STATE_NAMES[state] })),
+        },
         cell: ({ row }) => {
           const state = describeDownloadState(row.original);
 
@@ -170,20 +186,16 @@ const DownloadQueueTable = ({
               </Badge>
 
               {state.detail === null ? null : (
-                <HoverCard
-                  side="bottom"
+                <PanelCardInfo
                   align="start"
+                  label={state.detail}
                   detail={
                     <span className="flex flex-col items-start gap-1">
                       <span className="break-words text-text-muted">{state.detail}</span>
                       <HowToFix href={state.help} />
                     </span>
                   }
-                >
-                  <span className="text-text-muted hover:text-text">
-                    <Icon of={InfoIcon} size={14} label={state.detail} />
-                  </span>
-                </HoverCard>
+                />
               )}
             </span>
           );
@@ -197,28 +209,15 @@ const DownloadQueueTable = ({
           const arrived = describeArrived(row.original);
 
           return (
-            <span className="flex flex-col gap-1">
-              <ProgressBar
-                label={say('common.howFarTitleHasDownloaded', { title: row.original.title })}
-                value={Math.round(row.original.progress * 1000) / 10}
-                readout={
-                  <FormattedNumber
-                    value={Math.floor(row.original.progress * 100)}
-                    suffix="%"
-                    className="text-xs text-text"
-                  />
-                }
-              />
-
-              {arrived === null ? null : (
-                <span className="text-xs tabular-nums text-text-muted">{arrived}</span>
-              )}
-            </span>
+            <DownloadProgress title={row.original.title} progress={row.original.progress}>
+              {arrived}
+            </DownloadProgress>
           );
         },
       },
       {
         id: 'speed',
+        meta: { hidesOnPhones: true },
         header: say('common.speed'),
         accessorFn: (download) => download.downloadBytesPerSecond ?? -1,
         cell: ({ row }) => (
@@ -229,6 +228,7 @@ const DownloadQueueTable = ({
       },
       {
         id: 'left',
+        meta: { hidesOnPhones: true },
         header: say('common.timeLeft'),
         accessorFn: (download) => download.secondsLeft ?? Number.MAX_SAFE_INTEGER,
         cell: ({ row }) => (
@@ -239,6 +239,7 @@ const DownloadQueueTable = ({
       },
       {
         id: 'peers',
+        meta: { hidesOnPhones: true },
         header: say('common.peers'),
         accessorFn: (download) => download.seeds ?? -1,
         cell: ({ row }) => (
@@ -278,7 +279,6 @@ const DownloadQueueTable = ({
             <span className="flex justify-end">
               <ActionMenu
                 label={say('common.actionsForTitle', { title: row.original.title })}
-                trigger={<Icon of={MoreHorizontalIcon} size={16} />}
                 groups={[
                   {
                     items: [

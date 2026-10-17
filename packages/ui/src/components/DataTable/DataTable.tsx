@@ -1,10 +1,10 @@
 import { Icon } from '@ValenceUI/Icon';
 import {
   ChevronDown as ChevronDownIcon,
-  ChevronLeft as ChevronLeftIcon,
-  ChevronRight as ChevronRightIcon,
   ChevronUp as ChevronUpIcon,
   ChevronsUpDown as ChevronsUpDownIcon,
+  MoveLeft as MoveLeftIcon,
+  MoveRight as MoveRightIcon,
   Filter as FilterIcon,
 } from '@keyline-icons/react';
 import { useEffect, useState } from 'react';
@@ -117,6 +117,10 @@ const HEIGHT_CLASSES = {
  *   it, as in a dialog whose table is the part that scrolls, or stands exactly as tall as the room
  *   left below it, reaching the foot of the screen however little it holds, so the page stays still
  *   and only the table scrolls.
+ * @param sorting - How the rows are sorted, where the caller sorts them itself, such as on a server.
+ * @param onSortingChange - Told how to sort them instead, which makes the sorting the caller's.
+ * @param filters - What each column is filtered to, where the caller filters the rows itself.
+ * @param onFiltersChange - Told what a column is filtered to now, which makes filtering the caller's.
  * @param className - Extra classes for the caller's own layout.
  */
 const DataTable = <Row extends RowData>({
@@ -136,6 +140,10 @@ const DataTable = <Row extends RowData>({
   onPageChange,
   growsOnScroll = false,
   height = 'compact',
+  sorting: givenSorting,
+  onSortingChange,
+  filters: givenFilters,
+  onFiltersChange,
   className,
 }: DataTableProps<Row>) => {
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -217,20 +225,33 @@ const DataTable = <Row extends RowData>({
     }
   };
 
+  const heldSorting: SortingState =
+    onSortingChange === undefined
+      ? sorting
+      : givenSorting === null || givenSorting === undefined
+        ? []
+        : [{ id: givenSorting.id, desc: givenSorting.isDescending }];
+  const heldFilters: ColumnFiltersState =
+    onFiltersChange === undefined
+      ? columnFilters
+      : Object.entries(givenFilters ?? {}).map(([id, value]) => ({ id, value }));
+
   const table = useTable({
     features: dataTableFeatures,
     data: orderedRows,
     enableSorting: !isReordering,
     columns,
     manualPagination: totalRows !== undefined,
+    manualSorting: onSortingChange !== undefined,
+    manualFiltering: onFiltersChange !== undefined,
     ...(getRowId === undefined ? {} : { getRowId }),
     ...(getSubRows === undefined ? {} : { getSubRows }),
     paginateExpandedRows: false,
     autoResetExpanded: false,
     onExpandedChange: setExpanded,
     state: {
-      sorting,
-      columnFilters,
+      sorting: heldSorting,
+      columnFilters: heldFilters,
       expanded,
       pagination: growsOnScroll
         ? { pageIndex: 0, pageSize: holding }
@@ -238,11 +259,24 @@ const DataTable = <Row extends RowData>({
     },
     autoResetPageIndex: false,
     onSortingChange: (next) => {
-      setSorting(next);
+      const resolved = typeof next === 'function' ? next(heldSorting) : next;
+      const [first] = resolved;
+
+      setSorting(resolved);
+      onSortingChange?.(first === undefined ? null : { id: first.id, isDescending: first.desc });
       setPage(0);
     },
     onColumnFiltersChange: (next) => {
-      setColumnFilters(next);
+      const resolved = typeof next === 'function' ? next(heldFilters) : next;
+
+      setColumnFilters(resolved);
+
+      for (const id of new Set([...heldFilters, ...resolved].map((one) => one.id))) {
+        const value = resolved.find((one) => one.id === id)?.value;
+
+        onFiltersChange?.(id, typeof value === 'string' ? value : undefined);
+      }
+
       setPage(0);
     },
     onPaginationChange: (next) => {
@@ -303,9 +337,10 @@ const DataTable = <Row extends RowData>({
                       key={header.id}
                       scope="col"
                       className={cn(
-                        'sticky top-0 z-20 border-b border-[var(--surface-line)] px-3 py-2.5 text-left text-xs font-medium text-text-muted sm:px-5',
+                        'sticky top-0 z-20 border-b border-[var(--surface-line)] px-3 py-2.5 text-left text-xs font-medium text-text-muted in-[.valence-card-face]:border-[var(--card-face-line)] sm:px-5',
                         BAND,
                         header.column.columnDef.meta?.shrinks === true ? SHRINKS : '',
+                        header.column.columnDef.meta?.hidesOnPhones === true ? 'max-sm:hidden' : '',
                       )}
                     >
                       <div className="flex items-center gap-1">
@@ -409,6 +444,9 @@ const DataTable = <Row extends RowData>({
                   const fills = row
                     .getAllCells()
                     .map((cell) => cell.column.columnDef.meta?.fills === true);
+                  const hides = row
+                    .getAllCells()
+                    .map((cell) => cell.column.columnDef.meta?.hidesOnPhones === true);
 
                   return row.depth === 0 ? (
                     <ReorderRow
@@ -440,6 +478,7 @@ const DataTable = <Row extends RowData>({
                             'px-3 py-3 align-middle sm:px-5',
                             shrinks[at] === true ? SHRINKS : '',
                             fills[at] === true ? FILLS : '',
+                            hides[at] === true ? 'max-sm:hidden' : '',
                           )}
                         >
                           {drawn}
@@ -469,6 +508,7 @@ const DataTable = <Row extends RowData>({
                             'px-3 align-middle sm:px-5',
                             shrinks[at] === true ? SHRINKS : '',
                             fills[at] === true ? FILLS : '',
+                            hides[at] === true ? 'max-sm:hidden' : '',
                           )}
                         >
                           <motion.div
@@ -508,7 +548,7 @@ const DataTable = <Row extends RowData>({
       ) : pageCount <= 1 ? null : (
         <div
           className={cn(
-            'flex items-center justify-between gap-4 border-t border-[var(--surface-line)] px-5 py-2',
+            'flex items-center justify-between gap-4 border-t border-[var(--surface-line)] py-1.5 pr-1.5 pl-5',
             BAND,
           )}
         >
@@ -531,7 +571,7 @@ const DataTable = <Row extends RowData>({
                 setPage(Math.max(0, page - 1));
               }}
             >
-              <Icon of={ChevronLeftIcon} size={15} />
+              <Icon of={MoveLeftIcon} size={15} />
             </Button>
 
             <Button
@@ -544,7 +584,7 @@ const DataTable = <Row extends RowData>({
                 setPage(Math.min(pageCount - 1, page + 1));
               }}
             >
-              <Icon of={ChevronRightIcon} size={15} />
+              <Icon of={MoveRightIcon} size={15} />
             </Button>
           </div>
         </div>

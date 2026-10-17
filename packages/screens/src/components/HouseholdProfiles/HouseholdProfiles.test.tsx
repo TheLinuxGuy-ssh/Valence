@@ -107,9 +107,7 @@ describe('HouseholdProfiles', () => {
   it('tells the owner what profiles are for', async () => {
     draw();
 
-    expect(
-      await screen.findByText(/Everybody on this account gets a profile of their own/),
-    ).toBeInTheDocument();
+    expect(await screen.findByRole('button', { name: 'About Profiles' })).toBeInTheDocument();
   });
 
   it('says so where the profiles could not be read', async () => {
@@ -355,7 +353,9 @@ describe('HouseholdProfiles', () => {
     const ACCOUNT = 'account-7';
 
     it('reads that account’s profiles, and says changes apply at once', async () => {
-      draw(ACCOUNT);
+      const actor = draw(ACCOUNT);
+
+      await actor.hover(await screen.findByRole('button', { name: 'About Profiles' }));
 
       expect(
         await screen.findByText(/The profiles on this account\. Changes here apply at once/),

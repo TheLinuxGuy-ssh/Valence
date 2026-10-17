@@ -1,0 +1,98 @@
+import { useId } from 'react';
+import { motion } from 'motion/react';
+import { fadeVariants, stillTransition } from '@ValenceUI/animations/reveal';
+import { cn } from '@ValenceUI/cn';
+import type { PanelCardProps } from './PanelCard.types';
+
+/**
+ * One block of a panel — in the admin and account dialogs alike: a tinted shell carrying what the block is and what can be done to
+ * it, and a panel set into the shell carrying the block itself — the same two layers the figures at
+ * the top of the overview are drawn in, so every panel is built from one kind of piece.
+ *
+ * The heading and its controls live in the shell rather than on the panel, so the panel holds only
+ * content and a table inside it can run to its edges.
+ *
+ * @param title - What the block is called. Every block says, even where the tab above already
+ *   does — the shell's heading is what makes the block read as one piece rather than a loose panel.
+ * @param actions - Controls for the whole block, set at the right of the shell. Draw them with
+ *   PanelCardAction, which is transparent and small: they sit in a strip of heading, not on the page.
+ * @param below - A row beneath the heading, such as the block's own tabs.
+ * @param children - The block itself.
+ * @param isFlush - Whether the content runs to the panel's edges, for a table or a list that
+ *   brings its own inner spacing.
+ * @param isHighlighted - Whether the block is ringed in the accent, to say it is the one that is new
+ *   or needs looking at.
+ * @param isCompact - Whether the heading is drawn smaller, for a block one of many in a tight grid,
+ *   as the figures at the top of the overview are.
+ * @param className - Extra classes for the caller's own layout.
+ */
+const PanelCard = ({
+  title,
+  actions,
+  below,
+  children,
+  isFlush = false,
+  isHighlighted = false,
+  isCompact = false,
+  className,
+}: PanelCardProps) => {
+  const heading = useId();
+
+  return (
+    <motion.section
+      aria-labelledby={heading}
+      variants={fadeVariants}
+      initial="hidden"
+      animate="shown"
+      transition={stillTransition}
+      className={cn(
+        'valence-card-shell group/card flex flex-col',
+        isHighlighted && 'ring-1 ring-accent/40',
+        className,
+      )}
+    >
+      <header className={cn('flex flex-col gap-2 pb-1', isCompact ? 'pl-2.5' : 'pl-3')}>
+        <div
+          className={cn(
+            'flex items-center justify-between gap-2',
+            isCompact ? 'min-h-7' : 'min-h-8',
+          )}
+        >
+          <h3
+            id={heading}
+            className={cn(
+              'min-w-0 flex-1 truncate font-medium text-[var(--card-title)]',
+              isCompact ? 'text-xs' : 'text-[0.8125rem]',
+            )}
+          >
+            {title}
+          </h3>
+
+          {actions === undefined ? null : (
+            <div className="ml-auto flex min-w-0 max-w-full flex-wrap items-center justify-end gap-2 [--surface-hover:var(--card-face)] [--surface-line:var(--card-face-line)]">
+              {actions}
+            </div>
+          )}
+        </div>
+
+        {below === undefined ? null : <div className={isCompact ? 'pr-2.5' : 'pr-3'}>{below}</div>}
+      </header>
+
+      <div
+        className={cn(
+          'valence-card-face flex flex-1 flex-col overflow-hidden',
+          'ring-1 ring-transparent transition-[box-shadow] duration-[var(--duration-base)] ease-[var(--ease-out)]',
+          'group-hover/card:shadow-[var(--shadow-lifted)] group-hover/card:ring-[var(--surface-divider)]',
+          'motion-reduce:transition-none',
+          isFlush ? '' : 'p-4',
+        )}
+      >
+        {children}
+      </div>
+    </motion.section>
+  );
+};
+
+PanelCard.displayName = 'PanelCard';
+
+export { PanelCard };

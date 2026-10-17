@@ -1,3 +1,5 @@
+import { Cloud as EmptyCloudIcon } from '@keyline-icons/react/fill';
+import { NothingHere } from '@ValenceUI/NothingHere';
 import { useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Plus as PlusIcon } from '@keyline-icons/react';
@@ -7,7 +9,7 @@ import { CouldNotRead } from '@ValenceUI/CouldNotRead';
 import { Icon } from '@ValenceUI/Icon';
 import { Spinner } from '@ValenceUI/Spinner';
 import { notify } from '@ValenceUI/notify';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { BucketDialog } from '@ValenceScreens/components/AdminArea/components/StoragePanel/components/BucketDialog/BucketDialog';
 import { bucketQueries } from '@ValenceClient/query/bucketQueries';
 import { removeBucket } from '@ValenceClient/admin/fetchBuckets';
@@ -96,9 +98,11 @@ const StoragePanel = () => {
             )}
 
             {asked.data.buckets.length === 0 ? (
-              <p className="text-sm text-text-muted">
-                {say('screens.adminArea.storagePanel.noBucketsYet')}
-              </p>
+              <NothingHere
+                of={EmptyCloudIcon}
+                title={say('screens.adminArea.storagePanel.noBucketsYet')}
+                isCompact
+              />
             ) : (
               <ul className="flex flex-col gap-2">
                 {asked.data.buckets.map((bucket) => (

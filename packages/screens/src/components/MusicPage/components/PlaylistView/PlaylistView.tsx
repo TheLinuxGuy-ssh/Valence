@@ -1,3 +1,4 @@
+import { PlayAndShuffle } from '@ValenceScreens/components/MusicPage/components/PlayAndShuffle/PlayAndShuffle';
 import { useState } from 'react';
 import { PluginPanels } from '@ValenceScreens/components/PluginPanels/PluginPanels';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -6,12 +7,10 @@ import {
   ImagePlus as ImagePlusIcon,
   ListMusic as ListMusicIcon,
   MoreHorizontal as MoreHorizontalIcon,
-  Shuffle as ShuffleIcon,
 } from '@keyline-icons/react';
 import {
   Bin as BinFilledIcon,
   Image as ImageFilledIcon,
-  Play as PlayFilledIcon,
   Share as ShareFilledIcon,
   SquarePen as SquarePenFilledIcon,
 } from '@keyline-icons/react/fill';
@@ -212,35 +211,15 @@ const PlaylistView = ({ playlistId, isRequestingMissing = false }: PlaylistViewP
         }
         actions={
           <>
-            <Button
-              variant="confirm"
-              size="lg"
-              isIconOnly
-              label={say('common.playName', { name: playlist.name })}
-              className="size-14"
-              disabled={tracks.length === 0}
-              onClick={() => {
-                player.play(tracks, 0, options);
-              }}
-            >
-              <Icon of={PlayFilledIcon} size={24} />
-            </Button>
-
-            <Button
-              variant="ghost"
-              size="md"
-              isIconOnly
-              label={say('screens.musicPage.playlistView.shuffleName', { name: playlist.name })}
-              disabled={tracks.length === 0 || playlist.isOrdered}
-              onClick={() => {
-                player.play(tracks, Math.floor(Math.random() * tracks.length), {
-                  ...options,
-                  isShuffled: true,
-                });
-              }}
-            >
-              <Icon of={ShuffleIcon} size={22} />
-            </Button>
+            <PlayAndShuffle
+              tracks={tracks}
+              source={source}
+              isOrdered={playlist.isOrdered}
+              playLabel={say('common.playName', { name: playlist.name })}
+              shuffleLabel={say('screens.musicPage.playlistView.shuffleName', {
+                name: playlist.name,
+              })}
+            />
 
             {mayRequestMusic && missing.length > 0 ? (
               <Button

@@ -1,9 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  ChevronLeft as ChevronLeftIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-} from '@keyline-icons/react';
+import { ChevronLeft as ChevronLeftIcon } from '@keyline-icons/react';
 import {
   Bin as BinFilledIcon,
   Check as CheckFilledIcon,
@@ -44,7 +41,7 @@ import { seasonsOfTitle } from '@ValenceClient/requests/seasonsOfTitle';
 import { nameSeason } from '@ValenceClient/library/nameSeason';
 import { nameSearchScope } from '@ValenceClient/requests/nameSearchScope';
 import { FormattedBytes } from '@ValenceScreens/components/FormattedBytes/FormattedBytes';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { ApproveRequestDialog } from '@ValenceScreens/components/AdminArea/components/ApproveRequestDialog/ApproveRequestDialog';
 import { RefuseRequestDialog } from '@ValenceScreens/components/AdminArea/components/RefuseRequestDialog/RefuseRequestDialog';
 import { RequestBlocklistTab } from '@ValenceScreens/components/AdminArea/components/TitlePage/components/RequestBlocklistTab/RequestBlocklistTab';
@@ -512,7 +509,6 @@ const TitlePage = ({ titleKey, onBack, onOpenFolder, onOpenTitle }: TitlePagePro
 
         <ActionMenu
           label={say('common.actionsForTitle', { title: entry.title })}
-          trigger={<Icon of={MoreHorizontalIcon} size={16} />}
           groups={menu}
           className="lg:hidden"
         />

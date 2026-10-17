@@ -1,11 +1,7 @@
+import { PlayAndShuffle } from '@ValenceScreens/components/MusicPage/components/PlayAndShuffle/PlayAndShuffle';
 import { useQuery } from '@tanstack/react-query';
 import { PluginPanels } from '@ValenceScreens/components/PluginPanels/PluginPanels';
-import {
-  ListPlus as ListPlusIcon,
-  Record as RecordIcon,
-  Shuffle as ShuffleIcon,
-} from '@keyline-icons/react';
-import { Play as PlayFilledIcon } from '@keyline-icons/react/fill';
+import { ListPlus as ListPlusIcon, Record as RecordIcon } from '@keyline-icons/react';
 import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { Button } from '@ValenceUI/Button';
 import { CouldNotRead } from '@ValenceUI/CouldNotRead';
@@ -109,34 +105,12 @@ const AlbumView = ({ albumId }: AlbumViewProps) => {
         }
         actions={
           <>
-            <Button
-              variant="confirm"
-              size="lg"
-              isIconOnly
-              label={say('common.playTitle', { title: album.title })}
-              className="size-14"
-              disabled={tracks.length === 0}
-              onClick={() => {
-                player.play(tracks, 0, { source });
-              }}
-            >
-              <Icon of={PlayFilledIcon} size={24} />
-            </Button>
-            <Button
-              variant="ghost"
-              size="md"
-              isIconOnly
-              label={say('screens.musicPage.albumView.shuffleTitle', { title: album.title })}
-              disabled={tracks.length === 0}
-              onClick={() => {
-                player.play(tracks, Math.floor(Math.random() * tracks.length), {
-                  source,
-                  isShuffled: true,
-                });
-              }}
-            >
-              <Icon of={ShuffleIcon} size={22} />
-            </Button>
+            <PlayAndShuffle
+              tracks={tracks}
+              source={source}
+              playLabel={say('common.playTitle', { title: album.title })}
+              shuffleLabel={say('screens.musicPage.albumView.shuffleTitle', { title: album.title })}
+            />
             {tracks.length === 0 ? null : (
               <ActionMenu
                 label={say('screens.musicPage.albumView.addTitleToAPlaylist', {

@@ -7,6 +7,8 @@ import { Link } from '@ValenceUI/Link';
 import { SlidingMark } from '@ValenceUI/SlidingMark';
 import { cn } from '@ValenceUI/cn';
 import { stillTransition, spring } from '@ValenceUI/animations/reveal';
+import { say } from '@ValenceI18n/say';
+import { SidebarCount } from './components/SidebarCount/SidebarCount';
 import type { SidebarGroupProps } from './SidebarGroup.types';
 
 const TRACK = [
@@ -21,7 +23,10 @@ const TRACK = [
  * there is nothing to name the fold after.
  *
  * @param label - What the group is, shown above its items.
- * @param items - The destinations in this group.
+ * @param count - How many things in it are waiting on somebody, shown beside its label while it is
+ *   folded so they are not hidden by folding it.
+ * @param items - The destinations in this group, each with how many things there are waiting on
+ *   somebody, if any.
  * @param value - Which destination is current.
  * @param onSelect - Told which destination was chosen.
  * @param markGroup - The rail-wide name the travelling highlight answers to, so it slides between
@@ -35,6 +40,7 @@ const TRACK = [
  */
 const SidebarGroup = ({
   label,
+  count = 0,
   items,
   value,
   onSelect,
@@ -64,7 +70,7 @@ const SidebarGroup = ({
             onOpenChange?.(!isOpen);
           }}
           className={cn(
-            'group/fold flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-left text-[0.8125rem]',
+            'group/fold flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-left text-[0.8125rem]',
             'font-medium text-text',
           )}
         >
@@ -79,6 +85,8 @@ const SidebarGroup = ({
           />
 
           {label}
+
+          {isOpen || count === 0 ? null : <SidebarCount count={count} />}
         </Button>
       )}
 
@@ -98,12 +106,13 @@ const SidebarGroup = ({
               const isCurrent = item.id === value;
               const isLit = item.id === (pointedAt ?? value);
               const look = cn(
-                'relative isolate flex rounded-md',
+                'relative isolate flex rounded-lg',
                 'transition-colors duration-[var(--duration-fast)]',
                 isCollapsed
                   ? 'h-10 w-10 items-center justify-center px-0'
                   : 'h-8 w-full items-center justify-start gap-2.5 px-2.5 text-[0.8125rem]',
-                isCurrent ? 'font-medium text-text' : isLit ? 'text-text' : 'text-text-muted',
+                'font-medium',
+                isCurrent || isLit ? 'text-text' : 'text-text-muted',
               );
               const face = (
                 <>
@@ -133,8 +142,23 @@ const SidebarGroup = ({
                   {isCollapsed ? null : (
                     <span className="relative z-10 truncate">{item.label}</span>
                   )}
+
+                  {item.count === undefined || item.count === 0 ? null : (
+                    <SidebarCount
+                      count={item.count}
+                      isUrgent={item.isUrgent ?? false}
+                      isDot={isCollapsed}
+                    />
+                  )}
                 </>
               );
+              const named =
+                item.count === undefined || item.count === 0
+                  ? item.label
+                  : say('ui.sidebarGroup.labelWaiting', {
+                      label: item.label,
+                      count: item.count.toString(),
+                    });
 
               return (
                 <li key={item.id} className={showsFold && !isCollapsed ? 'relative' : undefined}>
@@ -149,7 +173,7 @@ const SidebarGroup = ({
                     <Link
                       href={item.href}
                       look="bare"
-                      label={item.label}
+                      label={named}
                       isCurrent={isCurrent}
                       onPointerEnter={() => {
                         onPointAt(item.id);
@@ -168,7 +192,7 @@ const SidebarGroup = ({
                     <Button
                       variant="bare"
                       size="sm"
-                      label={item.label}
+                      label={named}
                       hasTooltip={isCollapsed}
                       aria-current={isCurrent ? 'page' : undefined}
                       onPointerEnter={() => {

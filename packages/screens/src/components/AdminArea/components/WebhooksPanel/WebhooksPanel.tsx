@@ -1,5 +1,6 @@
+import { NothingHere } from '@ValenceUI/NothingHere';
 import { PanelCardAction } from '@ValenceScreens/components/PanelCardAction/PanelCardAction';
-import { Plus as PlusFilledIcon } from '@keyline-icons/react/fill';
+import { Plus as PlusFilledIcon, Webhook as EmptyWebhookIcon } from '@keyline-icons/react/fill';
 import { useState } from 'react';
 import { Badge } from '@ValenceUI/Badge';
 import { Button } from '@ValenceUI/Button';
@@ -12,7 +13,7 @@ import { EditWebhookDialog } from './components/EditWebhookDialog/EditWebhookDia
 import { DeliveryHistory } from './components/DeliveryHistory/DeliveryHistory';
 import type { WebhookSubscription } from '@ValenceContracts/schemas/Webhook';
 import type { WebhooksPanelProps } from './WebhooksPanel.types';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { useTicking } from '@ValenceScreens/clock/useTicking';
 import { A_CAPTION_AGES_EVERY } from '@ValenceScreens/clock/A_CAPTION_AGES_EVERY';
 import { useAdminCommand } from '@ValenceScreens/admin/useAdminCommand';
@@ -189,9 +190,11 @@ const WebhooksPanel = ({
         }
       >
         {webhooks.length === 0 ? (
-          <p className="px-4 py-8 text-center text-sm text-text-muted">
-            {say('screens.adminArea.webhooksPanel.nothingIsBeingToldAboutAnything')}
-          </p>
+          <NothingHere
+            of={EmptyWebhookIcon}
+            title={say('screens.adminArea.webhooksPanel.nothingIsBeingToldAboutAnything')}
+            isCompact
+          />
         ) : (
           <ul className="flex flex-col divide-y divide-[var(--surface-line)]">
             {webhooks.map((webhook) => {

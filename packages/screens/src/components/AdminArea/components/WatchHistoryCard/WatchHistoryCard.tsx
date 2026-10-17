@@ -5,7 +5,7 @@ import { formatDuration } from '@ValenceCore/functions/formatDuration';
 import { adminQueries } from '@ValenceClient/query/adminQueries';
 import { AccountFace } from '@ValenceScreens/components/AdminArea/components/AccountFace/AccountFace';
 import { DeviceLabel } from '@ValenceScreens/components/AdminArea/components/DeviceLabel/DeviceLabel';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { RowFoldButton } from '@ValenceScreens/components/AdminArea/components/RowFoldButton/RowFoldButton';
 import { say } from '@ValenceI18n/say';
 import { sayCount } from '@ValenceI18n/sayCount';
@@ -111,6 +111,7 @@ const WatchHistoryCard = () => {
     },
     {
       id: 'device',
+      meta: { hidesOnPhones: true },
       header: say('common.device'),
       accessorFn: (shown) => shown.viewing.deviceLabel ?? '',
       cell: ({ row }) =>
@@ -136,6 +137,7 @@ const WatchHistoryCard = () => {
     },
     {
       id: 'for',
+      meta: { hidesOnPhones: true },
       header: say('common.progress'),
       accessorFn: (shown) => shown.viewing.secondsWatched,
       cell: ({ row }) =>

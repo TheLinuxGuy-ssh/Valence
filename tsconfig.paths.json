@@ -88,6 +88,9 @@
       ],
       "@ValenceUI/DataTable": ["./packages/ui/src/components/DataTable/DataTable.tsx"],
       "@ValenceUI/DataTable.types": ["./packages/ui/src/components/DataTable/DataTable.types.ts"],
+      "@ValenceUI/DataTable/rowActionsColumn": [
+        "./packages/ui/src/components/DataTable/rowActionsColumn.tsx"
+      ],
       "@ValenceUI/Dialog": ["./packages/ui/src/components/Dialog/Dialog.tsx"],
       "@ValenceUI/Dialog.companionContext": [
         "./packages/ui/src/components/Dialog/companionContext.ts"
@@ -195,6 +198,12 @@
       ],
       "@ValenceUI/NavBar": ["./packages/ui/src/components/NavBar/NavBar.tsx"],
       "@ValenceUI/NavBar.types": ["./packages/ui/src/components/NavBar/NavBar.types.ts"],
+      "@ValenceUI/ResizablePanel": [
+        "./packages/ui/src/components/ResizablePanel/ResizablePanel.tsx"
+      ],
+      "@ValenceUI/ResizablePanel.types": [
+        "./packages/ui/src/components/ResizablePanel/ResizablePanel.types.ts"
+      ],
       "@ValenceUI/NoticeCard": ["./packages/ui/src/components/NoticeCard/NoticeCard.tsx"],
       "@ValenceUI/NoticeCard.types": [
         "./packages/ui/src/components/NoticeCard/NoticeCard.types.ts"
@@ -310,6 +319,9 @@
       "@ValenceUI/StarRating.types": [
         "./packages/ui/src/components/StarRating/StarRating.types.ts"
       ],
+      "@ValenceUI/MenuItemFace": ["./packages/ui/src/components/MenuItemFace/MenuItemFace.tsx"],
+      "@ValenceUI/PanelCard": ["./packages/ui/src/components/PanelCard/PanelCard.tsx"],
+      "@ValenceUI/PanelCard.types": ["./packages/ui/src/components/PanelCard/PanelCard.types.ts"],
       "@ValenceUI/StatTile": ["./packages/ui/src/components/StatTile/StatTile.tsx"],
       "@ValenceUI/StatTile.types": ["./packages/ui/src/components/StatTile/StatTile.types.ts"],
       "@ValenceUI/Stepper": ["./packages/ui/src/components/Stepper/Stepper.tsx"],
@@ -351,11 +363,17 @@
       "@ValenceUI/tokens/segmented": ["./packages/ui/src/tokens/segmented.ts"],
       "@ValenceUI/tokens/AURORA": ["./packages/ui/src/tokens/AURORA.ts"],
       "@ValenceUI/tokens/LIT_TEXT": ["./packages/ui/src/tokens/LIT_TEXT.ts"],
+      "@ValenceUI/tokens/GROUP_LABEL": ["./packages/ui/src/tokens/GROUP_LABEL.ts"],
+      "@ValenceUI/tokens/FIELD_TEXT": ["./packages/ui/src/tokens/FIELD_TEXT.ts"],
       "@ValenceUI/FoldGradient": ["./packages/ui/src/components/FoldGradient/FoldGradient.tsx"],
       "@ValenceUI/FoldGradient.types": [
         "./packages/ui/src/components/FoldGradient/FoldGradient.types.ts"
       ],
       "@ValenceUI/GradientAscii": ["./packages/ui/src/components/GradientAscii/GradientAscii.tsx"],
+      "@ValenceUI/StatusRing": ["./packages/ui/src/components/StatusRing/StatusRing.tsx"],
+      "@ValenceUI/StatusRing.types": [
+        "./packages/ui/src/components/StatusRing/StatusRing.types.ts"
+      ],
       "@ValenceUI/AuroraBackdrop": [
         "./packages/ui/src/components/AuroraBackdrop/AuroraBackdrop.tsx"
       ],

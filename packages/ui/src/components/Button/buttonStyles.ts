@@ -14,7 +14,12 @@ const buttonStyles = cva(
   {
     variants: {
       variant: {
-        primary: `${FLAT} border-transparent bg-primary text-primary-foreground hover:bg-primary-hover`,
+        primary: [
+          'border-0 font-[575] text-accent-contrast hover:brightness-105',
+          '[background:linear-gradient(color-mix(in_oklab,var(--color-accent)_75%,white),var(--color-accent))]',
+          '[text-shadow:0_0.5px_0_rgb(0_30_66/0.32)]',
+          'shadow-[inset_0_0_1px_1px_rgb(255_255_255/0.18),0_0_0_1px_rgb(0_0_0/0.08),0_2px_2px_rgb(0_0_0/0.04),0_0_0_1px_color-mix(in_oklab,var(--color-accent)_88%,white)]',
+        ].join(' '),
         glossy: `${FLAT} border-[var(--surface-line)] bg-[var(--surface-hover)] text-text hover:bg-[var(--surface-active)]`,
         confirm: `${FLAT} border-transparent bg-white text-on-white hover:bg-white-hover`,
         secondary: `${FLAT} border-[var(--surface-line)] bg-[var(--surface-hover)] text-text hover:bg-[var(--surface-active)]`,
@@ -30,7 +35,7 @@ const buttonStyles = cva(
           'flex items-center justify-center bg-transparent text-foreground hover:bg-[var(--surface-hover)] active:bg-[var(--surface-active)]',
         windowClose:
           'flex items-center justify-center bg-transparent text-foreground hover:bg-danger hover:text-destructive-foreground active:bg-danger/85',
-        row: 'flex w-full rounded-md bg-transparent text-left text-foreground transition-colors duration-[var(--duration-fast)] hover:bg-[var(--surface-hover)]',
+        row: 'flex w-full rounded-lg bg-transparent text-left text-foreground transition-colors duration-[var(--duration-fast)] hover:bg-[var(--surface-hover)]',
         bare: '',
       },
       size: {
@@ -42,10 +47,10 @@ const buttonStyles = cva(
         none: '',
       },
       shape: {
-        square: 'rounded-md',
+        square: 'rounded-lg',
         pill: 'rounded-full',
-        joinsNext: 'rounded-l-md rounded-r-none',
-        joinsPrevious: 'rounded-l-none rounded-r-md',
+        joinsNext: 'rounded-l-lg rounded-r-none',
+        joinsPrevious: 'rounded-l-none rounded-r-lg',
         bare: '',
       },
       isIconOnly: {
@@ -89,6 +94,7 @@ const buttonStyles = cva(
       { isIconOnly: true, size: 'md', class: 'size-8 coarse:size-11' },
       { isIconOnly: true, size: 'lg', class: 'size-9 coarse:size-11' },
       { isIconOnly: true, size: 'xl', class: 'size-11' },
+      { variant: 'primary', class: 'hover-hover:hover:scale-100' },
       { variant: 'bare', class: 'shadow-none active:translate-y-0' },
       {
         variant: ['bare', 'row', 'link', 'subtle'],

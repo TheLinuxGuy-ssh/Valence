@@ -1,12 +1,12 @@
 import * as RadixMenu from '@radix-ui/react-dropdown-menu';
-import { Check as CheckIcon } from '@keyline-icons/react';
-import { Info as InfoIcon } from '@keyline-icons/react/fill';
+import { MoreHorizontal as MoreHorizontalIcon } from '@keyline-icons/react';
 import { cn } from '@ValenceUI/cn';
 import { JOINED_LOOKS } from '@ValenceUI/tokens/joinedLooks';
+import { buttonStyles } from '@ValenceUI/Button/buttonStyles';
 import { Icon } from '@ValenceUI/Icon';
-import { Tooltip } from '@ValenceUI/Tooltip';
 import { POPUP_MOTION, PRESS_MOTION } from '@ValenceUI/animations/motion';
 import { MENU } from '@ValenceUI/tokens/menu';
+import { MenuItemFace } from '@ValenceUI/MenuItemFace';
 import { HoverHighlight } from '@ValenceUI/HoverHighlight';
 import { useSlidingHighlight } from '@ValenceUI/useSlidingHighlight';
 import { usePortalContainer } from '@ValenceUI/usePortalContainer';
@@ -22,8 +22,14 @@ const LOOKS = {
   plain: '',
   face: 'rounded-full hover:bg-transparent data-[state=open]:bg-transparent',
   pill: 'size-auto rounded-full bg-[var(--surface-hover)] p-1 hover:bg-[var(--surface-active)] data-[state=open]:bg-[var(--surface-active)]',
-  raised: 'border border-[var(--surface-line)] bg-[var(--surface-hover)]',
-  labelled: 'h-6 w-auto gap-1.5 px-2 text-xs font-medium',
+  raised: cn(
+    buttonStyles({ variant: 'glossy', size: 'none' }),
+    'hover:bg-[var(--surface-active)] data-[state=open]:bg-[var(--surface-active)]',
+  ),
+  labelled: cn(
+    buttonStyles({ variant: 'secondary', size: 'xs' }),
+    'w-auto hover:bg-[var(--surface-active)] data-[state=open]:bg-[var(--surface-active)]',
+  ),
   segment: cn(JOINED_LOOKS.segment, 'w-auto rounded-none'),
 } as const;
 
@@ -48,7 +54,8 @@ const LOOKS = {
  * where the answer is shown.
  *
  * @param label - What the menu is, read out to anybody who cannot see it.
- * @param trigger - The control that opens it.
+ * @param trigger - The control that opens it, the row's own three dots unless told otherwise, so
+ *   every menu of a row's actions opens from the same mark.
  * @param groups - The items, in groups separated by a rule. Destructive items are gathered into a
  *   group of their own at the bottom whatever order they were written in.
  * @param align - Which edge of the trigger the menu lines up with.
@@ -86,7 +93,7 @@ const ActionMenu = ({
           event.stopPropagation();
         }}
         className={cn(
-          'inline-flex shrink-0 items-center justify-center rounded-md outline-none',
+          'inline-flex shrink-0 items-center justify-center rounded-lg outline-none',
           TRIGGER_SIZES[size],
           'text-current',
           PRESS_MOTION,
@@ -97,7 +104,7 @@ const ActionMenu = ({
           className,
         )}
       >
-        {trigger}
+        {trigger ?? <Icon of={MoreHorizontalIcon} size={16} />}
       </RadixMenu.Trigger>
 
       <RadixMenu.Portal {...(portalContainer === undefined ? {} : { container: portalContainer })}>
@@ -152,29 +159,7 @@ const ActionMenu = ({
                       item.isDestructive === true ? MENU.itemDestructive : MENU.itemPlain,
                     )}
                   >
-                    {item.icon === undefined ? null : (
-                      <span className={MENU.icon}>{item.icon}</span>
-                    )}
-
-                    <span className={MENU.itemLabel}>{item.label}</span>
-
-                    {item.detail === undefined ? null : (
-                      <span className={MENU.detail}>{item.detail}</span>
-                    )}
-
-                    {item.isCurrent === true ? (
-                      <span className={MENU.hint}>
-                        <Icon of={CheckIcon} size={15} />
-                      </span>
-                    ) : null}
-
-                    {item.hint === undefined ? null : (
-                      <Tooltip label={item.hint} side="left">
-                        <span data-slot="menu-hint" className={MENU.hint}>
-                          <Icon of={InfoIcon} size={15} />
-                        </span>
-                      </Tooltip>
-                    )}
+                    <MenuItemFace item={item} />
                   </RadixMenu.Item>
                 ))}
               </RadixMenu.Group>

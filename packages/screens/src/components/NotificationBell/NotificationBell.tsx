@@ -1,3 +1,5 @@
+import { cn } from '@ValenceUI/cn';
+import { GROUP_LABEL } from '@ValenceUI/tokens/GROUP_LABEL';
 import { useState } from 'react';
 import { sayAgain } from '@ValenceI18n/sayAgain';
 import { Icon } from '@ValenceUI/Icon';
@@ -20,7 +22,7 @@ import { Badge } from '@ValenceUI/Badge';
 import { Button } from '@ValenceUI/Button';
 import { PopoverPanel } from '@ValenceUI/PopoverPanel';
 import { Switch } from '@ValenceUI/Switch';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { PanelCardAction } from '@ValenceScreens/components/PanelCardAction/PanelCardAction';
 import { TabRow } from '@ValenceUI/TabRow';
 import { Tabs } from '@ValenceUI/Tabs';
@@ -112,12 +114,12 @@ const NotificationBell = ({
 
           {unread === 0 ? null : (
             <Badge
-              tone="accent"
+              tone="bright"
               size="sm"
               className={
                 isInTheWindowBar
-                  ? 'absolute -right-2 -top-1.5 scale-75'
-                  : 'absolute -right-1 -top-1'
+                  ? 'absolute -top-1 -right-1.5 h-3.5 min-w-3.5 justify-center rounded-full px-1 text-[0.5625rem] leading-none ring-2 ring-[var(--frame-back)]'
+                  : 'absolute -top-1 -right-1 ring-2 ring-[var(--frame-back)]'
               }
             >
               <FormattedNumber
@@ -177,9 +179,7 @@ const NotificationBell = ({
           <div className="flex max-h-96 flex-col overflow-y-auto pb-1">
             {groupByDay(shown, now).map((group) => (
               <section key={group.day} className="flex flex-col">
-                <h4 className="px-4 pb-1 pt-3 text-[0.6875rem] font-medium uppercase tracking-[0.08em] text-text-muted">
-                  {DAY_NAMES[group.day]}
-                </h4>
+                <h4 className={cn('px-4 pb-1 pt-3', GROUP_LABEL)}>{DAY_NAMES[group.day]}</h4>
 
                 <ul className="flex flex-col">
                   {group.notifications.map((notification) => {

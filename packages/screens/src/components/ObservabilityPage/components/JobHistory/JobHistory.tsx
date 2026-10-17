@@ -2,17 +2,18 @@ import { sayAgain } from '@ValenceI18n/sayAgain';
 import { JobRunMix } from '@ValenceScreens/components/ObservabilityPage/components/JobRunMix/JobRunMix';
 import { cn } from '@ValenceUI/cn';
 import { Icon } from '@ValenceUI/Icon';
-import {
-  Info as InfoIcon,
-  MoreHorizontal as MoreHorizontalIcon,
-  Pin as PinFilledIcon,
-} from '@keyline-icons/react/fill';
+import { Info as InfoIcon, Pin as PinFilledIcon } from '@keyline-icons/react/fill';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { ActionMenu } from '@ValenceUI/ActionMenu';
 import { FormattedNumber } from '@ValenceUI/FormattedNumber';
 import { Badge } from '@ValenceUI/Badge';
 import { Button } from '@ValenceUI/Button';
 import { DataTable } from '@ValenceUI/DataTable';
+import {
+  JOB_RUN_NO_SUBJECT,
+  JOB_RUN_STATUSES,
+  JobRunStatusSchema,
+} from '@ValenceContracts/schemas/JobRun';
 import { FilterSplit } from '@ValenceUI/FilterSplit';
 import { ProgressBar } from '@ValenceUI/ProgressBar';
 import { ScopedField } from '@ValenceUI/ScopedField';
@@ -158,7 +159,7 @@ const JobHistoryPanel = ({
     [definitions],
   );
 
-  const { rq, rstatus, rsort, range, from, until } = search;
+  const { rq, rstatus, rsubject, rsort, range, from, until } = search;
   const shared = useMemo(() => logViewFromSearch(search), [search]);
   const rkind = shared.view.jobKinds[0];
   const sort: JobRunSort = rsort ?? 'newest';
@@ -208,12 +209,14 @@ const JobHistoryPanel = ({
       sinceMs: from ?? logRangeStart(range ?? defaultLogView().range, anchor),
       untilMs: until ?? null,
       kind: rkind ?? null,
+      subject: rsubject ?? null,
     }),
-    [rq, range, from, until, sort, anchor, rkind],
+    [rq, range, from, until, sort, anchor, rkind, rsubject],
   );
   const isAsOpened =
     rq === undefined &&
     rstatus === undefined &&
+    rsubject === undefined &&
     rkind === undefined &&
     rsort === undefined &&
     range === undefined &&
@@ -412,6 +415,12 @@ const JobHistoryPanel = ({
         id: 'status',
         header: say('common.status'),
         enableSorting: false,
+        meta: {
+          filterOptions: JOB_RUN_STATUSES.map((status) => ({
+            id: status,
+            label: describeJobStatus(status).label,
+          })),
+        },
         accessorFn: (record) => record.status,
         cell: ({ row }) => (
           <span className="flex items-center gap-1.5">
@@ -441,6 +450,15 @@ const JobHistoryPanel = ({
         id: 'subject',
         header: say('common.subject'),
         enableSorting: false,
+        meta: {
+          filterOptions: [
+            {
+              id: JOB_RUN_NO_SUBJECT,
+              label: say('screens.observabilityPage.jobHistory.theWholeServer'),
+            },
+            ...libraries.map((library) => ({ id: library.id, label: library.name })),
+          ],
+        },
         accessorFn: (record) => describeRunSubject(record.subject, libraries, record.kind).name,
         cell: ({ row }) => {
           const { name, library } = describeRunSubject(
@@ -578,7 +596,6 @@ const JobHistoryPanel = ({
       {
         id: 'when',
         header: say('screens.observabilityPage.jobHistory.when'),
-        enableSorting: false,
         accessorFn: (record) => record.finishedAtMs ?? record.startedAtMs ?? 0,
         cell: ({ row }) => (
           <span className="flex flex-col whitespace-nowrap tabular-nums text-text-muted">
@@ -608,7 +625,6 @@ const JobHistoryPanel = ({
               label={say('screens.observabilityPage.jobHistory.actionsForKind', {
                 kind: describeJobKind(row.original.kind, labels),
               })}
-              trigger={<Icon of={MoreHorizontalIcon} size={16} />}
               groups={[
                 {
                   items: [
@@ -698,7 +714,7 @@ const JobHistoryPanel = ({
       </Well>
 
       <DataTable
-        className="m-0"
+        className="m-0 in-[.valence-card-face]:-mx-4 in-[.valence-card-face]:-mb-4"
         label={say('screens.observabilityPage.jobHistory.whatTheJobQueueHasRun')}
         columns={columns}
         rows={records}
@@ -709,6 +725,28 @@ const JobHistoryPanel = ({
         }}
         getRowId={runId}
         onChooseRow={traceRun}
+        sorting={sort === 'longest' ? null : { id: 'when', isDescending: sort === 'newest' }}
+        onSortingChange={(next) => {
+          onSearchChange({
+            rsort: next === null || next.isDescending ? undefined : 'oldest',
+            rpage: undefined,
+          });
+        }}
+        filters={{
+          ...(rstatus === undefined ? {} : { status: rstatus }),
+          ...(rsubject === undefined ? {} : { subject: rsubject }),
+        }}
+        onFiltersChange={(id, value) => {
+          if (id === 'status') {
+            const status = JobRunStatusSchema.safeParse(value);
+
+            onSearchChange({ rstatus: status.success ? status.data : undefined, rpage: undefined });
+          }
+
+          if (id === 'subject') {
+            onSearchChange({ rsubject: value, rpage: undefined });
+          }
+        }}
         height="fill"
         pageSize={ROWS_PER_PAGE}
         emptyMessage={

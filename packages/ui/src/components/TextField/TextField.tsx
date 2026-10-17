@@ -1,3 +1,4 @@
+import { FIELD_TEXT } from '@ValenceUI/tokens/FIELD_TEXT';
 import { useId } from 'react';
 import { FieldNote } from './components/FieldNote/FieldNote';
 import { cn } from '@ValenceUI/cn';
@@ -66,15 +67,12 @@ const TextField = ({
 
   return (
     <div data-slot="field" className={cn('flex flex-col gap-1.5', className)}>
-      <label
-        htmlFor={fieldId}
-        className={cn('text-[0.8125rem] font-medium text-text', isLabelHidden ? 'sr-only' : '')}
-      >
+      <label htmlFor={fieldId} className={cn(FIELD_TEXT.label, isLabelHidden ? 'sr-only' : '')}>
         {label}
       </label>
 
       {description === undefined || isBelow ? null : (
-        <p id={describedBy} className="font-body text-xs leading-snug text-text-muted">
+        <p id={describedBy} className={FIELD_TEXT.note}>
           {description}
         </p>
       )}
@@ -125,8 +123,9 @@ const TextField = ({
                   : size === 'xl'
                     ? 'h-12 px-6 text-base'
                     : 'h-8 px-3 text-[0.8125rem]',
+            isBare && size === 'xl' ? '' : 'coarse:text-[length:max(1rem,1em)]',
             isBare && size === 'xl' ? 'text-2xl tracking-tight sm:text-3xl' : '',
-            isBare ? '' : isPill ? 'rounded-full' : 'rounded-md',
+            isBare ? '' : isPill ? 'rounded-full' : 'rounded-lg',
             joins === 'next' ? 'rounded-r-none border-r-0' : '',
             error === undefined ? '' : 'border-destructive',
           )}
@@ -140,7 +139,7 @@ const TextField = ({
           {description}
         </FieldNote>
       ) : error === undefined ? null : (
-        <p role="alert" className="font-body text-xs leading-snug text-danger">
+        <p role="alert" className={FIELD_TEXT.error}>
           {error}
         </p>
       )}

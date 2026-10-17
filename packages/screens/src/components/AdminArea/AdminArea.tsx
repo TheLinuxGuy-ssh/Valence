@@ -60,6 +60,10 @@ import { LinkedServersPanel } from './components/LinkedServersPanel/LinkedServer
 import { PluginsPanel } from './components/PluginsPanel/PluginsPanel';
 import { ImportWizard } from '@ValenceScreens/components/ImportWizard/ImportWizard';
 import { SharesPanel } from './components/SharesPanel/SharesPanel';
+import { StatisticsPanel } from './components/StatisticsPanel/StatisticsPanel';
+import { AuditPanel } from './components/AuditPanel/AuditPanel';
+import { BackupsPanel } from './components/BackupsPanel/BackupsPanel';
+import { UpdatesPanel } from './components/UpdatesPanel/UpdatesPanel';
 import {
   changeWebhook,
   createWebhook,
@@ -1390,6 +1394,26 @@ const AdminArea = ({
 
           <TabPanel value="shares">
             <SharesPanel />
+          </TabPanel>
+
+          <TabPanel value="statistics">
+            <StatisticsPanel onOpenPanel={showPanel} />
+          </TabPanel>
+
+          <TabPanel value="audit">
+            <AuditPanel />
+          </TabPanel>
+
+          <TabPanel value="backups">
+            <BackupsPanel
+              onOpenSchedule={() => {
+                showPanel('jobs', { view: 'jobs' });
+              }}
+            />
+          </TabPanel>
+
+          <TabPanel value="updates">
+            <UpdatesPanel />
           </TabPanel>
 
           <TabPanel value="plugins">

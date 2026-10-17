@@ -14,7 +14,7 @@ import { Spinner } from '@ValenceUI/Spinner';
 import { requestsQueries } from '@ValenceClient/query/requestsQueries';
 import { checkRequestsNow } from '@ValenceClient/requests/fetchRequests';
 import { saidWhen } from '@ValenceClient/format/saidWhen';
-import { PanelCard } from '@ValenceScreens/components/PanelCard/PanelCard';
+import { PanelCard } from '@ValenceUI/PanelCard';
 import { describeRequestsSolver } from './describeRequestsSolver';
 import { describeRequestsVpn } from './describeRequestsVpn';
 import { say } from '@ValenceI18n/say';
@@ -37,16 +37,25 @@ const RequestsPanel = () => {
   const checkNow = () => {
     setIsChecking(true);
 
-    void checkRequestsNow()
-      .then((fresh) => {
-        cache.setQueryData(requestsQueries.overview().queryKey, fresh);
-        notify.worked(say('screens.adminArea.requestsPanel.checkedTheRequests'));
-      })
-      .catch(() => {
-        notify.failed(say('screens.adminArea.requestsPanel.theRequestsCouldNotBeChecked'));
+    void notify
+      .during(
+        say('screens.adminArea.requestsPanel.checkingTheRequests'),
+        checkRequestsNow()
+          .then((fresh) => {
+            cache.setQueryData(requestsQueries.overview().queryKey, fresh);
 
-        return asked.refetch();
-      })
+            return true;
+          })
+          .catch(async () => {
+            await asked.refetch();
+
+            return false;
+          }),
+        (isChecked) =>
+          isChecked
+            ? { worked: say('screens.adminArea.requestsPanel.checkedTheRequests') }
+            : { failed: say('screens.adminArea.requestsPanel.theRequestsCouldNotBeChecked') },
+      )
       .finally(() => {
         setIsChecking(false);
       });
