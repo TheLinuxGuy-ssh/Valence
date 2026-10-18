@@ -11,9 +11,9 @@ import { usePartyPlayback } from '@ValenceClient/party/usePartyPlayback';
 import { invitationTo } from '@ValenceClient/party/invitationTo';
 import { countCarriedOn } from '@ValenceClient/playback/countCarriedOn';
 import { decideWhatFollows } from '@ValenceClient/playback/decideWhatFollows';
-import { nextEpisode } from '@ValenceClient/library/pickFeatured';
+import { nextEpisode } from '@ValenceCore/functions/nextEpisode';
 import { useShowEpisodes } from '@ValenceScreens/library/useShowEpisodes';
-import { watchedFraction, FINISHED_WITHIN_SECONDS } from '@ValenceContracts/schemas/WatchProgress';
+import { watchedFraction, hasWatchedToTheEnd } from '@ValenceContracts/schemas/WatchProgress';
 import { STILL_WATCHING_OFF } from '@ValenceContracts/schemas/StillWatching';
 import { HOME } from '@ValenceClient/navigation/readLocation';
 import { usePlace } from '@ValenceScreens/navigation/usePlace';
@@ -234,7 +234,7 @@ const WatchPage = () => {
             mediaId: shown.id,
             positionSeconds,
             durationSeconds,
-            isFinished: positionSeconds >= durationSeconds - FINISHED_WITHIN_SECONDS,
+            isFinished: hasWatchedToTheEnd(positionSeconds, durationSeconds),
             updatedAt: new Date().toISOString(),
           });
         }}
