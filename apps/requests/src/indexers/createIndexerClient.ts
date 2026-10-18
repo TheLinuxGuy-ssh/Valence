@@ -55,6 +55,9 @@ type CreateIndexerClientOptions = {
  *
  * An indexer made from a Cardigann definition is run by the engine that reads it instead, within the
  * session the connection carries — which the engine changes as it logs in, and the caller keeps.
+ * Every request the engine makes to the site waits its turn with the pacer, kept apart by the gap
+ * the definition asks for as well as the indexer's own limit, so the many searches one request
+ * makes at once reach a site like Nyaa one after another rather than all together.
  *
  * @param fetch - How to ask.
  * @param pacer - What keeps each indexer to its own limit.
@@ -71,7 +74,7 @@ const createIndexerClient = ({
   site,
   onAsked,
 }: CreateIndexerClientOptions) => {
-  const engineFor = async (indexer: IndexerConnection) => {
+  const engineFor = async (indexer: IndexerConnection, isUrgent = false) => {
     const definition =
       definitions === undefined || indexer.definitionId === null
         ? null
@@ -95,6 +98,13 @@ const createIndexerClient = ({
         client: site,
         indexer: { id: indexer.id, name: indexer.name },
         timeoutSeconds: indexer.timeoutSeconds,
+        wait: () =>
+          pacer.turn(
+            indexer.id,
+            indexer.requestsPerMinute,
+            (definition.requestDelay ?? 0) * 1000,
+            isUrgent,
+          ),
         ...(onAsked === undefined
           ? {}
           : {
@@ -106,8 +116,12 @@ const createIndexerClient = ({
     };
   };
 
-  const ask = async (indexer: IndexerConnection, parameters: Record<string, string>) => {
-    await pacer.turn(indexer.id, indexer.requestsPerMinute);
+  const ask = async (
+    indexer: IndexerConnection,
+    parameters: Record<string, string>,
+    isUrgent = false,
+  ) => {
+    await pacer.turn(indexer.id, indexer.requestsPerMinute, 0, isUrgent);
 
     const address = indexerEndpoint(indexer.url, {
       ...parameters,
@@ -170,16 +184,19 @@ const createIndexerClient = ({
         }
       }
 
-      await pacer.turn(indexer.id, indexer.requestsPerMinute);
       await engine.search({ query: '' }, []);
 
       return capabilitiesOf(definition);
     },
 
-    search: async (indexer: IndexerConnection, search: ReleaseSearch): Promise<Release[]> => {
+    search: async (
+      indexer: IndexerConnection,
+      search: ReleaseSearch,
+      isUrgent = false,
+    ): Promise<Release[]> => {
       if (indexer.kind !== 'cardigann') {
         const parameters = searchParametersFor(search, indexer.capabilities, indexer.categories);
-        const releases = readReleases(await ask(indexer, parameters), indexer);
+        const releases = readReleases(await ask(indexer, parameters, isUrgent), indexer);
 
         onAsked?.({
           indexer: indexer.name,
@@ -190,9 +207,7 @@ const createIndexerClient = ({
         return releases;
       }
 
-      const { engine } = await engineFor(indexer);
-
-      await pacer.turn(indexer.id, indexer.requestsPerMinute);
+      const { engine } = await engineFor(indexer, isUrgent);
 
       return engine.search(search, search.categories ?? indexer.categories);
     },

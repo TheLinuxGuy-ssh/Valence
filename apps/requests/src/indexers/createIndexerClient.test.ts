@@ -94,7 +94,7 @@ describe('createIndexerClient', () => {
 
     await client.capabilities({ ...JACKETT, requestsPerMinute: 10 });
 
-    expect(turn).toHaveBeenCalledWith(JACKETT.id, 10);
+    expect(turn).toHaveBeenCalledWith(JACKETT.id, 10, 0, false);
   });
 
   it.each([
@@ -285,6 +285,52 @@ search:
         address: 'https://alpha.example/browse.php',
         found: 1,
       });
+    });
+
+    it('makes every request to the site wait its turn, kept apart by the gap the definition asks for', async () => {
+      const turn = vi.fn(() => Promise.resolve());
+      const paced = readDefinition(
+        `id: gamma
+name: Gamma
+links: [https://gamma.example/]
+requestDelay: 2
+caps:
+  modes:
+    search: [q]
+search:
+  paths:
+    - path: browse.php
+  rows:
+    selector: tr
+  fields:
+    title:
+      selector: a
+`,
+      );
+      const client = createIndexerClient({
+        fetch: answering(''),
+        pacer: { turn },
+        definitions: () => Promise.resolve(paced),
+        site: createSiteClient({
+          fetch: () =>
+            Promise.resolve(
+              new Response('<table><tr><td><a href="/1">Dune</a></td></tr></table>', {
+                headers: { 'content-type': 'text/html' },
+              }),
+            ),
+        }),
+      });
+      const gamma = { ...ALPHA, url: 'https://gamma.example/', definitionId: 'gamma' };
+
+      await Promise.all([
+        client.search(gamma, { query: 'dune' }),
+        client.search(gamma, { query: 'arrival' }),
+      ]);
+
+      expect(turn.mock.calls).toEqual([
+        [gamma.id, null, 2000, false],
+        [gamma.id, null, 2000, false],
+      ]);
     });
 
     it('fetches a release with the engine', async () => {

@@ -9,6 +9,7 @@ import { createMemoryRecordStore } from '@ValenceRequests/stores/createMemoryRec
 import { aDownloadClient } from '@ValenceRequests/testing/aDownloadClient';
 import { aMediaRequest } from '@ValenceRequests/testing/aMediaRequest';
 import { aProfile } from '@ValenceRequests/testing/aProfile';
+import { anIndexer } from '@ValenceRequests/testing/anIndexer';
 import { aRelease } from '@ValenceRequests/testing/aRelease';
 import { aRequestItem } from '@ValenceRequests/testing/aRequestItem';
 import { aSentDownload } from '@ValenceRequests/testing/aSentDownload';
@@ -20,6 +21,7 @@ import type { GiveUpRules } from '@ValenceContracts/schemas/GiveUpRules';
 import type { ProblemCode } from '@ValenceContracts/schemas/ProblemCode';
 import type { NotSent } from '@ValenceRequests/downloads/NotSent';
 import type {
+  Indexer,
   IndexerSearchReport,
   Release,
   ReleaseSearch,
@@ -70,6 +72,7 @@ type HarnessOptions = {
   rules?: GiveUpRules;
   handOff?: { step: () => Promise<void> };
   answering?: Promise<void>;
+  kept?: Indexer[];
 };
 
 /**
@@ -109,6 +112,7 @@ const aWorker = ({
   rules = GIVE_UP_DEFAULTS,
   handOff,
   answering = Promise.resolve(),
+  kept = [],
 }: HarnessOptions = {}) => {
   const requestStore = createMemoryRecordStore(requests);
   const itemStore = createMemoryRecordStore(items);
@@ -117,6 +121,8 @@ const aWorker = ({
   const events = createMemoryEventStore(() => AT);
   const log = createMemoryRequestLogStore(() => AT);
   const searched: ReleaseSearch[] = [];
+  const searchedAmong: Array<readonly string[] | undefined> = [];
+  const searchedUrgently: boolean[] = [];
   let sends = 0;
   const send = vi.fn((release: ReleaseSend): Promise<QueuedDownload | NotSent> => {
     if (refuseSend !== undefined) {
@@ -154,10 +160,12 @@ const aWorker = ({
     },
     queue: { send, remove },
     indexers: {
-      search: async (search) => {
+      search: async (search, _profile, options) => {
         const asked = { ...search };
 
         searched.push(asked);
+        searchedAmong.push(options?.among);
+        searchedUrgently.push(options?.isUrgent === true);
         await answering;
 
         return {
@@ -167,7 +175,7 @@ const aWorker = ({
           pickedId: null,
         };
       },
-      list: () => Promise.resolve([]),
+      list: () => Promise.resolve(kept),
     },
     profiles: { list: () => Promise.resolve(profiles) },
     events,
@@ -198,6 +206,8 @@ const aWorker = ({
     downloads,
     events,
     searched,
+    searchedAmong,
+    searchedUrgently,
     send,
     remove,
     scheduled,
@@ -239,6 +249,29 @@ describe('createRequestWorker', () => {
       expect(await events.pending()).toMatchObject([
         { kind: 'chosen', title: 'Dune', releaseTitle: BLURAY, requestedById: 'someone' },
       ]);
+    });
+
+    it('searches only the indexers its library uses, or those the request was given', async () => {
+      const kept = [
+        anIndexer({ id: '00000000-0000-4000-8000-000000000001', libraryIds: ['anime'] }),
+        anIndexer({ id: '00000000-0000-4000-8000-000000000002' }),
+      ];
+      const byLibrary = aWorker({ kept, items: [aRequestItem({ state: 'waiting' })] });
+
+      await byLibrary.worker.tick();
+
+      expect(byLibrary.searchedAmong[0]).toEqual(['00000000-0000-4000-8000-000000000002']);
+      expect(byLibrary.searchedUrgently[0]).toBe(false);
+
+      const byHand = aWorker({
+        kept,
+        requests: [aMediaRequest({ indexerIds: ['00000000-0000-4000-8000-000000000001'] })],
+        items: [aRequestItem({ state: 'waiting' })],
+      });
+
+      await byHand.worker.tick();
+
+      expect(byHand.searchedAmong[0]).toEqual(['00000000-0000-4000-8000-000000000001']);
     });
 
     it('searches by a title no indexer reads as leaving words out', async () => {
@@ -2113,7 +2146,7 @@ describe('createRequestWorker', () => {
     });
 
     it('lists the releases for a request, judged, with each indexer once', async () => {
-      const { worker } = aWorker({
+      const { worker, searchedUrgently } = aWorker({
         requests: [SEVERANCE],
         items: [aRequestItem({ requestId: SEVERANCE.id, season: 1, episode: 1 })],
         found: () => [aRelease('Severance.S01E01.1080p.WEB-DL.x264-GRP')],
@@ -2125,6 +2158,8 @@ describe('createRequestWorker', () => {
         'Severance.S01E01.1080p.WEB-DL.x264-GRP',
       ]);
       expect(outcome?.indexers).toMatchObject([{ found: 4 }]);
+      expect(searchedUrgently.length).toBeGreaterThan(0);
+      expect(searchedUrgently.every(Boolean)).toBe(true);
       expect(await worker.releasesFor('missing')).toBeNull();
     });
 

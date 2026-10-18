@@ -4,6 +4,7 @@ import { applyFilters } from '@ValenceRequests/cardigann/applyFilters';
 import { buildMagnet } from '@ValenceRequests/cardigann/buildMagnet';
 import { buildSearchRequests } from '@ValenceRequests/cardigann/buildSearchRequests';
 import { configVariables } from '@ValenceRequests/cardigann/configVariables';
+import { isNextPage } from '@ValenceRequests/cardigann/isNextPage';
 import { createCategoryMap } from '@ValenceRequests/cardigann/createCategoryMap';
 import { encodeForm } from '@ValenceRequests/cardigann/encodeForm';
 import { findInHtml } from '@ValenceRequests/cardigann/findInHtml';
@@ -40,6 +41,7 @@ type CreateCardigannIndexerOptions = {
   now?: () => number;
   sleep?: (ms: number) => Promise<void>;
   onAsked?: (address: string, found: number) => void;
+  wait?: () => Promise<void>;
 };
 
 /**
@@ -65,13 +67,18 @@ const isTorrent = (bytes: Uint8Array): boolean => bytes[0] === 0x64;
  * and fetching a release, all within the session given — whose cookies the caller keeps between runs,
  * so that a site is not logged in to for every search.
  *
+ * A search stops walking a definition's pages once one comes back empty, since the pages after an
+ * empty one are empty too and each costs the site's gap between requests.
+ *
  * A search logs in first where the session has nothing to go on, and again where the site answers as
  * if logged out — by redirecting, by refusing, or by a page without the definition's logged-in
  * marker. Where logging in does not help, it says the settings are wrong rather than retrying.
  *
  * @param options - The definition, what the indexer was given, the address in use, the session, how
- *   to reach the site, which indexer this is, how long to wait, the clock, and what to tell of each
- *   address a search asked and how many releases it found there.
+ *   to reach the site, which indexer this is, how long to wait, the clock, what to tell of each
+ *   address a search asked and how many releases it found there, and how to wait a turn before
+ *   each request — shared between every engine for the same indexer, so searches made together
+ *   keep the definition's gap between requests rather than each keeping it alone.
  * @returns The indexer.
  */
 const createCardigannIndexer = ({
@@ -85,6 +92,7 @@ const createCardigannIndexer = ({
   now = Date.now,
   sleep = pause,
   onAsked,
+  wait,
 }: CreateCardigannIndexerOptions) => {
   const categories = createCategoryMap(definition.caps);
   const delayMs = (definition.requestDelay ?? 0) * 1000;
@@ -98,13 +106,17 @@ const createCardigannIndexer = ({
     followRedirects: boolean,
     referer: string | null = siteLink,
   ): Promise<SiteResponse> => {
-    const wait = lastAskedAt + delayMs - now();
+    if (wait === undefined) {
+      const left = lastAskedAt + delayMs - now();
 
-    if (delayMs > 0 && wait > 0) {
-      await sleep(wait);
+      if (delayMs > 0 && left > 0) {
+        await sleep(left);
+      }
+
+      lastAskedAt = now();
+    } else {
+      await wait();
     }
-
-    lastAskedAt = now();
 
     return client.send(request, {
       session,
@@ -405,8 +417,17 @@ const createCardigannIndexer = ({
       nowMs: now(),
     });
     const releases = new Map<string, Release>();
+    let last: { asked: string; found: number } | null = null;
 
     for (const request of requests) {
+      const asked = `${request.url} ${request.body ?? ''}`;
+
+      if (last !== null && last.found === 0 && isNextPage(last.asked, asked)) {
+        last = { asked, found: 0 };
+
+        continue;
+      }
+
       const follows = request.path.followredirect || definition.followredirect;
       let response = await send(request, follows);
 
@@ -452,6 +473,8 @@ const createCardigannIndexer = ({
           : request.url,
         found.length,
       );
+
+      last = { asked, found: found.length };
 
       for (const release of found) {
         releases.set(release.id, release);

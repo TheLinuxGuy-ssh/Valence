@@ -429,6 +429,7 @@ const ENGLISH = {
   'client.requests.describeRequestProgress.seasonsValue.other': 'Seasons {value}',
   'client.requests.describeSeasonBadge.hereOfLengthAvailable': '{here} of {length} available',
   'client.requests.nameTheStanding.waitingForApproval': 'Waiting for approval',
+  'client.requests.releaseFromMagnet.addedByHand': 'Added by hand',
   'client.requests.releaseTypeNames.compilations': 'Compilations',
   'client.requests.releaseTypeNames.ePs': 'EPs',
   'client.requests.releaseTypeNames.mixtape': 'Mixtape',
@@ -4097,6 +4098,8 @@ const ENGLISH = {
   'screens.adminArea.indexerDialog.readingWhatThisSiteNeeds': 'Loading indexer settings',
   'screens.adminArea.indexerDialog.readingWhatThisSiteNeeds2': 'Loading indexer settings…',
   'screens.adminArea.indexerDialog.searchesPerMinute': 'Searches per minute',
+  'screens.adminArea.indexerDialog.searchItOnlyForWhatIsAsked':
+    'Search it only for titles asked for into these libraries. Leave it on every library to search it for everything.',
   'screens.adminArea.indexerDialog.seedLimits': 'Seed limits',
   'screens.adminArea.indexerDialog.seedRatio': 'Seed ratio',
   'screens.adminArea.indexerDialog.seedTimeSeconds': 'Seed time (seconds)',
@@ -5274,6 +5277,13 @@ const ENGLISH = {
   'screens.adminArea.titlePage.handedToNote.openInName': 'Open in {name}',
   'screens.adminArea.titlePage.heightP': '{height}p',
   'screens.adminArea.titlePage.heldOfTotal': '{held} of {total}',
+  'screens.adminArea.titlePage.indexerChoiceCard.asItsLibraryChooses': 'Whichever its library uses',
+  'screens.adminArea.titlePage.indexerChoiceCard.indexersChanged': 'Indexers changed',
+  'screens.adminArea.titlePage.indexerChoiceCard.notUsedForThisLibrary':
+    'Not used for this library',
+  'screens.adminArea.titlePage.indexerChoiceCard.searchedOnWhicheverItsLibraryUses':
+    'This title is searched on the indexers its library uses. Choose some here to search only those for it.',
+  'screens.adminArea.titlePage.indexerChoiceCard.usedForThisLibrary': 'Used for this library',
   'screens.adminArea.titlePage.interactiveSearch': 'Interactive search',
   'screens.adminArea.titlePage.interactiveSearchDialog.interactiveSearchForTitle':
     'Interactive search for {title}',
@@ -5289,6 +5299,16 @@ const ENGLISH = {
     'You have it as {quality}, looking for lossless',
   'screens.adminArea.titlePage.itsQualityLibraryAndSeasons': 'Quality, library and seasons',
   'screens.adminArea.titlePage.keptProfile': 'Kept {profile}',
+  'screens.adminArea.titlePage.magnetForm.addAMagnetLink': 'Add a magnet link',
+  'screens.adminArea.titlePage.magnetForm.aMagnetLinkLooksLike': 'magnet:?xt=urn:btih:…',
+  'screens.adminArea.titlePage.magnetForm.downloadingTheMagnetLink': 'Downloading the magnet link',
+  'screens.adminArea.titlePage.magnetForm.downloadIt': 'Download it',
+  'screens.adminArea.titlePage.magnetForm.itsNameSaysWhichEpisodes':
+    'Named the way a release is, such as Show S01 or Show S01E03. This decides which episodes it fills and where it is filed.',
+  'screens.adminArea.titlePage.magnetForm.magnetLink': 'Magnet link',
+  'screens.adminArea.titlePage.magnetForm.thatIsNotAMagnetLink':
+    'That isn’t a magnet link to a torrent, or it has no name. Give it one below.',
+  'screens.adminArea.titlePage.magnetForm.whatItHolds': 'What it holds',
   'screens.adminArea.titlePage.markAsAdded': 'Mark as in the library',
   'screens.adminArea.titlePage.markedTitleAsAdded': 'Marked {title} as in the library',
   'screens.adminArea.titlePage.minutesLong': '{minutes} min',
