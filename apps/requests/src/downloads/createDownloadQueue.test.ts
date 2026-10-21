@@ -15,6 +15,7 @@ import type { ClientItem, DownloadClientAdapter } from './DownloadClientAdapter'
 import type { DownloadClientRecord } from './DownloadClientRecord';
 import type { SentDownloadRecord } from './SentDownloadRecord';
 import type { Indexer } from '@ValenceContracts/schemas/Indexer';
+import type { TorrentLayout } from '@ValenceRequests/downloads/TorrentLayout';
 
 const AT = new Date('2026-09-19T00:00:00.000Z');
 
@@ -46,6 +47,11 @@ const anItem = (overrides: Partial<ClientItem> = {}): ClientItem => ({
   ...overrides,
 });
 
+const LAID_OUT: TorrentLayout = {
+  pieceBytes: 4_194_304,
+  files: [{ name: 'Episode/Episode.mkv', offsetBytes: 0, sizeBytes: 1000, isWanted: true }],
+};
+
 /**
  * A client that lists what it is given.
  */
@@ -76,6 +82,16 @@ const anAdapter = (items: ClientItem[] = []) => {
       void deleteData;
 
       return Promise.resolve();
+    }),
+    recheck: vi.fn((remoteId: string) => {
+      void remoteId;
+
+      return Promise.resolve();
+    }),
+    layout: vi.fn((remoteId: string) => {
+      void remoteId;
+
+      return Promise.resolve<TorrentLayout | null>(LAID_OUT);
     }),
   } satisfies DownloadClientAdapter;
 
@@ -799,6 +815,39 @@ describe('createDownloadQueue', () => {
       expect(await queue.pause(kept.id)).toBeNull();
     });
 
+    it('asks its client to check a download again, and counts it as being worked on', async () => {
+      const kept = aSentDownload({ state: 'done' });
+      const { queue, downloads, adapter } = aQueue({ sent: [kept] });
+
+      expect(await queue.recheck(kept.id)).toBe(true);
+      expect(adapter.recheck).toHaveBeenCalledWith(HASH);
+      expect(adapter.resume).toHaveBeenCalledWith(HASH);
+      expect((await downloads.find(kept.id))?.state).toBe('processing');
+    });
+
+    it('says how a torrent is laid out, or nothing where its client cannot say', async () => {
+      const refusing = anAdapter();
+
+      refusing.layout.mockRejectedValueOnce(new Error('boom'));
+
+      const kept = aSentDownload();
+
+      expect(await aQueue({ sent: [kept] }).queue.layoutOf(kept.id)).toEqual(LAID_OUT);
+      expect(await aQueue({ sent: [kept], adapter: refusing }).queue.layoutOf(kept.id)).toBeNull();
+      expect(await aQueue({ sent: [] }).queue.layoutOf(kept.id)).toBeNull();
+    });
+
+    it('says where a client would not check a download again, or it is not there', async () => {
+      const refusing = anAdapter();
+
+      refusing.recheck.mockRejectedValueOnce(new Error('boom'));
+
+      const kept = aSentDownload({ state: 'done' });
+
+      expect(await aQueue({ sent: [kept], adapter: refusing }).queue.recheck(kept.id)).toBe(false);
+      expect(await aQueue({ sent: [] }).queue.recheck(kept.id)).toBe(false);
+    });
+
     it('removes a download from its client and from the queue', async () => {
       const kept = aSentDownload();
       const { queue, downloads, adapter } = aQueue({ sent: [kept] });
@@ -975,6 +1024,16 @@ describe('createDownloadQueue', () => {
 
       expect(adapter.remove).toHaveBeenCalledWith(HASH, true);
       expect(await downloads.list()).toEqual([]);
+    });
+
+    it('leaves a filed torrent its client is checking again, which may yet fetch a piece', async () => {
+      const adapter = anAdapter([done({ state: 'processing' })]);
+      const { queue, downloads } = aQueue({ sent: [filed()], adapter });
+
+      await queue.check();
+
+      expect(adapter.remove).not.toHaveBeenCalled();
+      expect(await downloads.list()).toHaveLength(1);
     });
 
     it('leaves one somebody paused while it was downloading where it is', async () => {

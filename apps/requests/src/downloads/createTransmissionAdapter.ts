@@ -9,6 +9,7 @@ import type {
   ClientSettings,
   DownloadClientAdapter,
 } from '@ValenceRequests/downloads/DownloadClientAdapter';
+import type { TorrentLayout } from '@ValenceRequests/downloads/TorrentLayout';
 import type { QueuedDownloadState } from '@ValenceContracts/schemas/DownloadQueue';
 import type { JsonValue } from '@ValenceContracts/schemas/JsonValue';
 import { saying } from '@ValenceI18n/saying';
@@ -43,6 +44,14 @@ const TorrentSchema = z.object({
 
 const FilesSchema = z.array(
   z.object({ files: z.array(z.object({ name: z.string() })).default([]) }),
+);
+
+const LayoutSchema = z.array(
+  z.object({
+    pieceSize: z.number().int().positive(),
+    files: z.array(z.object({ name: z.string(), length: z.number() })),
+    wanted: z.array(z.union([z.boolean(), z.number()])).optional(),
+  }),
 );
 
 const StatsSchema = z.object({ downloadSpeed: z.number(), uploadSpeed: z.number() });
@@ -275,6 +284,10 @@ const createTransmissionAdapter = (
       await rpc('torrent-start', each(hash));
     },
 
+    recheck: async (hash) => {
+      await rpc('torrent-verify', each(hash));
+    },
+
     remove: async (hash, deleteData) => {
       await rpc('torrent-remove', { ...each(hash), 'delete-local-data': deleteData });
     },
@@ -286,6 +299,33 @@ const createTransmissionAdapter = (
       const files = found[0]?.files ?? [];
 
       return files.length === 0 ? null : files.map((file, index) => ({ index, name: file.name }));
+    },
+
+    layout: async (hash) => {
+      const [found] = LayoutSchema.parse(
+        (await rpc('torrent-get', { ...each(hash), fields: ['files', 'wanted', 'pieceSize'] }))[
+          'torrents'
+        ],
+      );
+
+      if (found === undefined || found.files.length === 0) {
+        return null;
+      }
+
+      const files: TorrentLayout['files'] = [];
+      let offsetBytes = 0;
+
+      for (const [at, file] of found.files.entries()) {
+        files.push({
+          name: file.name,
+          offsetBytes,
+          sizeBytes: file.length,
+          isWanted: Boolean(found.wanted?.[at] ?? true),
+        });
+        offsetBytes += file.length;
+      }
+
+      return { pieceBytes: found.pieceSize, files };
     },
 
     skip: async (hash, indices) => {

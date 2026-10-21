@@ -1829,6 +1829,10 @@ const ENGLISH = {
     'Source uses {videoRefFrames} reference frames and the client supports {maxRefFrames}',
   'core.negotiatePlayback.sourceRunsAtVideoFrameRateFpsAnd':
     'Source is {videoFrameRate}fps and the client supports up to {maxFrameRate}fps',
+  'core.negotiatePlayback.theClientCouldNotPlayThePicture':
+    'The client couldn’t play the picture as it is in the file, so it’s converted',
+  'core.negotiatePlayback.theClientCouldNotPlayTheSound':
+    'The client couldn’t play the sound as it is in the file, so it’s converted',
   'core.negotiatePlayback.theSourceCannotBeCutInto':
     'The source can’t be split into playable segments',
   'core.negotiatePlayback.trackIsSampleRateHzAndThe':
@@ -2813,6 +2817,8 @@ const ENGLISH = {
   'requests.mediaRequests.requestWorker.notTakenByProfile':
     'It’s {quality}, which this profile doesn’t allow',
   'requests.mediaRequests.requestWorker.noVideoInItCouldBe': 'Couldn’t import any video from it',
+  'requests.mediaRequests.requestWorker.partOfNameWasNeverWritten':
+    'Part of {name} was never written to disk, though {clientName} says it has all of it',
   'requests.mediaRequests.requestWorker.reasonTryingTheNextBestRelease':
     '{reason}. Trying the next best release.',
   'requests.mediaRequests.requestWorker.removedFromTheDownloads': 'Removed from the downloads',
@@ -2837,6 +2843,8 @@ const ENGLISH = {
     'The requests service doesn’t have permission to write to the destination folder ({message}). Set its PUID and PGID to the owner of your media folders.',
   'requests.mediaRequests.requestWorker.titleFailedReasonItIsBlocklisted':
     '{title} failed: {reason}. It’s been blocklisted, and Valence is searching for the next best release.',
+  'requests.mediaRequests.requestWorker.titleIsCheckedAgainBeforeFiling':
+    "Part of {title} was never written to disk, so {clientName} is checking it again before it's filed",
   'requests.mediaRequests.requestWorker.titleWasNotFiledFirstRefusalIt':
     'Couldn’t import {title}: {firstRefusal}. It’s been blocklisted, and Valence is searching for the next best release.',
   'requests.mediaRequests.requestWorker.titleWasPickedByHand': '{title} was chosen manually.',
@@ -3120,6 +3128,8 @@ const ENGLISH = {
   'screens.admin.reasonNames.audioProfileNotSupported': 'The device can’t play the sound’s profile',
   'screens.admin.reasonNames.audioSampleRateNotSupported':
     'The device can’t play the sound’s sample rate',
+  'screens.admin.reasonNames.clientCouldNotPlayTheCopy':
+    'The device couldn’t play the file as it is',
   'screens.admin.reasonNames.clientSupportsSource': 'The device plays the file as it is',
   'screens.admin.reasonNames.containerNotSupported': 'The device can’t open the file’s container',
   'screens.admin.reasonNames.interlacedVideoNotSupported': 'The device can’t play interlaced video',

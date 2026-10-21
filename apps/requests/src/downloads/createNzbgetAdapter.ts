@@ -14,6 +14,14 @@ import type { QueuedDownloadState } from '@ValenceContracts/schemas/DownloadQueu
 import type { JsonValue } from '@ValenceContracts/schemas/JsonValue';
 import { saying } from '@ValenceI18n/saying';
 
+const INCOMPLETE_WARNINGS: readonly string[] = [
+  'WARNING/DAMAGED',
+  'WARNING/REPAIRABLE',
+  'WARNING/HEALTH',
+];
+
+const OUT_OF_SPACE = 'WARNING/SPACE';
+
 const MEBIBYTE = 1024 * 1024;
 
 const AnswerSchema = z.union([
@@ -53,6 +61,11 @@ const GROUP_STATES: Readonly<Record<string, QueuedDownloadState>> = {
  * Reads what NZBGet's history says became of a job: `SUCCESS/…` and `WARNING/…` finished, a
  * `DELETED/…` one was taken out, and anything else failed.
  *
+ * Some warnings are not finished at all. One that left articles missing, `DAMAGED`, `REPAIRABLE`
+ * or `HEALTH`, has files with holes in them and failed. One that ran out of room, `SPACE`, waits
+ * for somebody to make some, as Sonarr holds it, rather than starting the download again onto a
+ * full disk.
+ *
  * @param status - Such as `SUCCESS/UNPACK` or `FAILURE/PAR`.
  * @returns Its state, and what went wrong.
  */
@@ -65,7 +78,11 @@ const readHistoryStatus = (
 
   if (status.startsWith('WARNING')) {
     return {
-      state: 'done',
+      state: INCOMPLETE_WARNINGS.includes(status)
+        ? 'failed'
+        : status === OUT_OF_SPACE
+          ? 'paused'
+          : 'done',
       problem: saying('requests.downloads.nzbgetAdapter.nZBGetFinishedItWithAWarning', {
         status,
       }),

@@ -5,6 +5,7 @@ import { RefusalSchema } from '@ValenceContracts/schemas/Refusal';
 import { PlaybackPlanSchema } from '@ValenceContracts/schemas/PlaybackPlan';
 import { DeviceProfileSchema } from '@ValenceContracts/schemas/DeviceProfile';
 import { QualityStepIdSchema } from '@ValenceContracts/schemas/QualityStep';
+import { ConvertedSchema } from '@ValenceContracts/schemas/Converted';
 import { TranscodeReuseSchema } from '@ValenceContracts/schemas/TranscodeReuse';
 import { PLAYBACK_MODES } from '@ValenceContracts/functions/describePlaybackMode';
 const PlaybackError = RefusalSchema.openapi('PlaybackError');
@@ -22,8 +23,11 @@ const StartRequest = z
     subtitleStreamIndex: z.number().int().nonnegative().optional(),
     requestedQuality: QualityStepIdSchema.optional(),
     isAdaptive: z.boolean().optional(),
+    converted: ConvertedSchema.optional(),
   })
   .openapi('PlaybackStartRequest');
+
+const ExplainRequest = StartRequest.omit({ converted: true }).openapi('PlaybackExplainRequest');
 
 const DeliverySchema = z
   .union([
@@ -55,7 +59,7 @@ const explainRoute = createRoute({
   summary: 'Explain how an item would be played, without starting a session',
   request: {
     params: z.object({ mediaId: z.string().uuid() }),
-    body: { content: { 'application/json': { schema: StartRequest } } },
+    body: { content: { 'application/json': { schema: ExplainRequest } } },
   },
   responses: {
     200: {

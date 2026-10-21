@@ -56,6 +56,7 @@ vi.mock('@ValenceClient/playback/startPlaybackSession', async () => {
 
 vi.mock('@ValenceScreens/playback/attachShaka', () => ({
   attachShaka: attachMock,
+  CRITICAL: 2,
 }));
 
 vi.mock('@ValenceScreens/playback/castSender', async () => {
@@ -322,6 +323,7 @@ describe('VideoPlayer', () => {
         undefined,
         'original',
         undefined,
+        undefined,
       );
     });
   });
@@ -453,6 +455,116 @@ describe('VideoPlayer', () => {
       expect(attachMock).toHaveBeenCalledWith(
         expect.objectContaining({ manifestUrl: '/api/playback/session/abc/index.m3u8' }),
       );
+    });
+  });
+
+  it('asks again with the picture converted where the copied stream would not decode', async () => {
+    startMock.mockResolvedValue({
+      kind: 'started',
+      session: {
+        ...startedSession,
+        plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+      },
+    });
+    const attached: { onRecovered?: ((refusedAtSeconds: number) => void) | undefined } = {};
+
+    attachMock.mockImplementation((options: typeof attached) => {
+      attached.onRecovered = options.onRecovered;
+
+      return Promise.resolve({ detach: teardownMock, readDelivered: () => null });
+    });
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(attached.onRecovered).toBeDefined();
+    });
+    act(() => {
+      attached.onRecovered?.(15.4);
+    });
+
+    await waitFor(() => {
+      expect(startMock).toHaveBeenLastCalledWith(
+        'media-1',
+        { name: 'Browser' },
+        'client-1',
+        15,
+        undefined,
+        'original',
+        undefined,
+        'picture',
+      );
+    });
+  });
+
+  it('asks again with the sound converted too where the converted picture still would not decode', async () => {
+    const attached: {
+      onFault?: ((fault: { severity: number; category: number; code: number }) => void) | undefined;
+    } = {};
+
+    attachMock.mockImplementation((options: typeof attached) => {
+      attached.onFault = options.onFault;
+
+      return Promise.resolve({ detach: teardownMock, readDelivered: () => null });
+    });
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(attached.onFault).toBeDefined();
+    });
+    act(() => {
+      attached.onFault?.({ severity: 2, category: 3, code: 3016 });
+    });
+
+    await waitFor(() => {
+      expect(startMock).toHaveBeenLastCalledWith(
+        'media-1',
+        { name: 'Browser' },
+        'client-1',
+        0,
+        undefined,
+        'original',
+        undefined,
+        'pictureAndSound',
+      );
+    });
+  });
+
+  it('keeps the picture converted when a viewer picks another soundtrack afterwards', async () => {
+    const actor = userEvent.setup();
+    const attached: { onRecovered?: ((refusedAtSeconds: number) => void) | undefined } = {};
+
+    detailMock.mockResolvedValue(detailWithTwoAudioTracks);
+    startMock.mockResolvedValue({
+      kind: 'started',
+      session: {
+        ...startedSession,
+        plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+      },
+    });
+    attachMock.mockImplementation((options: typeof attached) => {
+      attached.onRecovered = options.onRecovered;
+
+      return Promise.resolve({ detach: teardownMock, readDelivered: () => null });
+    });
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(attached.onRecovered).toBeDefined();
+    });
+    act(() => {
+      attached.onRecovered?.(15);
+    });
+    await waitFor(() => {
+      expect(startMock.mock.calls.at(-1)?.[7]).toBe('picture');
+    });
+    await settled();
+
+    await actor.click(screen.getByRole('button', { name: 'Settings' }));
+    await actor.click(await screen.findByRole('button', { name: /Audio track/ }));
+    await actor.click(await screen.findByRole('menuitemradio', { name: 'English · 5.1 · AC3' }));
+
+    await waitFor(() => {
+      expect(startMock.mock.calls.at(-1)?.slice(4)).toEqual([2, 'original', undefined, 'picture']);
     });
   });
 
@@ -799,6 +911,58 @@ describe('VideoPlayer', () => {
     await settled();
 
     expect(attachMock).not.toHaveBeenCalled();
+  });
+
+  it('asks again with the picture converted where a direct file will not decode', async () => {
+    startMock.mockResolvedValue({
+      kind: 'started',
+      session: {
+        ...startedSession,
+        mode: 'DirectPlay',
+        delivery: { kind: 'direct', url: '/api/playback/media-1/file' },
+        plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+      },
+    });
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+    await settled();
+
+    const element = screen.getByLabelText('Arrival');
+
+    Object.defineProperty(element, 'error', {
+      configurable: true,
+      value: { code: 3 },
+    });
+    fireEvent.error(element);
+
+    await waitFor(() => {
+      expect(startMock.mock.calls.at(-1)?.[7]).toBe('picture');
+    });
+  });
+
+  it('says the stream could not be loaded where a direct file drops, rather than converting it', async () => {
+    startMock.mockResolvedValue({
+      kind: 'started',
+      session: {
+        ...startedSession,
+        mode: 'DirectPlay',
+        delivery: { kind: 'direct', url: '/api/playback/media-1/file' },
+        plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+      },
+    });
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+    await settled();
+
+    const element = screen.getByLabelText('Arrival');
+    const asked = startMock.mock.calls.length;
+
+    Object.defineProperty(element, 'error', {
+      configurable: true,
+      value: { code: 2 },
+    });
+    fireEvent.error(element);
+
+    expect(await screen.findByText(/Couldn’t load the stream/)).toBeInTheDocument();
+    expect(startMock.mock.calls).toHaveLength(asked);
   });
 
   it('points the video element at the direct file', async () => {
@@ -1567,6 +1731,7 @@ describe('VideoPlayer', () => {
         2400,
         2,
         'original',
+        undefined,
         undefined,
       );
     });

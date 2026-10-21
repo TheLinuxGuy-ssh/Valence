@@ -11,6 +11,7 @@ import type {
   ClientSettings,
   DownloadClientAdapter,
 } from '@ValenceRequests/downloads/DownloadClientAdapter';
+import type { TorrentLayout } from '@ValenceRequests/downloads/TorrentLayout';
 import type { QueuedDownloadState } from '@ValenceContracts/schemas/DownloadQueue';
 import { saying } from '@ValenceI18n/saying';
 
@@ -19,6 +20,7 @@ const TorrentSchema = z.object({
   name: z.string(),
   state: z.string(),
   progress: z.number(),
+  amount_left: z.number().optional(),
   size: z.number().optional(),
   total_size: z.number().optional(),
   completed: z.number().optional(),
@@ -32,7 +34,14 @@ const TorrentSchema = z.object({
   content_path: z.string().optional(),
 });
 
-const FileSchema = z.object({ name: z.string(), index: z.number().int().optional() });
+const FileSchema = z.object({
+  name: z.string(),
+  index: z.number().int().optional(),
+  size: z.number().optional(),
+  priority: z.number().int().optional(),
+});
+
+const PropertiesSchema = z.object({ piece_size: z.number().int().positive() });
 
 const TransferSchema = z.object({ dl_info_speed: z.number(), up_info_speed: z.number() });
 
@@ -48,7 +57,7 @@ const STATES: Readonly<Record<string, QueuedDownloadState>> = {
   forcedUP: 'done',
   pausedUP: 'done',
   stoppedUP: 'done',
-  checkingUP: 'done',
+  checkingUP: 'processing',
   downloading: 'downloading',
   forcedDL: 'downloading',
   metaDL: 'metadata',
@@ -69,13 +78,48 @@ const PROBLEMS: Readonly<Record<string, Said>> = {
 };
 
 /**
+ * Lays a torrent's files end to end as its pieces cover them, in the order qBittorrent lists them,
+ * which is the torrent's own.
+ *
+ * @param pieceBytes - How long each piece is.
+ * @param listed - Its files, each with its size and whether it is fetched.
+ * @returns The layout, or nothing where a file's size was not given.
+ */
+const layoutOf = (
+  pieceBytes: number,
+  listed: readonly z.infer<typeof FileSchema>[],
+): TorrentLayout | null => {
+  const files: TorrentLayout['files'] = [];
+  let offsetBytes = 0;
+
+  for (const file of listed) {
+    if (file.size === undefined) {
+      return null;
+    }
+
+    files.push({
+      name: file.name,
+      offsetBytes,
+      sizeBytes: file.size,
+      isWanted: file.priority !== 0,
+    });
+    offsetBytes += file.size;
+  }
+
+  return files.length === 0 ? null : { pieceBytes, files };
+};
+
+/**
  * Reads one torrent as qBittorrent lists it.
  *
  * @param torrent - The torrent.
  * @returns It as a download.
  */
 const readTorrent = (torrent: z.infer<typeof TorrentSchema>): ClientItem => {
-  const state = STATES[torrent.state] ?? 'queued';
+  const said = STATES[torrent.state] ?? 'queued';
+  const isWhole =
+    torrent.amount_left === undefined ? torrent.progress >= 1 : torrent.amount_left === 0;
+  const state = said === 'done' && !isWhole ? 'processing' : said;
   const sizeBytes = state === 'metadata' ? null : (torrent.size ?? torrent.total_size ?? null);
 
   return {
@@ -353,6 +397,24 @@ const createQbittorrentAdapter = (
       return listed.length === 0
         ? null
         : listed.map((file, position) => ({ index: file.index ?? position, name: file.name }));
+    },
+
+    layout: async (hash) => {
+      const asked = encodeURIComponent(hash);
+      const [properties, listed] = await Promise.all([
+        answered(`/api/v2/torrents/properties?hash=${asked}`).then(async (answer) =>
+          PropertiesSchema.parse(await answer.json()),
+        ),
+        answered(`/api/v2/torrents/files?hash=${asked}`).then(async (answer) =>
+          z.array(FileSchema).parse(await answer.json()),
+        ),
+      ]);
+
+      return layoutOf(properties.piece_size, listed);
+    },
+
+    recheck: async (hash) => {
+      await answered('/api/v2/torrents/recheck', new URLSearchParams({ hashes: hash }));
     },
 
     skip: async (hash, indices) => {

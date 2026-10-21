@@ -116,6 +116,29 @@ describe('createNzbgetAdapter', () => {
     ).rejects.toThrow('accepts NZBs, not torrents');
   });
 
+  it('counts a job NZBGet could not make whole as failed, and holds one it ran out of room for', async () => {
+    const { fetch } = anNzbget({
+      listgroups: [],
+      history: ['DAMAGED', 'REPAIRABLE', 'HEALTH', 'SPACE', 'SCRIPT'].map((warning, at) => ({
+        NZBID: at + 1,
+        Name: warning,
+        Category: 'valence',
+        Status: `WARNING/${warning}`,
+        FileSizeMB: 2,
+        DestDir: `/downloads/valence/${warning}`,
+      })),
+      status: { DownloadRate: 0 },
+    });
+
+    expect((await createNzbgetAdapter(SETTINGS, fetch).list()).map((job) => job.state)).toEqual([
+      'failed',
+      'failed',
+      'failed',
+      'paused',
+      'done',
+    ]);
+  });
+
   it('lists its own jobs from the queue and the history', async () => {
     const { fetch } = anNzbget({
       listgroups: [

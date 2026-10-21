@@ -122,6 +122,8 @@ import { useOfflineMode } from '@ValenceClient/offline/useOfflineMode';
 import { isOfflineNow } from '@ValenceClient/offline/isOfflineNow';
 import { holdWatching } from '@ValenceClient/playback/holdWatching';
 import type { StartedSession } from '@ValenceClient/playback/startPlaybackSession';
+import { whatToConvertNext } from '@ValenceClient/playback/whatToConvertNext';
+import type { Converted } from '@ValenceContracts/schemas/Converted';
 import type { MediaDetail } from '@ValenceContracts/schemas/Library';
 import { subtitleCuesUrl } from '@ValenceClient/playback/fetchSubtitleCues';
 import type { SubtitleTrack } from '@ValenceClient/playback/fetchSubtitles';
@@ -178,6 +180,16 @@ const PLAYER_TOASTS = 'player';
 const ASK_FOR_FRAMES_AGAIN_EVERY_MS = 10_000;
 
 const ADMIN_NOTICE = 'admin-notice';
+
+const NETWORK_FAULT = 1;
+
+const DECODING_FAULT = 3;
+
+const ELEMENT_LOST_THE_NETWORK = 2;
+
+const ELEMENT_COULD_NOT_DECODE = 3;
+
+const ELEMENT_COULD_NOT_READ = 4;
 
 const PARTY_NOTICE = 'party-notice';
 
@@ -395,6 +407,7 @@ const VideoPlayer = ({
     subtitleStreamIndex?: number;
     requestedQuality: QualityPreference;
     autoRung: AutoRung;
+    converted?: Converted;
   }>({
     mediaId: media.id,
     startSeconds: Math.floor(startSeconds),
@@ -932,6 +945,7 @@ const VideoPlayer = ({
           heardIndex,
           request.requestedQuality === 'auto' ? request.autoRung : request.requestedQuality,
           request.subtitleStreamIndex,
+          request.converted,
         );
       const first =
         keptSource === undefined
@@ -982,6 +996,27 @@ const VideoPlayer = ({
 
       const { sessionId } = outcome.session;
       const isHls = outcome.session.delivery.kind !== 'direct';
+      const convertInstead = (
+        fault: { category: number; code?: number } | null,
+        atSeconds = videoRef.current?.currentTime,
+      ): boolean => {
+        const next =
+          keptSource === undefined
+            ? whatToConvertNext({ plan: outcome.session.plan, converted: request.converted, fault })
+            : null;
+
+        if (next === null) {
+          return false;
+        }
+
+        setRequest((asked) => ({
+          ...asked,
+          converted: next,
+          startSeconds: Math.floor(atSeconds ?? asked.startSeconds),
+        }));
+
+        return true;
+      };
 
       heartbeatInterval = setInterval(() => {
         if (isHls) {
@@ -1145,6 +1180,33 @@ const VideoPlayer = ({
             }
           };
         } else if (outcome.session.delivery.kind === 'direct') {
+          const onRefused = () => {
+            const code = element.error?.code;
+            const isUnreadable =
+              code === ELEMENT_COULD_NOT_DECODE || code === ELEMENT_COULD_NOT_READ;
+
+            if (isAbandoned() || (isUnreadable && convertInstead(null))) {
+              return;
+            }
+
+            setProblem(
+              describePlaybackFailure(
+                code === ELEMENT_COULD_NOT_DECODE
+                  ? DECODING_FAULT
+                  : code === ELEMENT_LOST_THE_NETWORK
+                    ? NETWORK_FAULT
+                    : null,
+              ),
+            );
+            setState('failed');
+          };
+
+          element.addEventListener('error', onRefused, { once: true });
+          teardown = () => {
+            element.removeEventListener('error', onRefused);
+
+            return Promise.resolve();
+          };
           element.src = outcome.session.delivery.url;
         } else {
           const { plan } = outcome.session;
@@ -1162,12 +1224,17 @@ const VideoPlayer = ({
             ),
             connections: readPlaybackPreferences().connections,
             onFault: (fault) => {
-              if (fault.severity < CRITICAL || isAbandoned()) {
+              if (fault.severity < CRITICAL || isAbandoned() || convertInstead(fault)) {
                 return;
               }
 
               setProblem(describePlaybackFailure(fault.category, fault.code));
               setState('failed');
+            },
+            onRecovered: (refusedAtSeconds) => {
+              if (!isAbandoned()) {
+                convertInstead(null, refusedAtSeconds);
+              }
             },
           });
 
@@ -1715,6 +1782,7 @@ const VideoPlayer = ({
           ? {}
           : { audioStreamIndex: request.audioStreamIndex }),
         ...(wanted === undefined ? {} : { subtitleStreamIndex: wanted }),
+        ...(request.converted === undefined ? {} : { converted: request.converted }),
       });
     },
     [
@@ -1724,6 +1792,7 @@ const VideoPlayer = ({
       request.autoRung,
       request.audioStreamIndex,
       request.subtitleStreamIndex,
+      request.converted,
       position,
       hold,
     ],
@@ -1859,6 +1928,7 @@ const VideoPlayer = ({
         ...(request.subtitleStreamIndex === undefined
           ? {}
           : { subtitleStreamIndex: request.subtitleStreamIndex }),
+        ...(request.converted === undefined ? {} : { converted: request.converted }),
       });
     },
     [
@@ -1866,6 +1936,7 @@ const VideoPlayer = ({
       request.requestedQuality,
       request.autoRung,
       request.subtitleStreamIndex,
+      request.converted,
       position,
       hold,
       detail,
@@ -1890,9 +1961,17 @@ const VideoPlayer = ({
         ...(request.subtitleStreamIndex === undefined
           ? {}
           : { subtitleStreamIndex: request.subtitleStreamIndex }),
+        ...(request.converted === undefined ? {} : { converted: request.converted }),
       });
     },
-    [request.mediaId, request.audioStreamIndex, request.subtitleStreamIndex, position, hold],
+    [
+      request.mediaId,
+      request.audioStreamIndex,
+      request.subtitleStreamIndex,
+      request.converted,
+      position,
+      hold,
+    ],
   );
 
   useEffect(() => {

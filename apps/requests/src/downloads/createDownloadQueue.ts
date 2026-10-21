@@ -34,6 +34,7 @@ import type { Schedule } from '@ValenceRequests/timing/Schedule';
 import type { Indexer } from '@ValenceContracts/schemas/Indexer';
 import { say } from '@ValenceI18n/say';
 import { saying } from '@ValenceI18n/saying';
+import type { TorrentLayout } from '@ValenceRequests/downloads/TorrentLayout';
 
 type CreateDownloadQueueOptions = {
   clients: Pick<DownloadClientService, 'records' | 'adapterOf'>;
@@ -392,7 +393,13 @@ const createDownloadQueue = ({
     adapter: DownloadClientAdapter,
     clientName: string,
   ): Promise<boolean> => {
-    if (item === null || !record.removesWhenDone || record.wasPaused || record.filedInto === null) {
+    if (
+      item === null ||
+      item.state !== 'done' ||
+      !record.removesWhenDone ||
+      record.wasPaused ||
+      record.filedInto === null
+    ) {
       return false;
     }
 
@@ -685,6 +692,40 @@ const createDownloadQueue = ({
       live.delete(id);
       await downloads.remove(id);
       await announce();
+
+      return true;
+    },
+
+    layoutOf: async (id: string): Promise<TorrentLayout | null> => {
+      const found = await find(id);
+      const adapter = found === null ? null : clients.adapterOf(found.client);
+
+      if (found === null || adapter?.layout === undefined) {
+        return null;
+      }
+
+      return adapter.layout(found.record.remoteId).catch(() => null);
+    },
+
+    recheck: async (id: string): Promise<boolean> => {
+      const found = await find(id);
+      const adapter = found === null ? null : clients.adapterOf(found.client);
+
+      if (found === null || adapter?.recheck === undefined) {
+        return false;
+      }
+
+      try {
+        await adapter.recheck(found.record.remoteId);
+        await adapter.resume(found.record.remoteId);
+      } catch {
+        return false;
+      }
+
+      await downloads.update(found.record.id, {
+        state: 'processing',
+        updatedAt: now().toISOString(),
+      });
 
       return true;
     },
