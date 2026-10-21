@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { forgetPlatform, installPlatform } from '@ValenceClient/platform/installPlatform';
+import { aFakeKeptAnswers } from '@ValenceClient/testing/aFakeKeptAnswers';
 import { aFakePlatform } from '@ValenceClient/testing/aFakePlatform';
 import {
   answerDeviceRequest,
@@ -182,6 +183,30 @@ describe('fetchSession', () => {
 });
 
 describe('signOut', () => {
+  it('forgets every admin answer kept on this device even when the sign-out throws', async () => {
+    const fake = aFakeKeptAnswers();
+
+    fake.put('account-1', 'key', 'text');
+    installPlatform(aFakePlatform({ kept: fake.kept }));
+    fetchMock.mockRejectedValue(new Error('offline'));
+
+    await signOut().catch(() => false);
+
+    expect(fake.shelf.size).toBe(0);
+  });
+
+  it('forgets every admin answer kept on this device, whether or not the server heard', async () => {
+    const fake = aFakeKeptAnswers();
+
+    fake.put('account-1', 'key', 'text');
+    installPlatform(aFakePlatform({ kept: fake.kept }));
+    fetchMock.mockResolvedValue(said({ message: 'no' }, 500));
+
+    await signOut();
+
+    expect(fake.shelf.size).toBe(0);
+  });
+
   it('ends the session where it was issued', async () => {
     fetchMock.mockResolvedValue(said({ success: true }));
 
