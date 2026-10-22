@@ -910,6 +910,7 @@ const mediaItem = pgTable(
     posterUrl: text('posterUrl'),
     backdropUrl: text('backdropUrl'),
     logoUrl: text('logoUrl'),
+    artworkChangedAt: timestamp('artworkChangedAt'),
     externalId: text('externalId'),
     addedAt: timestamp('addedAt').notNull().defaultNow(),
     updatedAt: timestamp('updatedAt').notNull().defaultNow(),
@@ -1557,10 +1558,13 @@ const auditEntry = pgTable(
     action: text('action').notNull(),
     target: text('target'),
     detail: jsonb('detail').$type<Record<string, string>>(),
+    address: text('address'),
+    userAgent: text('userAgent'),
   },
   (table) => [
     index('audit_entry_at_idx').on(table.at),
     index('audit_entry_action_idx').on(table.action, table.at),
+    index('audit_entry_actor_idx').on(table.actorId, table.at),
   ],
 );
 

@@ -6,11 +6,18 @@ type AuditToRecord = {
   action: AuditAction;
   target?: string | null;
   detail?: Readonly<Record<string, string>> | null;
+  address?: string | null;
+  userAgent?: string | null;
+};
+
+type AuditRecording = {
+  foldWithinMs?: number;
 };
 
 type AuditService = {
-  record: (entry: AuditToRecord) => Promise<void>;
+  record: (entry: AuditToRecord, recording?: AuditRecording) => Promise<void>;
   list: (query: AuditQuery) => Promise<AuditPage>;
+  prune: (now: Date) => Promise<number>;
 };
 
-export type { AuditService, AuditToRecord };
+export type { AuditRecording, AuditService, AuditToRecord };

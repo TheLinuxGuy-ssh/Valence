@@ -1,3 +1,4 @@
+import { artworkUrl } from '@ValenceClient/library/artworkUrl';
 import {
   ChevronsUpDown,
   CircleCheck,
@@ -20,7 +21,7 @@ import { libraryQueries } from '@ValenceClient/query/libraryQueries';
 import { viewingQueries } from '@ValenceClient/query/viewingQueries';
 import { byMediaId } from '@ValenceClient/playback/watchProgress';
 import { resumeFor } from '@ValenceClient/playback/resumeFor';
-import { markWatched } from '@ValenceClient/playback/markWatched';
+import { markWatchedInPlace } from '@ValenceClient/playback/markWatchedInPlace';
 import { askAboutATitle } from '@ValenceMobile/components/ATitle/askAboutATitle';
 import { qualityBadges } from '@ValenceClient/library/qualityBadges';
 import { theVersionsOf } from '@ValenceClient/library/theVersionsOf';
@@ -428,14 +429,7 @@ const ATitle = ({
                   ? say('common.markTitleAsUnwatched', { title: title.title })
                   : say('common.markTitleAsWatched', { title: title.title }),
                 onChoose: () => {
-                  void markWatched([title], !isWatched)
-                    .then(async () =>
-                      Promise.all([
-                        cache.invalidateQueries({ queryKey: viewingQueries.progress().queryKey }),
-                        cache.invalidateQueries({ queryKey: libraryQueries.key }),
-                      ]),
-                    )
-                    .catch(() => null);
+                  void markWatchedInPlace(cache, [title], !isWatched).catch(() => null);
                 },
               },
               ...(onStartParty === undefined
@@ -542,9 +536,7 @@ const ATitle = ({
             >
               <APoster
                 title={extra.title}
-                artwork={
-                  extra.hasPoster ? onThisServer(`/api/media/${extra.id}/image/poster`) : null
-                }
+                artwork={extra.hasPoster ? onThisServer(artworkUrl(extra.id, 'poster')) : null}
                 note={
                   extra.extraKind === null || extra.extraKind === undefined
                     ? null
