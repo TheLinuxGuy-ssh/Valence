@@ -1,3 +1,6 @@
+import { bookHasSomethingStillThere } from '@ValenceServer/visibility/bookHasSomethingStillThere';
+import { artistHasSomethingStillThere } from '@ValenceServer/visibility/artistHasSomethingStillThere';
+import { albumHasSomethingStillThere } from '@ValenceServer/visibility/albumHasSomethingStillThere';
 import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { and, eq } from 'drizzle-orm';
 import { book, mediaItem, musicAlbum, musicArtist, musicTrack } from '#dialect/Schema';
@@ -45,7 +48,7 @@ const createPeerSubjectReader =
         ? await db
             .select({ id: book.id, title: book.title, libraryId: book.libraryId })
             .from(book)
-            .where(eq(book.id, id))
+            .where(and(eq(book.id, id), bookHasSomethingStillThere(db)))
         : kind === 'album'
           ? await db
               .select({
@@ -54,7 +57,7 @@ const createPeerSubjectReader =
                 libraryId: musicAlbum.libraryId,
               })
               .from(musicAlbum)
-              .where(eq(musicAlbum.id, id))
+              .where(and(eq(musicAlbum.id, id), albumHasSomethingStillThere(db)))
           : await db
               .select({
                 id: musicArtist.id,
@@ -62,7 +65,7 @@ const createPeerSubjectReader =
                 libraryId: musicArtist.libraryId,
               })
               .from(musicArtist)
-              .where(eq(musicArtist.id, id));
+              .where(and(eq(musicArtist.id, id), artistHasSomethingStillThere(db)));
 
     return row === undefined ? null : { ...row, certificationAge: null, isNeverRated: true };
   };

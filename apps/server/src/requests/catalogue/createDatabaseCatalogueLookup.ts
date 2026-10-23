@@ -1,3 +1,6 @@
+import { bookHasSomethingStillThere } from '@ValenceServer/visibility/bookHasSomethingStillThere';
+import { artistHasSomethingStillThere } from '@ValenceServer/visibility/artistHasSomethingStillThere';
+import { albumHasSomethingStillThere } from '@ValenceServer/visibility/albumHasSomethingStillThere';
 import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { hasSomethingStillThere } from '@ValenceServer/visibility/hasSomethingStillThere';
 import { concatenated } from '@ValenceDatabase/concatenated';
@@ -172,7 +175,13 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
         .select({ key: musicArtist.musicbrainzId, id: musicArtist.id })
         .from(musicArtist)
         .innerJoin(library, eq(library.id, musicArtist.libraryId))
-        .where(and(inArray(musicArtist.musicbrainzId, wanted), isNull(library.linkedServerId))),
+        .where(
+          and(
+            inArray(musicArtist.musicbrainzId, wanted),
+            isNull(library.linkedServerId),
+            artistHasSomethingStillThere(db),
+          ),
+        ),
     ),
 
   albums: (releaseGroupIds) =>
@@ -186,6 +195,7 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
             isNotNull(musicAlbum.releaseGroupMusicbrainzId),
             inArray(musicAlbum.releaseGroupMusicbrainzId, wanted),
             isNull(library.linkedServerId),
+            albumHasSomethingStillThere(db),
           ),
         ),
     ),
@@ -205,10 +215,12 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
       .from(musicTrack)
       .innerJoin(musicAlbum, eq(musicAlbum.id, musicTrack.albumId))
       .innerJoin(library, eq(library.id, musicAlbum.libraryId))
+      .innerJoin(mediaItem, eq(mediaItem.id, musicTrack.mediaItemId))
       .where(
         and(
           inArray(musicAlbum.releaseGroupMusicbrainzId, [...releaseGroupIds]),
           isNull(library.linkedServerId),
+          isStillThere(),
         ),
       );
     const tracks = new Map<string, (typeof rows)[number][]>();
@@ -232,6 +244,7 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
           eq(book.layout, 'audio'),
           sql`lower(${book.seriesName}) = ${series.toLowerCase()}`,
           isNull(library.linkedServerId),
+          bookHasSomethingStillThere(db),
         ),
       );
 
@@ -246,7 +259,13 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
         .select({ key: musicArtist.nameKey, id: musicArtist.id })
         .from(musicArtist)
         .innerJoin(library, eq(library.id, musicArtist.libraryId))
-        .where(and(inArray(musicArtist.nameKey, wanted), isNull(library.linkedServerId))),
+        .where(
+          and(
+            inArray(musicArtist.nameKey, wanted),
+            isNull(library.linkedServerId),
+            artistHasSomethingStillThere(db),
+          ),
+        ),
     ),
 
   albumsNamed: (titleKeys) =>
@@ -263,6 +282,7 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
           and(
             inArray(concatenated(musicArtist.nameKey, '/', musicAlbum.titleKey), wanted),
             isNull(library.linkedServerId),
+            albumHasSomethingStillThere(db),
           ),
         ),
     ),
@@ -327,6 +347,7 @@ const createDatabaseCatalogueLookup = (db: AnyValenceDatabase): CatalogueLookup 
             ...new Set(wanted.map((one) => one.title.toLowerCase())),
           ]),
           isNull(library.linkedServerId),
+          bookHasSomethingStillThere(db),
         ),
       );
 

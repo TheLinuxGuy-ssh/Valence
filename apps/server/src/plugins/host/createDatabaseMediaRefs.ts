@@ -1,3 +1,5 @@
+import { bookHasSomethingStillThere } from '@ValenceServer/visibility/bookHasSomethingStillThere';
+import { albumHasSomethingStillThere } from '@ValenceServer/visibility/albumHasSomethingStillThere';
 import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { hasSomethingStillThere } from '@ValenceServer/visibility/hasSomethingStillThere';
 import { and, asc, eq, inArray, isNull, or } from 'drizzle-orm';
@@ -201,7 +203,7 @@ const createDatabaseMediaRefs = (
       })
       .from(musicAlbum)
       .innerJoin(musicArtist, eq(musicArtist.id, musicAlbum.artistId))
-      .where(where)
+      .where(and(where, albumHasSomethingStillThere(db)))
       .orderBy(asc(musicAlbum.title))
       .limit(MOST_FOUND);
 
@@ -224,7 +226,7 @@ const createDatabaseMediaRefs = (
     const rows = await db
       .select({ id: book.id, title: book.title, year: book.year })
       .from(book)
-      .where(where)
+      .where(and(where, bookHasSomethingStillThere(db)))
       .orderBy(asc(book.title))
       .limit(MOST_FOUND);
 
@@ -242,6 +244,7 @@ const createDatabaseMediaRefs = (
             rows.map((row) => row.id),
           ),
           inArray(bookChapter.format, [...AUDIOBOOK_FORMATS]),
+          isNull(bookChapter.missingSince),
         ),
       );
 
@@ -387,7 +390,7 @@ const createDatabaseMediaRefs = (
         .innerJoin(musicAlbum, eq(musicAlbum.id, musicTrack.albumId))
         .innerJoin(musicTrackArtist, eq(musicTrackArtist.mediaItemId, mediaItem.id))
         .innerJoin(musicArtist, eq(musicArtist.id, musicTrackArtist.artistId))
-        .where(isTheTrackNamed(track.title, track.artist))
+        .where(and(isTheTrackNamed(track.title, track.artist), isStillThere()))
         .limit(MOST_FOUND);
       const onAlbum =
         track.album === null

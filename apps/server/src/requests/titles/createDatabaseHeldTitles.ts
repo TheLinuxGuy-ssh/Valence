@@ -1,3 +1,6 @@
+import { bookHasSomethingStillThere } from '@ValenceServer/visibility/bookHasSomethingStillThere';
+import { artistHasSomethingStillThere } from '@ValenceServer/visibility/artistHasSomethingStillThere';
+import { albumHasSomethingStillThere } from '@ValenceServer/visibility/albumHasSomethingStillThere';
 import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { book, library, mediaItem, musicAlbum, musicArtist, series } from '#dialect/Schema';
@@ -93,7 +96,7 @@ const createDatabaseHeldTitles = (db: AnyValenceDatabase) => async (): Promise<H
       })
       .from(musicArtist)
       .innerJoin(library, eq(library.id, musicArtist.libraryId))
-      .where(isNull(library.linkedServerId)),
+      .where(and(isNull(library.linkedServerId), artistHasSomethingStillThere(db))),
     db
       .select({
         id: musicAlbum.id,
@@ -108,7 +111,7 @@ const createDatabaseHeldTitles = (db: AnyValenceDatabase) => async (): Promise<H
       .from(musicAlbum)
       .innerJoin(musicArtist, eq(musicArtist.id, musicAlbum.artistId))
       .innerJoin(library, eq(library.id, musicAlbum.libraryId))
-      .where(isNull(library.linkedServerId)),
+      .where(and(isNull(library.linkedServerId), albumHasSomethingStillThere(db))),
     db
       .select({
         id: book.id,
@@ -122,7 +125,7 @@ const createDatabaseHeldTitles = (db: AnyValenceDatabase) => async (): Promise<H
       })
       .from(book)
       .innerJoin(library, eq(library.id, book.libraryId))
-      .where(isNull(library.linkedServerId)),
+      .where(and(isNull(library.linkedServerId), bookHasSomethingStillThere(db))),
   ]);
 
   const bySeries = new Map<
