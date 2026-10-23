@@ -37,7 +37,16 @@ const loadCastSenderMock = vi.hoisted(() => vi.fn());
 const castStateOfMock = vi.hoisted(() => vi.fn());
 const promptForDeviceMock = vi.hoisted(() => vi.fn());
 const isReachableOriginMock = vi.hoisted(() => vi.fn());
-const castStreamMock = vi.hoisted(() => vi.fn());
+const castStreamMock = vi.hoisted(() =>
+  vi.fn<
+    (
+      context: object,
+      stream: { url: string; title: string; startSeconds: number },
+    ) => Promise<boolean>
+  >(),
+);
+const followMock = vi.hoisted(() => vi.fn());
+const castAddressMock = vi.hoisted(() => vi.fn());
 const absoluteStreamUrlMock = vi.hoisted(() => vi.fn());
 const serverUpMock = vi.hoisted(() => vi.fn());
 const reportMock = vi.hoisted(() =>
@@ -82,6 +91,12 @@ vi.mock('@ValenceScreens/playback/castSender', async () => {
     castStream: castStreamMock,
   };
 });
+
+vi.mock('@ValenceClient/playback/castAddressOf', () => ({ castAddressOf: castAddressMock }));
+
+vi.mock('@ValenceScreens/playback/followCastPosition', () => ({
+  followCastPosition: followMock,
+}));
 
 vi.mock('@ValenceScreens/playback/castPlayback', async () => {
   const actual = await vi.importActual<typeof CastPlaybackModule>(
@@ -299,6 +314,8 @@ beforeEach(() => {
   isReachableOriginMock.mockReturnValue(true);
   castStreamMock.mockReset();
   castStreamMock.mockResolvedValue(true);
+  castAddressMock.mockReset();
+  castAddressMock.mockResolvedValue(null);
   absoluteStreamUrlMock.mockReset();
   absoluteStreamUrlMock.mockImplementation(
     (address: string) => `http://192.168.1.5:5173${address}`,
@@ -337,6 +354,7 @@ describe('VideoPlayer', () => {
         0,
         undefined,
         'original',
+        undefined,
         undefined,
         undefined,
         undefined,
@@ -509,6 +527,7 @@ describe('VideoPlayer', () => {
         undefined,
         'picture',
         undefined,
+        undefined,
       );
     });
   });
@@ -542,6 +561,7 @@ describe('VideoPlayer', () => {
         'original',
         undefined,
         'pictureAndSound',
+        undefined,
         undefined,
       );
     });
@@ -802,6 +822,34 @@ describe('VideoPlayer', () => {
     });
     expect(teardownMock).toHaveBeenCalled();
     expect(stopWatchingMock).toHaveBeenCalledWith('client-1');
+  });
+
+  it('takes down an engine that finishes loading after the player was closed', async () => {
+    const loading: { finish: () => void } = { finish: () => undefined };
+
+    attachMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          loading.finish = () => {
+            resolve({ detach: teardownMock, readDelivered: () => null });
+          };
+        }),
+    );
+
+    const { unmount } = renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} />);
+
+    await waitFor(() => {
+      expect(attachMock).toHaveBeenCalled();
+    });
+
+    unmount();
+    expect(teardownMock).not.toHaveBeenCalled();
+
+    loading.finish();
+
+    await waitFor(() => {
+      expect(teardownMock).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('does not say a tab has stopped watching just for changing quality or track', async () => {
@@ -1167,6 +1215,92 @@ describe('VideoPlayer', () => {
 
     expect(await screen.findByText('Reconnecting…')).toBeInTheDocument();
     expect(startMock.mock.calls).toHaveLength(asked);
+  });
+
+  it('reconnects where the viewer went back to, not where playing began', async () => {
+    startMock.mockResolvedValue({
+      kind: 'started',
+      session: {
+        ...startedSession,
+        mode: 'DirectPlay',
+        delivery: { kind: 'direct', url: '/api/playback/media-1/file' },
+        plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+      },
+    });
+    renderInAnAddress(<VideoPlayer media={media} startSeconds={600} onClose={vi.fn()} />);
+    await settled();
+
+    const element = screen.getByLabelText('Arrival');
+    const stream = fakeMediaElement(element);
+
+    stream.loaded({ duration: 7200, seekableTo: 7200 });
+    stream.playTo(600);
+    stream.playTo(605);
+    stream.playTo(100);
+
+    Object.defineProperty(element, 'error', { configurable: true, value: { code: 2 } });
+    fireEvent.error(element);
+
+    expect(await screen.findByText('Reconnecting…')).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(startMock.mock.calls.at(-1)?.[3]).toBe(100);
+      },
+      { timeout: 5000 },
+    );
+  });
+
+  it('keeps the place it was asked to start at when it reloads a file slow to answer', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+
+    try {
+      startMock.mockResolvedValue({
+        kind: 'started',
+        session: {
+          ...startedSession,
+          mode: 'DirectPlay',
+          delivery: { kind: 'direct', url: '/api/playback/media-1/file' },
+          plan: { ...transcodingPlan, video: { kind: 'passthrough', reason } },
+        },
+      });
+      renderInAnAddress(<VideoPlayer media={media} startSeconds={600} onClose={vi.fn()} />);
+      await settled();
+
+      const element = screen.getByLabelText('Arrival');
+      const reloads = vi.fn();
+
+      fakeMediaElement(element);
+      Object.defineProperty(element, 'readyState', { configurable: true, value: 0 });
+      Object.defineProperty(element, 'currentTime', {
+        configurable: true,
+        writable: true,
+        value: 600,
+      });
+      Object.defineProperty(element, 'play', {
+        configurable: true,
+        value: () => Promise.resolve(),
+      });
+      Object.defineProperty(element, 'load', {
+        configurable: true,
+        value: () => {
+          reloads();
+          Object.defineProperty(element, 'currentTime', {
+            configurable: true,
+            writable: true,
+            value: 0,
+          });
+        },
+      });
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(1600);
+      });
+
+      expect(reloads).toHaveBeenCalled();
+      expect(element).toHaveProperty('currentTime', 600);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('points the video element at the direct file', async () => {
@@ -1938,6 +2072,7 @@ describe('VideoPlayer', () => {
         undefined,
         undefined,
         undefined,
+        undefined,
       );
     });
   });
@@ -1957,7 +2092,11 @@ describe('VideoPlayer', () => {
       fireEvent.play(element);
 
       for (const seconds of [1, 2, 3, 4]) {
-        Object.defineProperty(element, 'currentTime', { configurable: true, value: seconds });
+        Object.defineProperty(element, 'currentTime', {
+          configurable: true,
+          writable: true,
+          value: seconds,
+        });
         fireEvent.timeUpdate(element);
       }
 
@@ -3048,7 +3187,11 @@ describe('when an administrator reaches into the stream', () => {
 
 describe('once a device has taken the stream', () => {
   const connected = async (delivery = startedSession.delivery) => {
-    loadCastSenderMock.mockResolvedValue({ addEventListener: vi.fn(), requestSession: vi.fn() });
+    loadCastSenderMock.mockResolvedValue({
+      addEventListener: vi.fn(),
+      requestSession: vi.fn(),
+      getCurrentSession: () => null,
+    });
     castStateOfMock.mockReturnValue('CONNECTED');
     startMock.mockResolvedValue({
       kind: 'started',
@@ -3119,6 +3262,134 @@ describe('once a device has taken the stream', () => {
     await connected();
 
     expect(await screen.findByText(/couldn’t play this stream/)).toBeInTheDocument();
+  });
+
+  it('hands the device an address carrying a ticket, since it has no session to read the stream with', async () => {
+    castAddressMock.mockResolvedValue('/api/playback/cast/ticket/index.m3u8');
+
+    await connected();
+
+    await waitFor(() => {
+      expect(castStreamMock.mock.calls.at(-1)?.[1].url).toContain('/api/playback/cast/ticket/');
+    });
+  });
+
+  it('asks for a stream a Chromecast plays, rather than what this browser plays', async () => {
+    await connected();
+
+    await waitFor(() => {
+      expect(startMock.mock.calls.at(-1)?.[9]).toBe(true);
+    });
+    expect(startMock.mock.calls.at(-1)?.[1]).toMatchObject({
+      maxHeight: 1080,
+      supportedVideoRanges: ['SDR'],
+    });
+  });
+
+  it('hands over only the session made for the Chromecast, not the one it replaces', async () => {
+    loadCastSenderMock.mockResolvedValue({
+      addEventListener: vi.fn(),
+      requestSession: vi.fn(),
+      getCurrentSession: () => null,
+    });
+    castStateOfMock.mockReturnValue('CONNECTED');
+    startMock.mockImplementation((...asked: (string | number | boolean | object | undefined)[]) => {
+      const sessionId = asked[9] === true ? 'for-the-cast' : 'for-the-browser';
+
+      return Promise.resolve({
+        kind: 'started',
+        session: {
+          ...startedSession,
+          sessionId,
+          delivery: { kind: 'hls', manifestUrl: `/api/playback/session/${sessionId}/index.m3u8` },
+        },
+      });
+    });
+
+    renderInAnAddress(<VideoPlayer media={media} onClose={vi.fn()} isImmersive />);
+    await settled();
+    fakeMediaElement(await screen.findByLabelText('Arrival')).loaded({
+      duration: 7200,
+      seekableTo: 7200,
+    });
+
+    await waitFor(() => {
+      expect(castStreamMock).toHaveBeenCalled();
+    });
+
+    expect(castStreamMock).toHaveBeenCalledOnce();
+    expect(castStreamMock.mock.calls[0]?.[1].url).toContain('for-the-cast');
+  });
+});
+
+describe('while a Chromecast plays it', () => {
+  const casting = async (onProgress = vi.fn()) => {
+    const context = {
+      addEventListener: vi.fn<(event: string, listener: () => void) => void>(),
+      requestSession: vi.fn(),
+      getCurrentSession: () => null,
+    };
+    const heard: { at: (seconds: number) => void } = { at: () => undefined };
+
+    vi.stubGlobal('cast', { framework: { CastContextEventType: { CAST_STATE_CHANGED: 'state' } } });
+    loadCastSenderMock.mockResolvedValue(context);
+    castStateOfMock.mockReturnValue('CONNECTED');
+    castStreamMock.mockResolvedValue(true);
+    followMock.mockImplementation((onSeconds: (seconds: number) => void) => {
+      heard.at = onSeconds;
+
+      return vi.fn();
+    });
+
+    renderInAnAddress(
+      <VideoPlayer media={media} onClose={vi.fn()} onProgress={onProgress} isImmersive />,
+    );
+    await settled();
+    fakeMediaElement(await screen.findByLabelText('Arrival')).loaded({
+      duration: 7200,
+      seekableTo: 7200,
+    });
+
+    await waitFor(() => {
+      expect(followMock).toHaveBeenCalled();
+    });
+
+    return { context, heard };
+  };
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    followMock.mockReset();
+  });
+
+  it('counts where the Chromecast has got to as where the viewer is', async () => {
+    const onProgress = vi.fn();
+    const { heard } = await casting(onProgress);
+
+    act(() => {
+      heard.at(1500);
+    });
+
+    expect(onProgress).toHaveBeenLastCalledWith(1500, expect.any(Number));
+  });
+
+  it('carries on here from where the Chromecast got to when the cast ends', async () => {
+    const { context, heard } = await casting();
+
+    act(() => {
+      heard.at(1500);
+    });
+    castStateOfMock.mockReturnValue('NOT_CONNECTED');
+    act(() => {
+      for (const [, listener] of context.addEventListener.mock.calls) {
+        listener();
+      }
+    });
+
+    await waitFor(() => {
+      expect(startMock.mock.calls.at(-1)?.[3]).toBe(1500);
+    });
+    expect(startMock.mock.calls.at(-1)?.[9]).toBe(false);
   });
 });
 

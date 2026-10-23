@@ -23,6 +23,8 @@ import { useSubtitleFetching } from '@ValenceScreens/playback/useSubtitleFetchin
 import { AssSubtitles } from '@ValenceScreens/components/VideoPlayer/components/AssSubtitles/AssSubtitles';
 import { isTheDesktopClient } from '@ValenceScreens/desktop/theDesktopShell';
 import { detectFromBrowser } from '@ValenceClient/playback/detectFromBrowser';
+import { castDeviceProfile } from '@ValenceClient/playback/castDeviceProfile';
+import { castAddressOf } from '@ValenceClient/playback/castAddressOf';
 import { qualityStepCostsFor } from '@ValenceClient/playback/qualityStepCostsFor';
 import { bufferFor } from '@ValenceClient/playback/bufferFor';
 import { rungOfHeight } from '@ValenceClient/playback/rungOfHeight';
@@ -48,6 +50,7 @@ import {
 } from '@ValenceScreens/playback/castPlayback';
 import { handOverToDevice } from '@ValenceScreens/playback/handOverToDevice';
 import { loadCastSender, castStateOf, castStream } from '@ValenceScreens/playback/castSender';
+import { followCastPosition } from '@ValenceScreens/playback/followCastPosition';
 import { applyVolumeBoost } from '@ValenceScreens/playback/volumeBoost';
 import { hasFinePointer } from '@ValenceUI/hasFinePointer';
 import { aLeaveWorthHiding } from '@ValenceScreens/playback/aLeaveWorthHiding';
@@ -341,6 +344,10 @@ const VideoPlayer = ({
     isOfflineRef.current = isOffline;
   });
   const [session, setSession] = useState<StartedSession | null>(null);
+  const [sessionMadeFor, setSessionMadeFor] = useState<{
+    isCast: boolean;
+    burnInSubtitleId: string | undefined;
+  }>({ isCast: false, burnInSubtitleId: undefined });
   const [state, setState] = useState<PlayerState>('starting');
   const [stoppedBy, setStoppedBy] = useState<{
     problem: PlaybackProblem;
@@ -424,6 +431,7 @@ const VideoPlayer = ({
     requestedQuality: QualityPreference;
     autoRung: AutoRung;
     converted?: Converted;
+    isCast?: boolean;
   }>({
     mediaId: media.id,
     startSeconds: Math.floor(startSeconds),
@@ -444,6 +452,7 @@ const VideoPlayer = ({
   const poppedRef = useRef<PoppedOut | null>(null);
   const [isPoppedOut, setIsPoppedOut] = useState(false);
   const [castState, setCastState] = useState<CastState>('unavailable');
+  const [isOnAChromecast, setIsOnAChromecast] = useState(false);
   const [sendingAt, setSendingAt] = useState<number | null>(null);
   const hasTelevision = useVideoDevices().some((device) => device.kind === 'tv');
 
@@ -614,6 +623,7 @@ const VideoPlayer = ({
         setCastState(
           state === 'CONNECTED' ? 'connected' : state === 'CONNECTING' ? 'connecting' : 'available',
         );
+        setIsOnAChromecast(state === 'CONNECTED');
       };
 
       const framework = window.cast?.framework;
@@ -658,60 +668,126 @@ const VideoPlayer = ({
     }));
   }, [toBurnIn, request.burnInSubtitleId]);
 
+  const castAtRef = useRef<number | null>(null);
+  const castTimeRef = useRef<(seconds: number) => void>(() => undefined);
+  const toCast = isOnAChromecast && keptSource === undefined;
+
   useEffect(() => {
-    if (castState !== 'connected' || toBurnIn !== request.burnInSubtitleId) {
+    if (toCast === (request.isCast === true)) {
+      return;
+    }
+
+    const castAt = castAtRef.current;
+
+    castAtRef.current = null;
+    setRequest((asked) => ({
+      ...asked,
+      isCast: toCast,
+      startSeconds: Math.floor(castAt ?? videoRef.current?.currentTime ?? asked.startSeconds),
+    }));
+  }, [toCast, request.isCast]);
+
+  useEffect(() => {
+    if (
+      castState !== 'connected' ||
+      toBurnIn !== request.burnInSubtitleId ||
+      toCast !== (request.isCast === true)
+    ) {
       return;
     }
 
     const element = videoRef.current;
-
-    if (element === null || session === null) {
+    if (
+      element === null ||
+      session === null ||
+      sessionMadeFor.isCast !== toCast ||
+      sessionMadeFor.burnInSubtitleId !== toBurnIn
+    ) {
       return;
     }
 
-    const address =
-      session.delivery.kind === 'direct' ? session.delivery.url : session.delivery.manifestUrl;
+    const handing: { isOver: boolean; stopFollowing: (() => void) | null } = {
+      isOver: false,
+      stopFollowing: null,
+    };
 
-    const context = castContextRef.current;
+    const handOver = (address: string) => {
+      const context = castContextRef.current;
 
-    if (context !== null) {
+      if (context === null) {
+        void handOverToDevice({
+          element,
+          url: address,
+          origin: window.location.origin,
+          ...(releaseRef.current === null
+            ? {}
+            : {
+                release: async () => {
+                  await releaseRef.current?.();
+                  releaseRef.current = null;
+                },
+              }),
+        });
+
+        return;
+      }
+
       const whole = absoluteStreamUrl(address, window.location.origin);
 
-      if (whole !== null) {
-        void castStream(context, {
-          url: whole,
-          title: media.title,
-          startSeconds: element.currentTime,
-        }).then((accepted) => {
-          if (accepted) {
-            element.pause();
+      if (whole === null) {
+        return;
+      }
 
-            return;
-          }
-
+      void castStream(context, {
+        url: whole,
+        title: media.title,
+        startSeconds: element.currentTime,
+      }).then((accepted) => {
+        if (!accepted) {
           notify.failed(say('screens.videoPlayer.thatDeviceWouldNotTakeThis'), {
             where: PLAYER_TOASTS,
           });
-        });
-      }
 
-      return;
+          return;
+        }
+
+        element.pause();
+
+        if (!handing.isOver) {
+          handing.stopFollowing = followCastPosition((seconds) => {
+            castAtRef.current = seconds;
+            castTimeRef.current(seconds);
+          });
+        }
+      });
+    };
+
+    if (session.delivery.kind === 'direct') {
+      handOver(session.delivery.url);
+    } else {
+      const own = session.delivery.manifestUrl;
+
+      void castAddressOf(session.sessionId).then((ticketed) => {
+        if (!handing.isOver) {
+          handOver(ticketed ?? own);
+        }
+      });
     }
 
-    void handOverToDevice({
-      element,
-      url: address,
-      origin: window.location.origin,
-      ...(releaseRef.current === null
-        ? {}
-        : {
-            release: async () => {
-              await releaseRef.current?.();
-              releaseRef.current = null;
-            },
-          }),
-    });
-  }, [castState, session, media.title, toBurnIn, request.burnInSubtitleId]);
+    return () => {
+      handing.isOver = true;
+      handing.stopFollowing?.();
+    };
+  }, [
+    castState,
+    session,
+    sessionMadeFor,
+    media.title,
+    toBurnIn,
+    request.burnInSubtitleId,
+    toCast,
+    request.isCast,
+  ]);
 
   const wasCastingRef = useRef(false);
 
@@ -746,7 +822,10 @@ const VideoPlayer = ({
         return;
       }
 
+      const at = element.currentTime;
+
       element.load();
+      element.currentTime = at;
       attempt();
     }, START_RETRY_MILLISECONDS);
   }, []);
@@ -764,23 +843,15 @@ const VideoPlayer = ({
 
     wasCastingRef.current = false;
 
-    const element = videoRef.current;
-
-    if (element === null || session === null || session.delivery.kind !== 'hls') {
+    if (request.isCast === true || session?.delivery.kind !== 'hls') {
       return;
     }
 
-    const at = element.currentTime;
-
-    void attachShaka({ element, manifestUrl: session.delivery.manifestUrl }).then((attached) => {
-      releaseRef.current = attached.detach;
-      deliveredRef.current = attached.readDelivered;
-      estimatedRef.current = attached.readEstimatedKbps;
-      ladderRef.current = attached.readLadder;
-      element.currentTime = at;
-      start(element);
-    });
-  }, [castState, session, start]);
+    setRequest((asked) => ({
+      ...asked,
+      startSeconds: Math.floor(videoRef.current?.currentTime ?? asked.startSeconds),
+    }));
+  }, [castState, session, request.isCast]);
 
   useEffect(
     () => () => {
@@ -843,6 +914,7 @@ const VideoPlayer = ({
       startSeconds: Math.floor(startSeconds),
       requestedQuality: request.requestedQuality,
       autoRung: request.autoRung,
+      ...(request.isCast === true ? { isCast: true } : {}),
     });
   }
 
@@ -933,7 +1005,10 @@ const VideoPlayer = ({
         return;
       }
 
-      const resumeAt = Math.floor(videoRef.current?.currentTime ?? request.startSeconds);
+      const resumeAt =
+        hasPlayedRef.current && videoRef.current !== null
+          ? Math.floor(videoRef.current.currentTime)
+          : null;
 
       setState('reconnecting');
       stopWaiting = waitForTheServer({
@@ -944,7 +1019,7 @@ const VideoPlayer = ({
 
           setRequest((asked) => ({
             ...asked,
-            startSeconds: Math.max(resumeAt, asked.startSeconds),
+            startSeconds: resumeAt ?? asked.startSeconds,
           }));
         },
         onGaveUp: () => {
@@ -987,6 +1062,7 @@ const VideoPlayer = ({
         (remembered === null || remembered.isDefault ? undefined : remembered.index);
       const film =
         keptSource === undefined &&
+        request.isCast !== true &&
         !engineRefusedRef.current &&
         readPlaybackPreferences().playsInTheBrowser
           ? await cache.ensureQueryData(libraryQueries.detail(request.mediaId)).catch(() => null)
@@ -1004,12 +1080,17 @@ const VideoPlayer = ({
       const ask = (heardIndex: number | undefined) =>
         startPlaybackSession(
           request.mediaId,
-          engine === null || film === null
-            ? deviceProfile
-            : withTheEngine(deviceProfile, engine, {
-                isHdr: film.videoRange !== 'SDR',
-                height: film.height,
-              }),
+          request.isCast === true
+            ? castDeviceProfile(
+                castContextRef.current?.getCurrentSession()?.getCastDevice()?.friendlyName ??
+                  deviceProfile.name,
+              )
+            : engine === null || film === null
+              ? deviceProfile
+              : withTheEngine(deviceProfile, engine, {
+                  isHdr: film.videoRange !== 'SDR',
+                  height: film.height,
+                }),
           clientId,
           request.startSeconds,
           heardIndex,
@@ -1017,6 +1098,7 @@ const VideoPlayer = ({
           request.subtitleStreamIndex,
           request.converted,
           request.burnInSubtitleId,
+          request.isCast,
         );
       const first =
         keptSource === undefined
@@ -1054,6 +1136,10 @@ const VideoPlayer = ({
 
         return;
       }
+      setSessionMadeFor({
+        isCast: request.isCast === true,
+        burnInSubtitleId: request.burnInSubtitleId,
+      });
       setSession(
         picksItsOwnSound && audioStreamIndex !== undefined
           ? {
@@ -1199,6 +1285,12 @@ const VideoPlayer = ({
             return;
           }
 
+          if (isAbandoned()) {
+            void attached.detach();
+
+            return;
+          }
+
           const original = outcome.session.delivery.url;
           const copies = outcome.session.keptCopies;
           const isHdrScreen = window.matchMedia('(dynamic-range: high)').matches;
@@ -1254,6 +1346,12 @@ const VideoPlayer = ({
 
             if (next === null) {
               handOver();
+
+              return;
+            }
+
+            if (isAbandoned()) {
+              void next.detach();
 
               return;
             }
@@ -1339,6 +1437,12 @@ const VideoPlayer = ({
             },
           });
 
+          if (isAbandoned()) {
+            void attached.detach();
+
+            return;
+          }
+
           teardown = attached.detach;
           releaseRef.current = attached.detach;
           deliveredRef.current = attached.readDelivered;
@@ -1358,7 +1462,9 @@ const VideoPlayer = ({
           setState('playing');
           setPosition(element.currentTime);
 
-          start(element, !isTheEngines);
+          if (request.isCast !== true) {
+            start(element, !isTheEngines);
+          }
 
           const still = { frames: -1, at: 0, checks: 0 };
 
@@ -1964,6 +2070,7 @@ const VideoPlayer = ({
           : { audioStreamIndex: request.audioStreamIndex }),
         ...(wanted === undefined ? {} : { subtitleStreamIndex: wanted }),
         ...(request.converted === undefined ? {} : { converted: request.converted }),
+        ...(request.isCast === true ? { isCast: true } : {}),
       });
     },
     [
@@ -1974,6 +2081,7 @@ const VideoPlayer = ({
       request.audioStreamIndex,
       request.subtitleStreamIndex,
       request.converted,
+      request.isCast,
       position,
       hold,
     ],
@@ -2113,6 +2221,7 @@ const VideoPlayer = ({
           ? {}
           : { burnInSubtitleId: request.burnInSubtitleId }),
         ...(request.converted === undefined ? {} : { converted: request.converted }),
+        ...(request.isCast === true ? { isCast: true } : {}),
       });
     },
     [
@@ -2122,6 +2231,7 @@ const VideoPlayer = ({
       request.autoRung,
       request.subtitleStreamIndex,
       request.converted,
+      request.isCast,
       position,
       hold,
       detail,
@@ -2150,6 +2260,7 @@ const VideoPlayer = ({
           ? {}
           : { burnInSubtitleId: request.burnInSubtitleId }),
         ...(request.converted === undefined ? {} : { converted: request.converted }),
+        ...(request.isCast === true ? { isCast: true } : {}),
       });
     },
     [
@@ -2158,6 +2269,7 @@ const VideoPlayer = ({
       request.audioStreamIndex,
       request.subtitleStreamIndex,
       request.converted,
+      request.isCast,
       position,
       hold,
     ],
@@ -2626,6 +2738,10 @@ const VideoPlayer = ({
     onBufferingChange: setIsBuffering,
     onEnded: finish,
   };
+
+  useEffect(() => {
+    castTimeRef.current = asItPlays.onTimeUpdate;
+  });
 
   const theTitleBar = (
     <header
