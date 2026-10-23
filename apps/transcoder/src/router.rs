@@ -135,13 +135,34 @@ pub struct AppState {
 
 impl AppState {
     /// Whether a path lies inside a configured media root.
+    ///
+    /// A film kept as several files arrives as a list this service wrote into
+    /// its own cache, which is no media root. It may be read where every part
+    /// it joins may, which is also what stops a list being a way past the
+    /// roots: the parts are what is opened.
+    ///
+    /// A path holding a `..` is refused outright, as [`is_writable`](Self::is_writable) refuses
+    /// one, because a prefix test on it proves nothing about where the file is. Where the path
+    /// leads through a link is the operator's own arrangement and is trusted.
     #[must_use]
     pub fn is_readable(&self, path: &Path) -> bool {
         if self.media_roots.is_empty() {
             return true;
         }
 
-        self.media_roots.iter().any(|root| path.starts_with(root))
+        let is_inside = |path: &Path| {
+            !path
+                .components()
+                .any(|component| matches!(component, std::path::Component::ParentDir))
+                && self.media_roots.iter().any(|root| path.starts_with(root))
+        };
+
+        if path.to_str().is_some_and(crate::joined_input::is_joined) {
+            return crate::joined_input::parts_of(path)
+                .is_some_and(|parts| parts.iter().all(|part| is_inside(part)));
+        }
+
+        is_inside(path)
     }
 
     /// Whether a path lies inside a configured write root.
@@ -1678,17 +1699,65 @@ async fn start_preview(
 /// request and belongs to the request type; a caller that computed it instead
 /// would be a second implementation of the naming scheme, and the first time the
 /// two disagreed the sweep would delete every artefact still in use.
+///
+/// Read one entry at a time. An entry naming a film kept as several files whose
+/// list cannot be written now — a part gone missing since the server last
+/// looked — is left out rather than failing the sweep, which only lets that
+/// film's artefacts go until it is whole again. It is told apart by reading
+/// the entry again with its first part in place of its parts: one that reads
+/// then failed only for its parts. Any other entry that cannot be read still
+/// refuses the whole sweep, since leaving it out would delete what it keeps.
 #[derive(Debug, Deserialize)]
-struct SweepRequest<T> {
-    keep: Vec<T>,
+struct SweepRequest {
+    keep: Vec<serde_json::Value>,
+}
+
+impl SweepRequest {
+    /// The entries as the requests they are, or why the sweep cannot go ahead.
+    fn kept<T: serde::de::DeserializeOwned>(self) -> Result<Vec<T>, String> {
+        let mut kept = Vec::with_capacity(self.keep.len());
+
+        for entry in self.keep {
+            let first_part = entry
+                .get("inputPath")
+                .and_then(serde_json::Value::as_array)
+                .and_then(|parts| parts.first())
+                .and_then(|part| part.get("path"))
+                .cloned();
+            let reads_as_one_file = first_part.is_some_and(|path| {
+                let mut alone = entry.clone();
+
+                alone["inputPath"] = path;
+
+                serde_json::from_value::<T>(alone).is_ok()
+            });
+
+            match serde_json::from_value::<T>(entry) {
+                Ok(request) => kept.push(request),
+                Err(error) if reads_as_one_file => {
+                    tracing::warn!(
+                        target: "transcode",
+                        %error,
+                        "left a film kept as several files out of a sweep"
+                    );
+                }
+                Err(error) => return Err(error.to_string()),
+            }
+        }
+
+        Ok(kept)
+    }
 }
 
 /// Removes preview clips nothing addresses any more.
 async fn sweep_previews(
     State(state): State<AppState>,
-    Json(request): Json<SweepRequest<PreviewRequest>>,
+    Json(request): Json<SweepRequest>,
 ) -> Response {
-    let keep: HashSet<String> = request.keep.iter().map(PreviewRequest::id).collect();
+    let keep: HashSet<String> = match request.kept::<PreviewRequest>() {
+        Ok(kept) => kept.iter().map(PreviewRequest::id).collect(),
+        Err(reason) => return error(StatusCode::UNPROCESSABLE_ENTITY, &reason),
+    };
     let root = state.registry.config().artefact_root.join("previews");
 
     let report = cache_sweep::sweep(&root, &keep, cache_sweep::GRACE).await;
@@ -1712,9 +1781,12 @@ async fn measure_cache(State(state): State<AppState>) -> Response {
 /// Removes thumbnail sheets nothing addresses any more.
 async fn sweep_trickplay(
     State(state): State<AppState>,
-    Json(request): Json<SweepRequest<TrickplayRequest>>,
+    Json(request): Json<SweepRequest>,
 ) -> Response {
-    let keep: HashSet<String> = request.keep.iter().map(TrickplayRequest::id).collect();
+    let keep: HashSet<String> = match request.kept::<TrickplayRequest>() {
+        Ok(kept) => kept.iter().map(TrickplayRequest::id).collect(),
+        Err(reason) => return error(StatusCode::UNPROCESSABLE_ENTITY, &reason),
+    };
     let root = state.registry.config().artefact_root.join("trickplay");
 
     let report = cache_sweep::sweep(&root, &keep, cache_sweep::GRACE).await;
@@ -3089,7 +3161,7 @@ pub fn create_router(state: AppState) -> Router {
 mod tests {
     use super::{
         claim_for_a_live_job, content_type_for, is_safe_segment_name, locate, parse_range,
-        AppState, Claimed, SessionFileQuery,
+        AppState, Claimed, SessionFileQuery, SweepRequest,
     };
     use crate::render_registry::RenderRegistry;
     use std::path::{Path, PathBuf};
@@ -3121,6 +3193,129 @@ mod tests {
             media_roots: Vec::new(),
             write_roots: roots.iter().map(PathBuf::from).collect(),
         }
+    }
+
+    /// A film kept as several files is read through a list in the cache, which is no media root:
+    /// it may be read where every part may, and no further.
+    #[test]
+    fn reads_a_joined_film_only_where_every_part_may_be_read() {
+        let _ = crate::joined_input::test_folder();
+
+        let inside = std::env::temp_dir().join("valence-readable-inside");
+        let outside = std::env::temp_dir().join("valence-readable-outside");
+
+        for folder in [&inside, &outside] {
+            std::fs::create_dir_all(folder).expect("makes the folder");
+            std::fs::write(folder.join("cd1.mkv"), b"one").expect("writes a part");
+            std::fs::write(folder.join("cd2.mkv"), b"two").expect("writes a part");
+        }
+
+        let part = |folder: &Path, name: &str| crate::joined_input::Part {
+            path: folder.join(name).to_string_lossy().into_owned(),
+            duration_seconds: 20.0,
+        };
+        let reading = AppState {
+            media_roots: vec![inside.clone()],
+            ..writing_to(&[])
+        };
+        let within =
+            crate::joined_input::join(&[part(&inside, "cd1.mkv"), part(&inside, "cd2.mkv")])
+                .expect("joins them");
+        let reaching =
+            crate::joined_input::join(&[part(&inside, "cd1.mkv"), part(&outside, "cd2.mkv")])
+                .expect("joins them");
+
+        assert!(reading.is_readable(Path::new(&within)));
+        assert!(!reading.is_readable(Path::new(&reaching)));
+    }
+
+    /// A film whose list cannot be written, a part gone missing since the server looked, is left
+    /// out of a sweep; any other entry that cannot be read still stops it, since leaving that out
+    /// would delete what it keeps.
+    #[test]
+    fn leaves_a_film_whose_parts_cannot_be_joined_out_of_a_sweep_and_nothing_else() {
+        let _ = crate::joined_input::test_folder();
+
+        let sweep = |keep: serde_json::Value| {
+            serde_json::from_value::<SweepRequest>(serde_json::json!({ "keep": keep }))
+                .expect("reads the request")
+                .kept::<crate::preview::PreviewRequest>()
+        };
+        let missing_part = serde_json::json!({
+            "inputPath": [
+                { "path": "/nowhere/Film - cd1.mkv", "durationSeconds": 20.0 },
+                { "path": "/nowhere/Film - cd2.mkv", "durationSeconds": 20.0 },
+            ],
+            "generation": 0,
+        });
+        let whole = serde_json::json!({ "inputPath": "/films/Film.mkv", "generation": 0 });
+
+        assert_eq!(
+            sweep(serde_json::json!([whole.clone(), missing_part])).map(|kept| kept.len()),
+            Ok(1)
+        );
+        assert!(sweep(serde_json::json!([whole, { "inputPath": "/films/Other.mkv" }])).is_err());
+        assert!(sweep(serde_json::json!([{
+            "inputPath": [
+                { "path": "/nowhere/Film - cd1.mkv", "durationSeconds": 20.0 },
+                { "path": "/nowhere/Film - cd2.mkv", "durationSeconds": 20.0 },
+            ],
+        }]))
+        .is_err());
+    }
+
+    /// A prefix test on a path holding `..` proves nothing about where the file is, so such a
+    /// path is never read, whether it is asked for alone or as a part of a film.
+    #[test]
+    fn reads_no_path_that_climbs_out_of_its_root() {
+        let _ = crate::joined_input::test_folder();
+
+        let inside = std::env::temp_dir().join("valence-readable-climbing");
+
+        std::fs::create_dir_all(&inside).expect("makes the folder");
+        std::fs::write(inside.join("cd1.mkv"), b"one").expect("writes a part");
+
+        let reading = AppState {
+            media_roots: vec![inside.clone()],
+            ..writing_to(&[])
+        };
+        let climbing = format!("{}/../{}", inside.display(), "elsewhere.mkv");
+        let list = crate::joined_input::join(&[
+            crate::joined_input::Part {
+                path: inside.join("cd1.mkv").to_string_lossy().into_owned(),
+                duration_seconds: 20.0,
+            },
+            crate::joined_input::Part {
+                path: format!(
+                    "{}/../{}",
+                    inside.display(),
+                    "valence-readable-climbing/cd1.mkv"
+                ),
+                duration_seconds: 20.0,
+            },
+        ])
+        .expect("joins them");
+
+        assert!(!reading.is_readable(Path::new(&climbing)));
+        assert!(!reading.is_readable(Path::new(&list)));
+    }
+
+    /// A list is read only through its parts, so one that cannot be read as written is refused
+    /// even where the cache it sits in is a media root.
+    #[test]
+    fn refuses_a_list_that_cannot_be_read_even_inside_a_root() {
+        let folder = crate::joined_input::test_folder();
+        let list = folder.join("unreadable-root.ffconcat");
+
+        std::fs::create_dir_all(&folder).expect("makes the folder");
+        std::fs::write(&list, "file '/x.mkv'\n").expect("writes the list");
+
+        let reading = AppState {
+            media_roots: vec![std::env::temp_dir()],
+            ..writing_to(&[])
+        };
+
+        assert!(!reading.is_readable(&list));
     }
 
     /// Writing where an operator said Valence may write.
