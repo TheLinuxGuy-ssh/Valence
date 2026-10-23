@@ -1,4 +1,5 @@
 import { z } from '@hono/zod-openapi';
+import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { createFilePictureStore } from '@ValenceServer/pictures/createFilePictureStore';
 import { brandLogoAddress } from '@ValenceServer/brand/brandLogoAddress';
 import { BRAND_LOGO_LIMITS } from '@ValenceServer/brand/BRAND_LOGO_LIMITS';
@@ -745,7 +746,8 @@ const countUsers = async (): Promise<number> => {
 const readLibraryBytes = async (): Promise<number> => {
   const rows = await db
     .select({ total: sql<number>`coalesce(sum(${mediaItem.sizeBytes}), 0)` })
-    .from(mediaItem);
+    .from(mediaItem)
+    .where(isStillThere());
 
   return Number(rows[0]?.total ?? 0);
 };
@@ -1479,7 +1481,7 @@ const runDetectSegments = async (libraryId: string, jobId: string): Promise<void
             eq(mediaItemJob.kind, DETECT_SEGMENTS_JOB),
           ),
         )
-        .where(eq(mediaItem.libraryId, id));
+        .where(and(eq(mediaItem.libraryId, id), isStillThere()));
 
       return rows.map((row) => ({
         mediaId: row.mediaId,
@@ -2833,6 +2835,7 @@ const jobs = createJobQueue({
               lte(mediaItem.addedAt, now),
               isNull(mediaItem.extraKind),
               isNull(mediaItem.parentId),
+              isStillThere(),
             ),
           );
 
@@ -3154,7 +3157,10 @@ const sayWhatAScanChanged = async (
   scanned: { name: string; kind: LibraryKind },
   result: ScanResult,
 ): Promise<ScannedItem[]> => {
-  if (result.added + result.updated + result.removed > 0) {
+  const changed =
+    result.added + result.updated + result.removed + (result.missing ?? 0) + (result.returned ?? 0);
+
+  if (changed > 0) {
     void tellLinkedOfChange({ libraryId }).catch(() => undefined);
   }
 
@@ -3179,7 +3185,7 @@ const sayWhatAScanChanged = async (
     await events.publish({ event: 'media.removed', data: named(item) });
   }
 
-  if (result.added + result.updated + result.removed > 0) {
+  if (changed > 0) {
     realtime.publish('media', { added: result.added }, { kind: 'everyone' });
   }
 

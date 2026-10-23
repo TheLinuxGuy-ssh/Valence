@@ -84,6 +84,7 @@ const stored = (path: string, overrides: Partial<StoredItem> = {}): StoredItem =
 const harness = (options: {
   found?: ScannedFile[];
   unreadable?: string[];
+  leftOut?: string[];
   existing?: StoredItem[];
   probeImpl?: (path: string) => Promise<MediaProbe>;
   providers?: MetadataProvider[];
@@ -104,6 +105,9 @@ const harness = (options: {
   kind?: 'movies' | 'shows';
   within?: string;
   regroupSeries?: (libraryId: string, foldersByPath: Map<string, string>) => Promise<void>;
+  setAside?: (libraryId: string, paths: string[], now: Date) => Promise<string[]>;
+  markFound?: (libraryId: string, paths: string[]) => Promise<void>;
+  listMissingSince?: (libraryId: string, before: Date) => Promise<string[]>;
 }) => {
   const rows: MediaRow[] = [];
   const walked: string[] = [];
@@ -194,6 +198,7 @@ const harness = (options: {
           return Promise.resolve({
             files: options.found ?? [],
             unreadable: options.unreadable ?? [],
+            ...(options.leftOut === undefined ? {} : { leftOut: options.leftOut }),
           });
         },
       },
@@ -212,6 +217,11 @@ const harness = (options: {
         listOverrides: () => Promise.resolve(options.overrides ?? []),
         ...(options.linkExtras === undefined ? {} : { linkExtras: options.linkExtras }),
         ...(options.regroupSeries === undefined ? {} : { regroupSeries: options.regroupSeries }),
+        ...(options.setAside === undefined ? {} : { setAside: options.setAside }),
+        ...(options.markFound === undefined ? {} : { markFound: options.markFound }),
+        ...(options.listMissingSince === undefined
+          ? {}
+          : { listMissingSince: options.listMissingSince }),
         ...(options.forgetStaleVersions === undefined
           ? {}
           : { forgetStaleVersions: options.forgetStaleVersions }),
@@ -322,6 +332,154 @@ describe('a library whose files have gone from under it', () => {
 
     expect(removedPaths).toEqual([]);
     expect(problems).toEqual([]);
+  });
+});
+
+describe('a file that goes missing', () => {
+  it('is set aside rather than removed, so what viewers have of it is kept', async () => {
+    const setAside = vi.fn(() => Promise.resolve([]));
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016).mkv')],
+      existing: [stored('/media/films/Arrival (2016).mkv'), stored('/media/films/Gone.mkv')],
+      setAside,
+    });
+
+    const result = await run();
+
+    expect(setAside).toHaveBeenCalledWith(LIBRARY_ID, ['/media/films/Gone.mkv'], expect.any(Date));
+    expect(removedPaths).toEqual([]);
+    expect(result.removed).toBe(0);
+  });
+
+  it('is removed where another copy takes its place, so what viewers have moves to it', async () => {
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016) - 1080p.mkv')],
+      existing: [stored('/media/films/Arrival (2016) - 720p.mkv')],
+      setAside: (_, paths) => Promise.resolve(paths),
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual(['/media/films/Arrival (2016) - 720p.mkv']);
+  });
+
+  it('is removed once it has been missing for thirty days', async () => {
+    let asked: Date | undefined;
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016).mkv')],
+      existing: [stored('/media/films/Arrival (2016).mkv')],
+      setAside: () => Promise.resolve([]),
+      listMissingSince: (_, before) => {
+        asked = before;
+
+        return Promise.resolve(['/media/films/Long Gone.mkv']);
+      },
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual(['/media/films/Long Gone.mkv']);
+    expect(Date.now() - (asked?.getTime() ?? 0)).toBeGreaterThanOrEqual(30 * 24 * 60 * 60 * 1000);
+    expect(Date.now() - (asked?.getTime() ?? 0)).toBeLessThan(31 * 24 * 60 * 60 * 1000);
+  });
+
+  it('is not removed for being long missing while the whole library is missing too', async () => {
+    const listMissingSince = vi.fn(() => Promise.resolve(['/media/films/Long Gone.mkv']));
+    const { run, removedPaths } = harness({
+      found: [],
+      existing: [stored('/media/films/Arrival (2016).mkv')],
+      setAside: () => Promise.resolve([]),
+      listMissingSince,
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual([]);
+    expect(listMissingSince).not.toHaveBeenCalled();
+  });
+
+  it('is not removed for being long missing by a scan of only part of the library', async () => {
+    const listMissingSince = vi.fn(() => Promise.resolve(['/media/films/Long Gone.mkv']));
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016).mkv')],
+      existing: [stored('/media/films/Arrival (2016).mkv')],
+      isPartial: true,
+      setAside: () => Promise.resolve([]),
+      listMissingSince,
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual([]);
+    expect(listMissingSince).not.toHaveBeenCalled();
+  });
+
+  it('is removed at once where an administrator left it out, rather than kept as missing', async () => {
+    const setAside = vi.fn(() => Promise.resolve([]));
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016).mkv')],
+      leftOut: ['/media/films/Left.mkv'],
+      existing: [
+        stored('/media/films/Arrival (2016).mkv'),
+        stored('/media/films/Left.mkv'),
+        stored('/media/films/Gone.mkv'),
+      ],
+      setAside,
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual(['/media/films/Left.mkv']);
+    expect(setAside).toHaveBeenCalledWith(LIBRARY_ID, ['/media/films/Gone.mkv'], expect.any(Date));
+  });
+
+  it('counts what went missing this time and what came back, so open pages hear of it', async () => {
+    const { run } = harness({
+      found: [file('/media/films/Back.mkv')],
+      existing: [
+        stored('/media/films/Back.mkv', { missingSince: new Date('2026-10-01') }),
+        stored('/media/films/Gone Now.mkv'),
+        stored('/media/films/Gone Before.mkv', { missingSince: new Date('2026-10-01') }),
+      ],
+      setAside: () => Promise.resolve([]),
+      markFound: () => Promise.resolve(),
+    });
+
+    await expect(run()).resolves.toMatchObject({ removed: 0, missing: 1, returned: 1 });
+  });
+
+  it('is removed at once where it is still there but no longer read as a title', async () => {
+    const setAside = vi.fn(() => Promise.resolve([]));
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Arrival (2016).mkv'), file('/media/films/Arrival-sample.mkv')],
+      existing: [
+        stored('/media/films/Arrival (2016).mkv'),
+        stored('/media/films/Arrival-sample.mkv'),
+      ],
+      setAside,
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual(['/media/films/Arrival-sample.mkv']);
+    expect(setAside).toHaveBeenCalledWith(LIBRARY_ID, [], expect.any(Date));
+  });
+
+  it('is no longer missing once it comes back', async () => {
+    const markFound = vi.fn(() => Promise.resolve());
+    const { run } = harness({
+      found: [file('/media/films/Arrival (2016).mkv'), file('/media/films/Here.mkv')],
+      existing: [
+        stored('/media/films/Arrival (2016).mkv', { missingSince: new Date('2026-10-01') }),
+        stored('/media/films/Here.mkv'),
+      ],
+      setAside: () => Promise.resolve([]),
+      markFound,
+    });
+
+    await run();
+
+    expect(markFound).toHaveBeenCalledWith(LIBRARY_ID, ['/media/films/Arrival (2016).mkv']);
   });
 });
 
@@ -503,6 +661,54 @@ describe('scanLibrary', () => {
 
     expect(result).toMatchObject({ added: 1, updated: 0, removed: 0, failed: 0 });
     expect(rows[0]).toMatchObject({ title: 'Arrival', year: 2016, libraryId: LIBRARY_ID });
+  });
+
+  it('reads a Blu-ray copied whole as one film, named by its folder, played from its largest stream', async () => {
+    const disc = '/media/films/A Film (2010)/BDMV/STREAM';
+    const { run, rows } = harness({
+      found: [
+        file(`${disc}/00001.m2ts`, { sizeBytes: 40 }),
+        file(`${disc}/00800.m2ts`, { sizeBytes: 30_000 }),
+        file(`${disc}/00801.m2ts`, { sizeBytes: 900 }),
+      ],
+    });
+
+    const result = await run();
+
+    expect(result).toMatchObject({ added: 1 });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({ path: `${disc}/00800.m2ts`, title: 'A Film', year: 2010 });
+  });
+
+  it('lets go of the films a disc’s other streams were once read as', async () => {
+    const disc = '/media/films/A Film (2010)/BDMV/STREAM';
+    const { run, removedPaths } = harness({
+      found: [
+        file(`${disc}/00001.m2ts`, { sizeBytes: 40 }),
+        file(`${disc}/00800.m2ts`, { sizeBytes: 30_000 }),
+      ],
+      existing: [stored(`${disc}/00001.m2ts`, { sizeBytes: 40 }), stored(`${disc}/00800.m2ts`)],
+      setAside: () => Promise.resolve([]),
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual([`${disc}/00001.m2ts`]);
+  });
+
+  it('only sets aside a disc whose every stream has gone, in case it comes back', async () => {
+    const disc = '/media/films/A Film (2010)/BDMV/STREAM';
+    const setAside = vi.fn(() => Promise.resolve([]));
+    const { run, removedPaths } = harness({
+      found: [file('/media/films/Other (2011).mkv')],
+      existing: [stored('/media/films/Other (2011).mkv'), stored(`${disc}/00800.m2ts`)],
+      setAside,
+    });
+
+    await run();
+
+    expect(removedPaths).toEqual([]);
+    expect(setAside).toHaveBeenCalledWith(LIBRARY_ID, [`${disc}/00800.m2ts`], expect.any(Date));
   });
 
   it('ignores files that are not media', async () => {
@@ -715,6 +921,73 @@ describe('scanLibrary', () => {
     await run();
 
     expect(rows[0]).toMatchObject({ title: 'Arrival', year: 2016 });
+  });
+
+  it('files an episode named by its air date under the season and number the catalogue gives', async () => {
+    let asked: string | null | undefined;
+    const { run, rows } = harness({
+      kind: 'shows',
+      root: '/media/shows',
+      found: [file('/media/shows/Some Show/Some Show 2020-03-05.mkv')],
+      providers: [
+        {
+          name: 'plugin',
+          describe: (facts) => {
+            asked = facts.episode?.airDate;
+
+            return Promise.resolve({
+              title: 'The Day Itself',
+              year: 2019,
+              seriesTitle: 'Some Show',
+              seasonNumber: 2,
+              episodeNumber: 45,
+            });
+          },
+        },
+      ],
+    });
+
+    await run();
+
+    expect(asked).toBe('2020-03-05');
+    expect(rows[0]?.episode).toMatchObject({ seasonNumber: 2, episodeNumber: 45 });
+  });
+
+  it('files a dated episode the catalogue cannot place in season 1, as before', async () => {
+    const { run, rows } = harness({
+      kind: 'shows',
+      root: '/media/shows',
+      found: [file('/media/shows/Some Show/Some Show 2020-03-05.mkv')],
+      providers: [
+        {
+          name: 'plugin',
+          describe: () => Promise.resolve({ title: 'Some Show', year: 2019 }),
+        },
+      ],
+    });
+
+    await run();
+
+    expect(rows[0]?.episode).toMatchObject({ seasonNumber: 1, episodeNumber: null });
+  });
+
+  it('keeps the number a file gives over one a provider says', async () => {
+    const { run, rows } = harness({
+      kind: 'shows',
+      root: '/media/shows',
+      found: [file('/media/shows/Some Show/Season 1/Some Show S01E02.mkv')],
+      providers: [
+        {
+          name: 'plugin',
+          describe: () =>
+            Promise.resolve({ title: 'Two', year: 2019, seasonNumber: 7, episodeNumber: 9 }),
+        },
+      ],
+    });
+
+    await run();
+
+    expect(rows[0]?.episode).toMatchObject({ seasonNumber: 1, episodeNumber: 2 });
   });
 
   it('tells a provider what a changed file was already matched to', async () => {

@@ -321,6 +321,154 @@ describe('createCatalogueMetadataProvider', () => {
     ).resolves.toMatchObject({ releaseDate: '2019-01-15' });
   });
 
+  it('finds an episode named by its air date by that day, and says its season and number', async () => {
+    const { instance, calls } = provider({
+      '/search/tv': { results: [{ id: 5, name: 'Some Show', first_air_date: '2019-01-01' }] },
+      '/tv/5': {
+        id: 5,
+        name: 'Some Show',
+        first_air_date: '2019-01-01',
+        genres: [],
+        seasons: [
+          { season_number: 0, episode_count: 3, air_date: '2019-01-01' },
+          { season_number: 1, episode_count: 200, air_date: '2019-01-07' },
+          { season_number: 2, episode_count: 200, air_date: '2020-01-06' },
+          { season_number: 3, episode_count: 200, air_date: '2021-01-04' },
+        ],
+      },
+      '/tv/5/season/2': {
+        episodes: [
+          { episode_number: 44, name: 'The Day Before', air_date: '2020-03-04' },
+          { episode_number: 45, name: 'The Day Itself', air_date: '2020-03-05' },
+        ],
+      },
+    });
+
+    await expect(
+      instance.describe(
+        facts('/media/Some Show/Some Show 2020-03-05.mkv', {
+          seriesTitle: 'Some Show',
+          seasonNumber: 1,
+          episodeNumber: null,
+          airDate: '2020-03-05',
+        }),
+      ),
+    ).resolves.toMatchObject({
+      title: 'The Day Itself',
+      seasonNumber: 2,
+      episodeNumber: 45,
+      releaseDate: '2020-03-05',
+    });
+    expect(calls.map((call) => new URL(call).pathname)).not.toContain('/3/tv/5/season/3');
+  });
+
+  it('looks first in the season a dated episode’s folder names', async () => {
+    const { instance, calls } = provider({
+      '/search/tv': { results: [{ id: 5, name: 'Some Show', first_air_date: '2019-01-01' }] },
+      '/tv/5': {
+        id: 5,
+        name: 'Some Show',
+        genres: [],
+        seasons: [
+          { season_number: 2019, episode_count: 200, air_date: '2019-01-07' },
+          { season_number: 2020, episode_count: 200, air_date: '2019-12-02' },
+        ],
+      },
+      '/tv/5/season/2019': {
+        episodes: [{ episode_number: 199, name: 'Year End', air_date: '2019-12-30' }],
+      },
+    });
+
+    await expect(
+      instance.describe(
+        facts('/media/Some Show/Season 2019/Some Show 2019-12-30.mkv', {
+          seriesTitle: 'Some Show',
+          seasonNumber: 2019,
+          episodeNumber: null,
+          airDate: '2019-12-30',
+        }),
+      ),
+    ).resolves.toMatchObject({ seasonNumber: 2019, episodeNumber: 199 });
+    expect(
+      calls.map((call) => new URL(call).pathname).filter((path) => path.includes('/season/')),
+    ).toEqual(['/3/tv/5/season/2019']);
+  });
+
+  it('reads a season that does not say when it began, after those that do', async () => {
+    const { instance } = provider({
+      '/search/tv': { results: [{ id: 5, name: 'Some Show', first_air_date: '2019-01-01' }] },
+      '/tv/5': {
+        id: 5,
+        name: 'Some Show',
+        genres: [],
+        seasons: [
+          { season_number: 1, episode_count: 9, air_date: '2019-01-07' },
+          { season_number: 2, episode_count: 9, air_date: '2019-02-07' },
+          { season_number: 3, episode_count: 9, air_date: '2019-03-07' },
+          { season_number: 4, episode_count: 9, air_date: '2019-04-07' },
+          { season_number: 5, episode_count: 9, air_date: null },
+        ],
+      },
+      '/tv/5/season/5': {
+        episodes: [{ episode_number: 3, name: 'Undated', air_date: '2019-05-01' }],
+      },
+    });
+
+    await expect(
+      instance.describe(
+        facts('/media/Some Show/Some Show 2019-05-01.mkv', {
+          seriesTitle: 'Some Show',
+          seasonNumber: null,
+          episodeNumber: null,
+          airDate: '2019-05-01',
+        }),
+      ),
+    ).resolves.toMatchObject({ seasonNumber: 5, episodeNumber: 3 });
+  });
+
+  it('looks for a programme rather than a film where only an air date is known', async () => {
+    const { calls, instance } = provider({
+      '/search/tv': { results: [{ id: 5, name: 'Some Show', first_air_date: '2019-01-01' }] },
+      '/tv/5': { id: 5, name: 'Some Show', genres: [], seasons: [] },
+    });
+
+    await instance.describe(
+      facts('/media/Some Show 2019-05-01.mkv', {
+        seriesTitle: null,
+        seasonNumber: null,
+        episodeNumber: null,
+        airDate: '2019-05-01',
+      }),
+    );
+
+    expect(calls[0]).toContain('/search/tv');
+  });
+
+  it('describes an episode named by an air date nothing aired on by its programme alone', async () => {
+    const { instance } = provider({
+      '/search/tv': { results: [{ id: 5, name: 'Some Show', first_air_date: '2019-01-01' }] },
+      '/tv/5': {
+        id: 5,
+        name: 'Some Show',
+        genres: [],
+        seasons: [{ season_number: 1, episode_count: 2, air_date: '2019-01-07' }],
+      },
+      '/tv/5/season/1': { episodes: [{ episode_number: 1, name: 'One', air_date: '2019-01-07' }] },
+    });
+
+    const found = await instance.describe(
+      facts('/media/Some Show/Some Show 2019-06-01.mkv', {
+        seriesTitle: 'Some Show',
+        seasonNumber: 1,
+        episodeNumber: null,
+        airDate: '2019-06-01',
+      }),
+    );
+
+    expect(found).toMatchObject({ seriesTitle: 'Some Show', externalId: '5' });
+    expect(found).not.toHaveProperty('episodeNumber');
+  });
+
   it('searches by the year in the filename, so remakes do not win', async () => {
     const { instance, calls } = provider({ '/search/movie': SEARCH, '/movie/329': DETAIL });
 

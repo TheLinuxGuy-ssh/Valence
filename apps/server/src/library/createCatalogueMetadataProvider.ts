@@ -135,6 +135,8 @@ const ImagesResponseSchema = z.object({
 
 type SearchResult = z.infer<typeof SearchResultSchema>;
 
+const SEASONS_READ_FOR_A_DATE = 3;
+
 const SeasonResponseSchema = z.object({
   episodes: z
     .array(
@@ -227,6 +229,7 @@ const DetailResponseSchema = z.object({
       z.object({
         season_number: z.number().int(),
         episode_count: z.number().int().nonnegative(),
+        air_date: z.string().nullish(),
       }),
     )
     .default([]),
@@ -774,8 +777,9 @@ const createCatalogueMetadataProvider = ({
       const appended = wantsTrailers ? CERTIFICATES_AND_VIDEOS : CERTIFICATES;
 
       const episodeNumber = facts.episode?.episodeNumber ?? null;
+      const airDate = facts.episode?.airDate ?? null;
       const seriesTitle = facts.episode?.seriesTitle ?? null;
-      const isEpisode = episodeNumber !== null || seriesTitle !== null;
+      const isEpisode = episodeNumber !== null || seriesTitle !== null || airDate !== null;
       const kind = isEpisode ? 'tv' : 'movie';
       const given = isEpisode ? seriesTitle : (facts.title ?? null);
       const isAlreadyRead = isEpisode
@@ -795,12 +799,67 @@ const createCatalogueMetadataProvider = ({
         : (facts.year ?? wanted.year);
 
       /**
+       * Finds the episode of a programme that aired on a day, for a file named by its air date
+       * rather than its number, as Jellyfin matches a daily show. The season its folder names is
+       * read first, then the few others that had begun by then, latest first, since a long-running
+       * daily show has dozens, and last a few that do not say when they began.
+       *
+       * @param detail - The programme's own record.
+       * @param day - The day, as `YYYY-MM-DD`.
+       * @param named - The season the file's folder names, if it is in one.
+       * @returns The season it is in and the episode, or null where none aired that day.
+       */
+      const episodeAiredOn = async (
+        detail: z.infer<typeof DetailResponseSchema>,
+        day: string,
+        named: number | null,
+      ) => {
+        const others = detail.seasons.filter(
+          (one) => one.season_number > 0 && one.season_number !== named,
+        );
+        const begun = [
+          ...detail.seasons.filter((one) => one.season_number === named),
+          ...others
+            .flatMap((one) =>
+              one.air_date === null || one.air_date === undefined || one.air_date > day
+                ? []
+                : [{ ...one, air_date: one.air_date }],
+            )
+            .toSorted((left, right) => right.air_date.localeCompare(left.air_date))
+            .slice(0, SEASONS_READ_FOR_A_DATE),
+          ...others
+            .filter((one) => one.air_date === null || one.air_date === undefined)
+            .slice(0, SEASONS_READ_FOR_A_DATE),
+        ];
+
+        for (const candidate of begun) {
+          const read = SeasonResponseSchema.safeParse(
+            await request(
+              `/tv/${detail.id.toString()}/season/${candidate.season_number.toString()}`,
+              key,
+              {},
+            ),
+          );
+          const aired = read.success
+            ? read.data.episodes.find((one) => one.air_date === day)
+            : undefined;
+
+          if (aired !== undefined) {
+            return { seasonNumber: candidate.season_number, episode: aired };
+          }
+        }
+
+        return null;
+      };
+
+      /**
        * Turns a catalogue entry into the metadata Valence stores, taking only the fields it has a use for
        * and building full addresses for the artwork.
        *
        * An episode is looked up by its number within the programme, and never checked against the
        * title its file gives: a file's title is whatever a release called it, and the programme and
-       * the number are what say which episode it is.
+       * the number are what say which episode it is. One named by its air date is looked up by that
+       * day, and the season and number it turns out to have are handed back with it.
        *
        * @param detail - The catalogue's own record.
        * @returns The metadata to store against the file.
@@ -829,12 +888,18 @@ const createCatalogueMetadataProvider = ({
               )
             : null;
 
+        const dated =
+          isEpisode && episodeNumber === null && airDate !== null
+            ? await episodeAiredOn(detail, airDate, facts.episode?.seasonNumber ?? null)
+            : null;
         const covered =
           season?.success === true && episodeNumber !== null
             ? episodeNumbersOf(episodeNumber, facts.episode?.episodeNumberEnd ?? null).flatMap(
                 (number) => season.data.episodes.find((one) => one.episode_number === number) ?? [],
               )
-            : [];
+            : dated === null
+              ? []
+              : [dated.episode];
         const episode = covered[0] ?? null;
         const joined = (said: (string | undefined)[]): string | null => {
           const kept = said.filter((one): one is string => one !== undefined && one !== '');
@@ -877,6 +942,9 @@ const createCatalogueMetadataProvider = ({
           ...(backdrop === null ? {} : { backdropUrl: backdrop }),
           ...(trailerKey === null ? {} : { trailerKey }),
           ...releaseFactsOf(detail, episode?.air_date ?? null),
+          ...(dated === null
+            ? {}
+            : { seasonNumber: dated.seasonNumber, episodeNumber: dated.episode.episode_number }),
         };
       };
 

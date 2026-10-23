@@ -1,3 +1,5 @@
+import { discFolderOf } from '@ValenceServer/library/naming/discFolderOf';
+import { keepMainDiscStreams } from '@ValenceServer/library/placement/keepMainDiscStreams';
 import { sayVerbatim } from '@ValenceI18n/sayVerbatim';
 import type { Said } from '@ValenceI18n/SaidSchema';
 import { isUnderAny } from '@ValenceServer/library/isUnderAny';
@@ -22,6 +24,8 @@ import { seriesFolderUnder } from './placement/seriesFolderUnder';
 import { filesToLookUpAgain } from './filesToLookUpAgain';
 import { reachOfEachSeries } from './reachOfEachSeries';
 
+const KEPT_MISSING_FOR_MS = 30 * 24 * 60 * 60 * 1000;
+
 type ScannedFile = {
   path: string;
   sizeBytes: number;
@@ -31,6 +35,7 @@ type ScannedFile = {
 type ScanFindings = {
   files: ScannedFile[];
   unreadable: string[];
+  leftOut?: string[];
 };
 
 type StoredItem = {
@@ -43,6 +48,7 @@ type StoredItem = {
   canCopySegments: boolean | null;
   videoFrameRate: number | null;
   probeVersion: number | null;
+  missingSince?: Date | null;
 };
 
 type MediaRow = {
@@ -91,6 +97,9 @@ type MediaStore = {
   listStored: (libraryId: string) => Promise<StoredItem[]>;
   upsert: (row: MediaRow) => Promise<string | null>;
   removeByPaths: (libraryId: string, paths: string[]) => Promise<ScannedItem[]>;
+  setAside?: (libraryId: string, paths: string[], now: Date) => Promise<string[]>;
+  markFound?: (libraryId: string, paths: string[]) => Promise<void>;
+  listMissingSince?: (libraryId: string, before: Date) => Promise<string[]>;
   listOverrides?: (libraryId: string) => Promise<MediaOverride[]>;
   linkExtras?: (libraryId: string, links: { path: string; parentPath: string }[]) => Promise<void>;
   forgetStaleVersions?: (libraryId: string, stillVersions: string[]) => Promise<void>;
@@ -284,7 +293,11 @@ const selectChanged = (
 /**
  * Walks a library root and brings the database in line with what is actually there: probing what is
  * new or changed, asking the metadata providers about each, and removing rows for files that have
- * gone. Reports its progress as it goes, since a first scan of a real library takes minutes.
+ * gone. A file gone with no other copy to take its place is set aside as missing instead, keeping
+ * what viewers have of it, and removed once it has been missing for 30 days. One an administrator
+ * left out is removed at once, as is one still there but no longer read as a title, such as a
+ * sample, and a stream of a Blu-ray whose film plays from another of its streams. Reports its
+ * progress as it goes, since a first scan of a real library takes minutes.
  *
  * @param options - The library's root, which decides the folder each programme is filed under, and
  *   the folder under it to walk where that is only part of the library; what to write to, who to
@@ -353,7 +366,10 @@ const scanLibrary = async ({
 }: ScanLibraryOptions): Promise<ScanResult> => {
   const isPartial = askedPartial || within !== root;
   const walked = await files.listFiles(within);
-  const listed = walked.files.filter((file) => isMediaFile(file.path));
+  const listed = keepMainDiscStreams(walked.files.filter((file) => isMediaFile(file.path)));
+  const listedPaths = new Set(listed.map((file) => file.path));
+  const isPlaceable = (path: string): boolean =>
+    listedPaths.has(path) || discFolderOf(path) === null;
   const stored = await store.listStored(libraryId);
   const probeVersion = await readProbeVersion(transcoder);
   const corrections = (await store.listOverrides?.(libraryId)) ?? [];
@@ -365,8 +381,14 @@ const scanLibrary = async ({
     [
       ...new Set([
         ...listed.map((file) => file.path),
-        ...stored.map((item) => item.path).filter(isInScope),
-        ...corrections.map((one) => one.path).filter(isInScope),
+        ...stored
+          .map((item) => item.path)
+          .filter(isInScope)
+          .filter(isPlaceable),
+        ...corrections
+          .map((one) => one.path)
+          .filter(isInScope)
+          .filter(isPlaceable),
       ]),
     ],
     root,
@@ -557,6 +579,16 @@ const scanLibrary = async ({
       }
 
       const { title, year } = metadata;
+      const filed =
+        numbered.episodeNumber === null && metadata.episodeNumber !== undefined
+          ? {
+              ...numbered,
+              seasonNumber: metadata.seasonNumber ?? numbered.seasonNumber,
+              episodeNumber: metadata.episodeNumber,
+            }
+          : numbered.airDate !== null && numbered.seasonNumber === null
+            ? { ...numbered, seasonNumber: 1 }
+            : numbered;
 
       failedInARow = 0;
 
@@ -570,7 +602,7 @@ const scanLibrary = async ({
         probe,
         probeVersion,
         metadata,
-        episode: numbered,
+        episode: filed,
         extraKind: extra?.kind ?? null,
         versionLabel: versions.get(file.path)?.label ?? null,
         isCorrected: corrected !== null,
@@ -586,8 +618,8 @@ const scanLibrary = async ({
             itemId,
             title,
             seriesTitle: episode.seriesTitle ?? null,
-            seasonNumber: episode.seasonNumber,
-            episodeNumber: episode.episodeNumber,
+            seasonNumber: filed.seasonNumber,
+            episodeNumber: filed.episodeNumber,
             year,
             posterUrl: metadata.posterUrl ?? null,
             overview: metadata.overview ?? null,
@@ -657,7 +689,40 @@ const scanLibrary = async ({
     ]);
   }
 
-  const gone = missing.length === 0 ? [] : await store.removeByPaths(libraryId, missing);
+  const now = new Date();
+  const returned = found
+    .filter((file) => (storedByPath.get(file.path)?.missingSince ?? null) !== null)
+    .map((file) => file.path);
+
+  if (returned.length > 0) {
+    await store.markFound?.(libraryId, returned);
+  }
+
+  const leftOut = new Set(walked.leftOut ?? []);
+  const listedDiscs = new Set(listed.flatMap((file) => discFolderOf(file.path) ?? []));
+  const isGoneForGood = (path: string): boolean => {
+    const disc = discFolderOf(path);
+
+    return leftOut.has(path) || listedPaths.has(path) || (disc !== null && listedDiscs.has(disc));
+  };
+  const goneForNow = missing.filter((path) => !isGoneForGood(path));
+  const replaced =
+    store.setAside === undefined ? goneForNow : await store.setAside(libraryId, goneForNow, now);
+  const newlyMissing =
+    store.setAside === undefined
+      ? []
+      : goneForNow.filter(
+          (path) =>
+            !replaced.includes(path) && (storedByPath.get(path)?.missingSince ?? null) === null,
+        );
+  const expired =
+    store.listMissingSince === undefined || isPartial || hasVanished
+      ? []
+      : (
+          await store.listMissingSince(libraryId, new Date(now.getTime() - KEPT_MISSING_FOR_MS))
+        ).filter((path) => !isUnderAny(path, walked.unreadable));
+  const leaving = [...new Set([...missing.filter(isGoneForGood), ...replaced, ...expired])];
+  const gone = leaving.length === 0 ? [] : await store.removeByPaths(libraryId, leaving);
 
   if (gone.length > 0) {
     onRemoved?.(gone);
@@ -669,7 +734,14 @@ const scanLibrary = async ({
 
   await store.markScanned(libraryId);
 
-  return { added, updated, removed: gone.length, failed };
+  return {
+    added,
+    updated,
+    removed: gone.length,
+    failed,
+    missing: newlyMissing.length,
+    returned: returned.length,
+  };
 };
 
 export type {
