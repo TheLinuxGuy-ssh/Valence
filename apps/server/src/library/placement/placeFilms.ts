@@ -12,6 +12,7 @@ import { inVersionOrder } from './inVersionOrder';
 import { isOrdinaryPath } from './isOrdinaryPath';
 import { labelOfVersion } from './labelOfVersion';
 import { pathParts } from './pathParts';
+import { stacksIn } from './stacksIn';
 import type { Placement } from './Placement.types';
 
 const SAMPLE = /[-._]sample\d*\.[^.]+$/iu;
@@ -75,18 +76,34 @@ const readFolder = (
  * folder where the folder holds just that film and by its own name where it shares a folder with
  * others, with versions, extras, sample files and identifiers written into the names read the same
  * way Jellyfin reads them. A Blu-ray rip copied whole is read as a file in the folder holding its
- * `BDMV`, and named by that folder.
+ * `BDMV`, and named by that folder. A film kept as several files, "cd1" and "cd2" and the like, is
+ * one film, placed at its first part, named without the part word and holding every part in
+ * order; its later parts are no film of their own. Extras are never joined, since an extra in
+ * parts is as many extras.
  *
  * @param paths - Every file in the library.
  * @param root - The library's top folder.
+ * @param unjoined - The first parts of films kept as several files whose parts cannot be read as
+ *   one, which are placed as copies of one film instead.
  * @returns Where each file belongs.
  */
-const placeFilms = (paths: readonly string[], root: string): Map<string, Placement> => {
+const placeFilms = (
+  paths: readonly string[],
+  root: string,
+  unjoined: ReadonlySet<string> = new Set(),
+): Map<string, Placement> => {
   const base = root.replace(/\/+$/, '');
   const placed = new Map<string, Placement>();
-  const kept = paths.filter(
+  const ordinary = paths.filter(
     (path) => isOrdinaryPath(path, base) && !SAMPLE.test(pathParts(path).fileName),
   );
+  const stacks = new Map(
+    [...stacksIn(ordinary.filter((path) => readExtraKind(path, base) === null))].filter(
+      ([first]) => !unjoined.has(first),
+    ),
+  );
+  const laterParts = new Set([...stacks.values()].flatMap((stack) => stack.parts.slice(1)));
+  const kept = ordinary.filter((path) => !laterParts.has(path));
   const byFolder = new Map<string, string[]>();
   const holdsOthers = new Set<string>();
 
@@ -116,7 +133,9 @@ const placeFilms = (paths: readonly string[], root: string): Map<string, Placeme
   }
 
   const describeFilm = (path: string, folder: string, namesFilm: boolean): Placement => {
-    const { fileName, stem } = pathParts(path);
+    const { fileName } = pathParts(path);
+    const stack = stacks.get(path);
+    const stem = stack?.name ?? pathParts(path).stem;
     const folderName = folder.slice(folder.lastIndexOf('/') + 1);
     const isDisc = discFolderOf(path) !== null;
     const fromFile = parseName(stem);
@@ -147,6 +166,7 @@ const placeFilms = (paths: readonly string[], root: string): Map<string, Placeme
       ],
       extra: null,
       version: null,
+      ...(stack === undefined ? {} : { parts: stack.parts }),
     };
   };
 
@@ -158,9 +178,12 @@ const placeFilms = (paths: readonly string[], root: string): Map<string, Placeme
     }
 
     for (const [version, primary] of read.versions) {
+      const stack = stacks.get(version);
+      const labelled = stack === undefined ? version : `${folder}/${stack.name}.part`;
+
       placed.set(version, {
         ...describeFilm(version, folder, read.namesFilm),
-        version: { parentPath: primary, label: labelOfVersion(version, folderName) },
+        version: { parentPath: primary, label: labelOfVersion(labelled, folderName) },
       });
     }
   }

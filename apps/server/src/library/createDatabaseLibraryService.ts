@@ -12,6 +12,8 @@ import { createArtworkChoices } from '@ValenceServer/library/createArtworkChoice
 import { jobBehindTheKey } from '@ValenceServer/library/jobBehindTheKey';
 import { randomUUID } from 'node:crypto';
 import { rm, stat } from 'node:fs/promises';
+import { stacksIn } from './placement/stacksIn';
+import { isMediaFile } from './isMediaFile';
 import { isUnderAny } from './isUnderAny';
 import { z } from 'zod';
 import {
@@ -52,6 +54,7 @@ import {
   library,
   libraryBlock,
   mediaItem,
+  mediaPart,
   musicTrack,
   watchProgress,
   mediaOverride,
@@ -406,7 +409,9 @@ const createDatabaseLibraryService = ({
   /**
    * The files of a library as its scans should see them: everything on the disk, less what an
    * administrator has left out of it, and less everything inside a folder left out. What was left
-   * out is named too, so a scan removes it rather than keeping it as a file gone missing.
+   * out is named too, so a scan removes it rather than keeping it as a file gone missing. Leaving
+   * out one part of a film kept as several files leaves out the film, since a part left behind
+   * would otherwise be read as a film of its own.
    *
    * @param libraryId - The library being scanned.
    * @returns The same file system, its listing narrowed.
@@ -420,15 +425,22 @@ const createDatabaseLibraryService = ({
       ]);
       const paths = leftOut.map((one) => one.path);
 
-      return paths.length === 0
-        ? walked
-        : {
-            ...walked,
-            files: walked.files.filter((file) => !isUnderAny(file.path, paths)),
-            leftOut: walked.files
-              .filter((file) => isUnderAny(file.path, paths))
-              .map((file) => file.path),
-          };
+      if (paths.length === 0) {
+        return walked;
+      }
+
+      const stacked = new Set(
+        [...stacksIn(walked.files.map((file) => file.path).filter(isMediaFile)).values()]
+          .filter((stack) => stack.parts.some((part) => isUnderAny(part, paths)))
+          .flatMap((stack) => stack.parts),
+      );
+      const isLeftOut = (path: string): boolean => stacked.has(path) || isUnderAny(path, paths);
+
+      return {
+        ...walked,
+        files: walked.files.filter((file) => !isLeftOut(file.path)),
+        leftOut: walked.files.filter((file) => isLeftOut(file.path)).map((file) => file.path),
+      };
     },
   });
 
@@ -745,7 +757,8 @@ const createDatabaseLibraryService = ({
    *
    * The scan is told the library's own root even though it reads only these files, because the root
    * decides the folder each programme is filed under, and the scan places every file in the library
-   * again, not only these.
+   * again, not only these. A film kept as several files is handed over as every part, so it is read
+   * as the one film it is rather than as its first part alone.
    *
    * @param libraryId - The library the files are in.
    * @param paths - The files to read again.
@@ -756,8 +769,9 @@ const createDatabaseLibraryService = ({
     paths: string[],
     onProgress?: (phase: ScanPhase, processed: number, total: number) => void,
   ): Promise<void> => {
-    const rows = await db
+    const items = await db
       .select({
+        id: mediaItem.id,
         path: mediaItem.path,
         sizeBytes: mediaItem.sizeBytes,
         modifiedAtMs: mediaItem.modifiedAtMs,
@@ -766,6 +780,27 @@ const createDatabaseLibraryService = ({
       .where(
         and(eq(mediaItem.libraryId, libraryId), inArray(mediaItem.path, paths), isStillThere()),
       );
+    const parts =
+      items.length === 0
+        ? []
+        : await db
+            .select({
+              mediaItemId: mediaPart.mediaItemId,
+              path: mediaPart.path,
+              sizeBytes: mediaPart.sizeBytes,
+              modifiedAtMs: mediaPart.modifiedAtMs,
+            })
+            .from(mediaPart)
+            .where(
+              inArray(
+                mediaPart.mediaItemId,
+                items.map((item) => item.id),
+              ),
+            );
+    const split = new Set(parts.map((part) => part.mediaItemId));
+    const rows = [...items.filter((item) => !split.has(item.id)), ...parts].map(
+      ({ path, sizeBytes, modifiedAtMs }) => ({ path, sizeBytes, modifiedAtMs }),
+    );
 
     const found = await findLibrary(libraryId);
 
@@ -893,8 +928,8 @@ const createDatabaseLibraryService = ({
   };
 
   /**
-   * Deletes the files of the items that match, one library at a time, and forgets each as a scan
-   * would on finding it gone: the rows go, a series left with nothing goes with them, whoever
+   * Deletes the files of the items that match, every part of a film kept as several files among
+   * them, one library at a time, and forgets each as a scan would on finding it gone: the rows go, a series left with nothing goes with them, whoever
    * listens hears they departed, and the cache is swept of what was made from them.
    *
    * Stops at the first file the disk will not give up, having forgotten the ones already deleted,
@@ -926,10 +961,17 @@ const createDatabaseLibraryService = ({
       let refusal: Exclude<MediaFileDeletion, { kind: 'deleted' }> | null = null;
 
       for (const item of items.filter((one) => one.libraryId === libraryId)) {
+        const parts = await db
+          .select({ path: mediaPart.path })
+          .from(mediaPart)
+          .where(eq(mediaPart.mediaItemId, item.id))
+          .orderBy(asc(mediaPart.position));
+        const [first = item.path, ...later] = parts.map((part) => part.path);
         const deleted = await deleteMediaFile(
           found.path,
-          item.path,
+          first,
           await keptCopiesOf(db, eq(mediaItem.id, item.id)),
+          later,
         );
 
         if (deleted.kind !== 'deleted') {
@@ -2495,7 +2537,17 @@ const createDatabaseLibraryService = ({
       const moved: string[] = [];
 
       for (const item of items) {
-        const outcome = await moveMediaFile(source.path, item.path, target.path);
+        const parts = await db
+          .select({ position: mediaPart.position, path: mediaPart.path })
+          .from(mediaPart)
+          .where(eq(mediaPart.mediaItemId, item.id))
+          .orderBy(asc(mediaPart.position));
+        const outcome = await moveMediaFile(
+          source.path,
+          item.path,
+          target.path,
+          parts.slice(1).map((part) => part.path),
+        );
 
         if (outcome.kind !== 'moved') {
           await store.forgetEmptySeries?.(source.id);
@@ -2519,6 +2571,20 @@ const createDatabaseLibraryService = ({
             externalId: null,
           })
           .where(eq(mediaItem.id, item.id));
+
+        for (const [at, path] of [outcome.to, ...outcome.laterTo].entries()) {
+          const part = parts[at];
+
+          if (part !== undefined) {
+            await db
+              .update(mediaPart)
+              .set({ path })
+              .where(
+                and(eq(mediaPart.mediaItemId, item.id), eq(mediaPart.position, part.position)),
+              );
+          }
+        }
+
         await db
           .update(mediaPreviewOverride)
           .set({ libraryId: target.id, path: outcome.to })
@@ -2545,12 +2611,18 @@ const createDatabaseLibraryService = ({
         return {};
       }
 
-      const rows = await db
-        .select({ id: mediaItem.id, path: mediaItem.path })
-        .from(mediaItem)
-        .where(inArray(mediaItem.path, paths));
+      const [rows, parts] = await Promise.all([
+        db
+          .select({ id: mediaItem.id, path: mediaItem.path })
+          .from(mediaItem)
+          .where(inArray(mediaItem.path, paths)),
+        db
+          .select({ id: mediaPart.mediaItemId, path: mediaPart.path })
+          .from(mediaPart)
+          .where(inArray(mediaPart.path, paths)),
+      ]);
 
-      return Object.fromEntries(rows.map((row) => [row.path, row.id]));
+      return Object.fromEntries([...parts, ...rows].map((row) => [row.path, row.id]));
     },
 
     mediaPathsIn: async (libraryId) => {

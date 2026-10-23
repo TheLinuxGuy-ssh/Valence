@@ -57,6 +57,7 @@ type ReencodeSubject = {
   path: string;
   libraryId: string;
   libraryPath: string;
+  isSplit?: boolean;
 };
 
 type ReencodeMedia = {
@@ -119,6 +120,7 @@ const whereItGoes = (
       requestId,
       item: subject.item,
       settings,
+      ...(subject.isSplit === undefined ? {} : { isSplit: subject.isSplit }),
     });
   }
 
@@ -344,6 +346,7 @@ const createDatabaseReencodeService = ({
           isFolderWritable: known,
           isAlreadyKept: isKnown,
           takenName: isOccupied && !isKnown ? basename(output) : null,
+          ...(found.isSplit === undefined ? {} : { isSplit: found.isSplit }),
         }),
       });
     }
@@ -606,6 +609,12 @@ const createDatabaseReencodeService = ({
       return 'done';
     }
 
+    if (row.mode !== 'keep' && found.isSplit === true) {
+      await failWith(row.id, saying('server.reencode.refuseReencode.thisFilmIsSplitAcrossSeveral'));
+
+      return 'done';
+    }
+
     const paths = reencodePathsFor(found.libraryPath, found.path, row.id);
     const output = row.mode === 'keep' ? row.workingPath : paths.output;
     const directory = row.mode === 'keep' ? dirname(output) : paths.directory;
@@ -784,6 +793,13 @@ const createDatabaseReencodeService = ({
       await wait(ASK_AGAIN_MS);
     }
 
+    if ((await media.findForReencode(row.mediaItemId))?.isSplit === true) {
+      await transcoder.forgetRendition(output).catch(() => false);
+      await failWith(row.id, saying('server.reencode.refuseReencode.thisFilmIsSplitAcrossSeveral'));
+
+      return 'done';
+    }
+
     await swapIntoPlace({
       originalPath: found.path,
       encodePath: output,
@@ -875,7 +891,8 @@ const createDatabaseReencodeService = ({
           videoCodec: settings.videoCodec,
           audio: settings.audio,
           originalPath: found.path,
-          originalSizeBytes: facts.sizeBytes,
+          originalSizeBytes:
+            found.isSplit === true ? (found.item.sizeBytes ?? facts.sizeBytes) : facts.sizeBytes,
           originalProbe: facts,
           workingPath: output,
           estimatedBytes: candidate.estimatedBytes,

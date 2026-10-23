@@ -8019,6 +8019,8 @@ const ENGLISH = {
     'The metadata catalogue didn’t respond. The existing metadata for this file was kept.',
   'server.library.scanLibrary.theMediaServiceStoppedAnsweringSo':
     'The media service stopped responding, so the scan was stopped. Nothing was deleted, and files that weren’t reached will be read on the next scan.',
+  'server.library.scanLibrary.thePartsOfThisFilmCannotBe':
+    'The parts of this film can’t be played as one because their pictures or tracks differ, so they’re kept as separate copies.',
   'server.library.scanLibrary.thisScanWasStoppedBeforeIt':
     'This scan was stopped before it finished. Files already read were saved, nothing was deleted, and the library is still marked as not scanned.',
   'server.library.withRottenTomatoes.oMDbAnsweredImdbIdWithAnError':
@@ -8163,6 +8165,8 @@ const ENGLISH = {
     'This file has subtitles that a {container} file can’t hold, and the container is never changed. Re-encoding would remove them.',
   'server.reencode.refuseReencode.thisFileIsAlreadyAtOr':
     'This file is already at or below the chosen quality, so re-encoding would lose quality without saving space.',
+  'server.reencode.refuseReencode.thisFilmIsSplitAcrossSeveral':
+    'This film is split across several files, so it can’t be replaced. Keep the new copy alongside instead.',
   'server.reencode.refuseReencode.thisOneIsAlreadyQueuedOr':
     'This file is already queued or being re-encoded.',
   'server.reencode.refuseReencode.thisWouldBeTheSamePicture':

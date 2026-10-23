@@ -31811,6 +31811,11 @@
     "context": "Shown in the library on the server (from `scanLibrary`)."
   },
   {
+    "handler": "server.library.scanLibrary.thePartsOfThisFilmCannotBe",
+    "text": "The parts of this film can’t be played as one because their pictures or tracks differ, so they’re kept as separate copies.",
+    "context": "A scan problem shown to administrators, for a film split across several files (cd1, cd2) whose files were encoded differently and so can't be joined into one."
+  },
+  {
     "handler": "server.library.scanLibrary.thisScanWasStoppedBeforeIt",
     "text": "This scan was stopped before it finished. Files already read were saved, nothing was deleted, and the library is still marked as not scanned.",
     "context": "Shown in the library on the server (from `scanLibrary`)."
@@ -32334,6 +32339,11 @@
     "handler": "server.reencode.refuseReencode.thisFileIsAlreadyAtOr",
     "text": "This file is already at or below the chosen quality, so re-encoding would lose quality without saving space.",
     "context": "Shown in the reencode on the server (from `refuseReencode`)."
+  },
+  {
+    "handler": "server.reencode.refuseReencode.thisFilmIsSplitAcrossSeveral",
+    "text": "This film is split across several files, so it can’t be replaced. Keep the new copy alongside instead.",
+    "context": "The detail in the reencode on the server (from `refuseReencode`), for a film split across several files (cd1, cd2), which can only get a copy kept alongside."
   },
   {
     "handler": "server.reencode.refuseReencode.thisOneIsAlreadyQueuedOr",

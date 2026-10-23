@@ -323,6 +323,21 @@ describe('createDatabaseReencodeService', { timeout: STARTING_POSTGRES_MS }, () 
     await expect(service.list()).resolves.toMatchObject([{ id: started[0]?.id }]);
   });
 
+  it('refuses to replace a film split across several files, and keeps its whole size', async () => {
+    const split = (libraryPath: string): ReencodeSubject => ({
+      ...theFilm(libraryPath),
+      item: { ...REMUX, sizeBytes: 90 },
+      isSplit: true,
+    });
+    const { service } = await aReencoder(split);
+
+    const replacing = await service.start([FILM_ID], REPLACING, null);
+    const keeping = await service.start([FILM_ID], KEEPING_BESIDE, null);
+
+    expect(replacing.refused).toMatchObject([{ refusal: { code: 'SplitFilm' } }]);
+    expect(keeping.started).toMatchObject([{ originalSizeBytes: 90 }]);
+  });
+
   it('takes back what a stopped server left half done, then works through the queue oldest first', async () => {
     const { db, service, onProblem } = await aReencoder(() => null);
 
@@ -387,6 +402,40 @@ describe('createDatabaseReencodeService', { timeout: STARTING_POSTGRES_MS }, () 
       { id: 'judging', state: 'awaitingReview' },
       { id: 'waiting', state: 'queued' },
     ]);
+  });
+
+  it('replaces nothing of a film that became split across several files while it was queued', async () => {
+    for (const becomesSplit of ['before it is encoded', 'while it is encoded'] as const) {
+      const written: string[] = [];
+      let isSplit = false;
+      const working = aWorkingTranscoder(written);
+      const { db, service, libraryPath } = await aReencoder(
+        (path) => ({ ...theFilm(path), isSplit }),
+        10,
+        {
+          transcoder: {
+            ...working,
+            requestRendition: async (request) => {
+              isSplit = becomesSplit === 'while it is encoded' || isSplit;
+
+              return working.requestRendition(request);
+            },
+          },
+        },
+      );
+
+      await service.start([FILM_ID], REPLACING, null);
+      isSplit = becomesSplit === 'before it is encoded';
+      await service.work(
+        () => undefined,
+        () => false,
+      );
+
+      const [request] = await db.select().from(reencodeRequest);
+
+      expect(request?.state).toBe('failed');
+      await expect(readFile(join(libraryPath, 'film.mkv'), 'utf8')).resolves.toBe('a film');
+    }
   });
 
   it('keeps a copy beside the film under its readable name, and remembers it as a rendition', async () => {

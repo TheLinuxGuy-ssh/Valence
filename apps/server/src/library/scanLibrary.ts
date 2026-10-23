@@ -1,3 +1,4 @@
+import { joinedProbe } from '@ValenceServer/library/joinedProbe';
 import { discFolderOf } from '@ValenceServer/library/naming/discFolderOf';
 import { keepMainDiscStreams } from '@ValenceServer/library/placement/keepMainDiscStreams';
 import { sayVerbatim } from '@ValenceI18n/sayVerbatim';
@@ -49,7 +50,12 @@ type StoredItem = {
   videoFrameRate: number | null;
   probeVersion: number | null;
   missingSince?: Date | null;
+  parts?: readonly StoredPart[];
 };
+
+type StoredPart = { path: string; sizeBytes: number; modifiedAtMs: number };
+
+type FilePart = StoredPart & { durationSeconds: number };
 
 type MediaRow = {
   libraryId: string;
@@ -65,6 +71,7 @@ type MediaRow = {
   extraKind: ExtraKind | null;
   versionLabel: string | null;
   isCorrected?: boolean;
+  parts?: readonly FilePart[];
 };
 
 type MediaFileSystem = {
@@ -249,7 +256,9 @@ const correctionFor = (
 /**
  * Decides which of a library's files actually need probing: the ones that are new, and the ones
  * whose size or modification time has moved since they were last read. Probing launches a process
- * per file, so a library of twenty thousand that has gained two should cost two probes.
+ * per file, so a library of twenty thousand that has gained two should cost two probes. A film kept
+ * as several files is stored as long and as large as its parts together, so its first part is
+ * measured against what was stored for that part.
  *
  * @param found - Every file on disk now.
  * @param stored - What the database holds about them.
@@ -273,11 +282,12 @@ const selectChanged = (
 
   const changed = found.filter((file) => {
     const existing = storedByPath.get(file.path);
+    const asFound = existing?.parts?.[0] ?? existing;
 
     return (
       existing === undefined ||
-      existing.sizeBytes !== file.sizeBytes ||
-      existing.modifiedAtMs !== file.modifiedAtMs ||
+      asFound?.sizeBytes !== file.sizeBytes ||
+      asFound.modifiedAtMs !== file.modifiedAtMs ||
       existing.videoBitDepth === null ||
       existing.videoRangeBase === null ||
       existing.videoFrameRate === null ||
@@ -291,13 +301,100 @@ const selectChanged = (
 };
 
 /**
+ * Whether a film kept as several files is stored joined from exactly the parts it has now, each
+ * the size and age it was, so a scan reads its parts again only where one of them changed.
+ *
+ * @param stored - The parts it was stored with.
+ * @param parts - Its parts now, in order.
+ * @param listed - The files found, by path.
+ * @returns Whether it is still the film it was stored as.
+ */
+const isStillJoined = (
+  stored: readonly StoredPart[],
+  parts: readonly string[],
+  listed: ReadonlyMap<string, ScannedFile>,
+): boolean =>
+  stored.length === parts.length &&
+  parts.every((path, at) => {
+    const was = stored[at];
+    const now = listed.get(path);
+
+    return (
+      was !== undefined &&
+      now !== undefined &&
+      was.path === path &&
+      was.sizeBytes === now.sizeBytes &&
+      was.modifiedAtMs === now.modifiedAtMs
+    );
+  });
+
+/**
+ * Whether a film kept as several files has lost some of its parts while others are still there.
+ *
+ * Such a film is held as it was stored rather than read again from what is left, which would make
+ * it as long as one part, or turn a part that is left into a film of its own. It is set aside as
+ * missing like any other file that went, and is the film it was again once its parts are back.
+ *
+ * @param item - The film as stored.
+ * @param listed - The paths found.
+ * @returns Whether some of its parts are found and some are not.
+ */
+const isMissingAPart = (item: StoredItem, listed: ReadonlySet<string>): boolean => {
+  const parts = item.parts ?? [];
+
+  return (
+    parts.length > 1 &&
+    parts.some((part) => listed.has(part.path)) &&
+    parts.some((part) => !listed.has(part.path))
+  );
+};
+
+/**
+ * Reads every part of a film kept as several files and describes the film they play as together,
+ * or nothing where their streams are not alike enough to be read as one input. A part that cannot
+ * be read at all is not a part that differs, so that refuses rather than answering nothing.
+ *
+ * @param transcoder - What reads a file.
+ * @param parts - The parts, in order.
+ * @param listed - The files found, by path.
+ * @returns The film and each part with its length, or null.
+ */
+const readParts = async (
+  transcoder: Transcoder,
+  parts: readonly string[],
+  listed: ReadonlyMap<string, ScannedFile>,
+): Promise<{ probe: MediaProbe; parts: FilePart[] } | null> => {
+  const probes: MediaProbe[] = [];
+
+  for (const part of parts) {
+    probes.push(await transcoder.probe(part));
+  }
+
+  const probe = joinedProbe(probes);
+
+  return probe === null
+    ? null
+    : {
+        probe,
+        parts: parts.map((path, at) => ({
+          path,
+          sizeBytes: listed.get(path)?.sizeBytes ?? 0,
+          modifiedAtMs: listed.get(path)?.modifiedAtMs ?? 0,
+          durationSeconds: probes[at]?.durationSeconds ?? 0,
+        })),
+      };
+};
+
+/**
  * Walks a library root and brings the database in line with what is actually there: probing what is
  * new or changed, asking the metadata providers about each, and removing rows for files that have
  * gone. A file gone with no other copy to take its place is set aside as missing instead, keeping
  * what viewers have of it, and removed once it has been missing for 30 days. One an administrator
  * left out is removed at once, as is one still there but no longer read as a title, such as a
- * sample, and a stream of a Blu-ray whose film plays from another of its streams. Reports its
- * progress as it goes, since a first scan of a real library takes minutes.
+ * sample, and a stream of a Blu-ray whose film plays from another of its streams. A film kept as
+ * several files that has lost some of its parts is held as it was and set aside as missing, and one
+ * whose parts cannot be read this time is left as it was until a scan can. Reports its progress as
+ * it goes, since a first scan of a real library takes minutes.
  *
  * @param options - The library's root, which decides the folder each programme is filed under, and
  *   the folder under it to walk where that is only part of the library; what to write to, who to
@@ -366,34 +463,97 @@ const scanLibrary = async ({
 }: ScanLibraryOptions): Promise<ScanResult> => {
   const isPartial = askedPartial || within !== root;
   const walked = await files.listFiles(within);
-  const listed = keepMainDiscStreams(walked.files.filter((file) => isMediaFile(file.path)));
-  const listedPaths = new Set(listed.map((file) => file.path));
+  const onDisk = keepMainDiscStreams(walked.files.filter((file) => isMediaFile(file.path)));
+  const listedPaths = new Set(onDisk.map((file) => file.path));
   const isPlaceable = (path: string): boolean =>
     listedPaths.has(path) || discFolderOf(path) === null;
   const stored = await store.listStored(libraryId);
+  const heldApart = stored.filter((item) => isMissingAPart(item, listedPaths));
+  const heldFilms = new Set(heldApart.map((item) => item.path));
+  const heldParts = new Set(
+    heldApart.flatMap((item) => (item.parts ?? []).map((part) => part.path)),
+  );
+  const listed = onDisk.filter((file) => !heldParts.has(file.path));
   const probeVersion = await readProbeVersion(transcoder);
   const corrections = (await store.listOverrides?.(libraryId)) ?? [];
 
   const scope = isPartial && kind !== 'movies' ? seriesFolderUnder(root, within) : null;
   const isInScope = (path: string): boolean => scope === null || path.startsWith(`${scope}/`);
-  const placed = placeInLibrary(
-    kind,
-    [
-      ...new Set([
-        ...listed.map((file) => file.path),
-        ...stored
-          .map((item) => item.path)
-          .filter(isInScope)
-          .filter(isPlaceable),
-        ...corrections
-          .map((one) => one.path)
-          .filter(isInScope)
-          .filter(isPlaceable),
-      ]),
-    ],
-    root,
+  const placeable = [
+    ...new Set([
+      ...listed.map((file) => file.path),
+      ...stored
+        .map((item) => item.path)
+        .filter(isInScope)
+        .filter(isPlaceable),
+      ...corrections
+        .map((one) => one.path)
+        .filter(isInScope)
+        .filter(isPlaceable),
+    ]),
+  ].filter((path) => !heldParts.has(path));
+  const listedByPath = new Map(listed.map((file) => [file.path, file]));
+  const storedParts = new Map(stored.map((item) => [item.path, item.parts ?? []]));
+  const firstPlaced = placeInLibrary(kind, placeable, root);
+  const joined = new Map<string, { probe: MediaProbe; parts: FilePart[] }>();
+  const unjoined = new Set<string>();
+  const unread = new Set<string>();
+
+  for (const [first, placement] of firstPlaced) {
+    const { parts } = placement;
+
+    if (parts === undefined) {
+      continue;
+    }
+
+    if (!parts.every((part) => listedByPath.has(part))) {
+      unjoined.add(first);
+      continue;
+    }
+
+    if (!force && isStillJoined(storedParts.get(first) ?? [], parts, listedByPath)) {
+      continue;
+    }
+
+    const read =
+      isCancelled?.() === true
+        ? undefined
+        : await readParts(transcoder, parts, listedByPath).catch((error) => {
+            onProblem?.(
+              first,
+              error instanceof Error
+                ? sayVerbatim(describeFailure(error))
+                : saying('server.library.scanLibrary.probeFailed'),
+            );
+
+            return undefined;
+          });
+
+    if (read === undefined) {
+      for (const part of parts) {
+        unread.add(part);
+      }
+
+      continue;
+    }
+
+    if (read === null) {
+      unjoined.add(first);
+      onProblem?.(first, saying('server.library.scanLibrary.thePartsOfThisFilmCannotBe'));
+      continue;
+    }
+
+    joined.set(first, read);
+  }
+
+  const placed =
+    unjoined.size === 0 ? firstPlaced : placeInLibrary(kind, placeable, root, unjoined);
+  const laterParts = new Set(
+    [...placed.values()].flatMap((placement) => placement.parts?.slice(1) ?? []),
   );
-  const found = listed.filter((file) => placed.get(file.path)?.isIgnored !== true);
+  const found = listed.filter(
+    (file) => !unread.has(file.path) && placed.get(file.path)?.isIgnored !== true,
+  );
   const extras = new Map(
     found.flatMap((file) => {
       const extra = placed.get(file.path)?.extra ?? null;
@@ -413,11 +573,12 @@ const scanLibrary = async ({
     ? { changed: found, missing: selectChanged(found, stored, probeVersion).missing }
     : selectChanged(found, stored, probeVersion);
 
-  const hasVanished = found.length === 0 && stored.length > 0;
+  const hasVanished =
+    found.length === 0 && heldParts.size === 0 && unread.size === 0 && stored.length > 0;
   const missing =
     isPartial || hasVanished
       ? []
-      : seen.missing.filter((path) => !isUnderAny(path, walked.unreadable));
+      : seen.missing.filter((path) => !unread.has(path) && !isUnderAny(path, walked.unreadable));
   const knownPaths = new Set(stored.map((item) => item.path));
   const storedByPath = new Map(stored.map((item) => [item.path, item]));
   const overrides = new Map(corrections.map((one) => [one.path, one]));
@@ -431,11 +592,20 @@ const scanLibrary = async ({
   const overridesBySeries = correctionsBySeries(corrections, seriesFolders);
   const catalogueBySeries = catalogueIdsBySeries(stored, seriesFolders);
   const reachBySeries = reachOfEachSeries(placed);
+  const regrouped = found.filter((file) => {
+    const parts = placed.get(file.path)?.parts ?? [];
+    const before = storedParts.get(file.path) ?? [];
+
+    return parts.length === 0 ? before.length > 0 : !isStillJoined(before, parts, listedByPath);
+  });
   const changed = force
     ? seen.changed
     : [
-        ...seen.changed,
-        ...filesToLookUpAgain(found, stored, seen.changed, seriesFolders, catalogueBySeries),
+        ...new Set([
+          ...seen.changed,
+          ...regrouped,
+          ...filesToLookUpAgain(found, stored, seen.changed, seriesFolders, catalogueBySeries),
+        ]),
       ];
   const nfoRead = new Map<string, Promise<ExternalIds | null>>();
 
@@ -489,7 +659,20 @@ const scanLibrary = async ({
     }
 
     try {
-      const probe = await transcoder.probe(file.path);
+      const asParts = placed.get(file.path)?.parts;
+      const read =
+        asParts === undefined
+          ? null
+          : (joined.get(file.path) ?? (await readParts(transcoder, asParts, listedByPath)));
+
+      if (asParts !== undefined && read === null) {
+        failed += 1;
+        onProblem?.(file.path, saying('server.library.scanLibrary.thePartsOfThisFilmCannotBe'));
+
+        return false;
+      }
+
+      const probe = read?.probe ?? (await transcoder.probe(file.path));
 
       if (probe.video === null) {
         failed += 1;
@@ -597,10 +780,14 @@ const scanLibrary = async ({
         path: file.path,
         title,
         year,
-        sizeBytes: file.sizeBytes,
+        sizeBytes:
+          read === null
+            ? file.sizeBytes
+            : read.parts.reduce((total, part) => total + part.sizeBytes, 0),
         modifiedAtMs: file.modifiedAtMs,
         probe,
         probeVersion,
+        parts: read?.parts ?? [],
         metadata,
         episode: filed,
         extraKind: extra?.kind ?? null,
@@ -703,7 +890,12 @@ const scanLibrary = async ({
   const isGoneForGood = (path: string): boolean => {
     const disc = discFolderOf(path);
 
-    return leftOut.has(path) || listedPaths.has(path) || (disc !== null && listedDiscs.has(disc));
+    return (
+      leftOut.has(path) ||
+      (listedPaths.has(path) && !heldFilms.has(path)) ||
+      laterParts.has(path) ||
+      (disc !== null && listedDiscs.has(disc))
+    );
   };
   const goneForNow = missing.filter((path) => !isGoneForGood(path));
   const replaced =
@@ -753,6 +945,8 @@ export type {
   ScannedFile,
   ScannedItem,
   StoredItem,
+  StoredPart,
+  FilePart,
 };
 
 export { scanLibrary, selectChanged };

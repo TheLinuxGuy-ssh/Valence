@@ -1,4 +1,7 @@
 import { z } from '@hono/zod-openapi';
+import { withJoinedInputs } from '@ValenceServer/transcoder/withJoinedInputs';
+import { createPartsOf } from '@ValenceServer/library/createPartsOf';
+import { createPartsOfMany } from '@ValenceServer/library/createPartsOfMany';
 import { isStillThere } from '@ValenceServer/visibility/isStillThere';
 import { createFilePictureStore } from '@ValenceServer/pictures/createFilePictureStore';
 import { brandLogoAddress } from '@ValenceServer/brand/brandLogoAddress';
@@ -119,6 +122,7 @@ import {
   library,
   mediaItem,
   mediaArtworkChoice,
+  mediaPart,
   mediaRendition,
   mediaItemJob,
   mediaPreviewOverride,
@@ -1185,10 +1189,16 @@ const bookService = createDatabaseBookService(db, env.IMAGE_CACHE_DIR, {
   picture: (url) => musicWeb.bytes(url),
 });
 
-const transcoder = createTranscoderClient({
-  baseUrl: env.TRANSCODER_URL,
-  secret: env.TRANSCODER_SECRET,
-});
+const partsOf = createPartsOf(db);
+
+const transcoder = withJoinedInputs(
+  createTranscoderClient({
+    baseUrl: env.TRANSCODER_URL,
+    secret: env.TRANSCODER_SECRET,
+  }),
+  partsOf,
+  createPartsOfMany(db),
+);
 
 const musicArtworkDir = join(env.IMAGE_CACHE_DIR, 'music');
 
@@ -3859,7 +3869,14 @@ const reportSubtitleProblem = (path: string, reason: Said): void => {
 
 const ownSubtitles = createLayeredSubtitleService([
   createSidecarSubtitleService({
-    media: { findPath: findMediaPath },
+    media: {
+      findPath: findMediaPath,
+      findParts: async (mediaId) => {
+        const path = await findMediaPath(mediaId);
+
+        return path === null ? [] : ((await partsOf(path)) ?? []);
+      },
+    },
     onProblem: reportSubtitleProblem,
   }),
   createEmbeddedSubtitleService({
@@ -4034,10 +4051,15 @@ const playbackService = createPlaybackService({
         .select()
         .from(mediaRendition)
         .where(eq(mediaRendition.mediaItemId, mediaId));
+      const parts = await db
+        .select({ position: mediaPart.position })
+        .from(mediaPart)
+        .where(eq(mediaPart.mediaItemId, mediaId));
 
       return {
         item,
         path: row.path,
+        isSplit: parts.length > 1,
         defaultAudioLanguage: row.defaultAudioLanguage,
         generation: row.generation,
         previewMoment:
@@ -4220,6 +4242,10 @@ const reencodeService = createDatabaseReencodeService({
         .limit(1);
 
       const row = rows[0];
+      const parts = await db
+        .select({ position: mediaPart.position })
+        .from(mediaPart)
+        .where(eq(mediaPart.mediaItemId, mediaId));
 
       return row === undefined
         ? null
@@ -4230,6 +4256,7 @@ const reencodeService = createDatabaseReencodeService({
             path: row.path,
             libraryId: row.libraryId,
             libraryPath: row.libraryPath,
+            isSplit: parts.length > 1,
           };
     },
   },
