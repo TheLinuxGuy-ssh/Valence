@@ -198,7 +198,7 @@ Open a poster for the title's own page. It shows the title, where it stands, who
 
 A show's **Seasons** each have a bar of their episodes, a count of how many are here and a switch to follow it. An anime lists its **Cours** instead, each with its name, the catalogue's season and episodes it covers, and its numbers from the first, and an **Anime** card for its speech, release group, how its cours are worked out, the names it's searched by and its films. Open a season for its episodes: when each aired, where it stands, the reason on hover where something went wrong, and its file. An artist's page lists its albums the same way. Following a season of a show nobody asked for, or pressing **Follow** on any title nobody asked for, starts fetching it.
 
-**Details** and **On disk** say its quality profile, library and folder, and the files the library holds of it. **Activity** is everything its request has done, newest first, and **Never again** lists the releases it won't try again. Remove an entry to let one be tried again.
+**Details** and **On disk** say its quality profile, library and folder, and the files the library holds of it. **Activity** is everything its request has done, newest first, and **Blocklist** lists the releases it won't try again. Remove an entry to let one be tried again.
 
 ### Refetch media
 
@@ -210,7 +210,7 @@ If a download fails, or runs into trouble that the **Rules** tab of the **Downlo
 
 ### Releases, quality profiles and libraries
 
-A **quality profile** decides which releases are acceptable: which qualities, such as WEB-DL 1080p or Blu-ray 720p, in what order, how big they should be, and when a film counts as released. Profiles are managed on the **Profiles** panel and need `requests.manage`. Each library says whether it **Accept requests**, which profile its requests are judged by (by default, whichever profile names that library) and where requests are filed (by default, the library's own folder). See [Libraries](/use/libraries).
+A **quality profile** decides which releases are acceptable: which qualities, such as WEB-DL 1080p or Blu-ray 720p, in what order, how big they should be, and when a film counts as released. Profiles are managed on the **Profiles** panel and need `requests.manage`. Each library's **Accept requests** setting says whether it takes requests, and its settings say which profile its requests are judged by (by default, one that names that library, then the one marked for when no quality is chosen) and where requests are filed (by default, the library's own folder). See [Libraries](/use/libraries).
 
 The **Profiles** panel lists profiles highest first. **Move up** and **Move down** in a profile's **…** menu change the order, which every list of profiles follows, including the quality picker people see when they request something. A new profile goes to the bottom. The order is what makes one profile higher than another, not its resolution: a "1080p Remux" can sit above a plain "2160p WEB".
 
