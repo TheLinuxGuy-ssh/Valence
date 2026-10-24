@@ -70,7 +70,6 @@ const EACH_TELEVISION: Config = {
     '<rootDir>/../../packages/native/src/**/*.test.ts',
     '<rootDir>/../../packages/native/src/**/*.test.tsx',
   ],
-  testTimeout: 20_000,
 };
 
 const ONLY_IN_A_BROWSER = ['\\.web\\.test\\.tsx?$'];
@@ -103,6 +102,7 @@ const config: Config = {
   ],
   coverageReporters: ['text', 'json-summary'],
   collectCoverageFrom: ['src/**/*.{ts,tsx}', '!src/**/*.types.ts', '!src/testing/**'],
+  testTimeout: 20_000,
 };
 
 export default config;
