@@ -26,9 +26,17 @@ const DocPageView = ({ page }: DocPageViewProps) => {
   const [headings, setHeadings] = useState<readonly PageHeading[]>([]);
 
   useEffect(() => {
+    const description = document.querySelector('meta[name="description"]');
+    const before = description?.getAttribute('content') ?? '';
+
     document.title = `${page.title} | Valence Docs`;
+    description?.setAttribute('content', page.description);
     window.scrollTo({ top: 0 });
     setHeadings([]);
+
+    return () => {
+      description?.setAttribute('content', before);
+    };
   }, [page]);
 
   return (
