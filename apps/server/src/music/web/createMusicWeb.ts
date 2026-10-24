@@ -13,6 +13,7 @@ type WebFetch = (
 
 type MusicWeb = {
   json: (url: string) => Promise<JsonValue | null>;
+  reachJson?: (url: string) => Promise<JsonValue | null | undefined>;
   bytes: (url: string) => Promise<Uint8Array | null>;
   text: (url: string) => Promise<string | null>;
   failures?: () => number;
@@ -56,8 +57,9 @@ const BACKOFF_MS = 2000;
  *
  * @param options - Who to say is asking, how far apart to space each site's requests, how long to
  *   wait for an answer, and — for a test — how to fetch, wait and tell the time.
- * @returns A way to ask for JSON, to send a query for JSON, and to ask for a picture and a page,
- *   and how many asks so far could not be answered.
+ * @returns A way to ask for JSON, and one that answers nothing at all where the site couldn't be
+ *   reached, apart from null where it refused; to send a query for JSON; to ask for a picture and a page; and how many asks so
+ *   far could not be answered.
  */
 const createMusicWeb = ({
   userAgent,
@@ -100,11 +102,11 @@ const createMusicWeb = ({
     }
   };
 
-  const ask = async (
+  const reach = async (
     url: string,
     accept: string,
     body: JsonValue | null = null,
-  ): Promise<Response | null> => {
+  ): Promise<Response | null | undefined> => {
     const host = new URL(url).host;
 
     for (let attempt = 0; attempt <= RETRIES; attempt += 1) {
@@ -123,12 +125,14 @@ const createMusicWeb = ({
       if (answer === null) {
         failed += 1;
 
-        return null;
+        return undefined;
       }
 
       if (answer.status !== 429 && answer.status !== 503) {
         if (answer.status >= 500) {
           failed += 1;
+
+          return undefined;
         }
 
         return answer.ok ? answer : null;
@@ -139,7 +143,17 @@ const createMusicWeb = ({
 
     failed += 1;
 
-    return null;
+    return undefined;
+  };
+
+  const ask = async (
+    url: string,
+    accept: string,
+    body: JsonValue | null = null,
+  ): Promise<Response | null> => {
+    const answer = await reach(url, accept, body);
+
+    return answer ?? null;
   };
 
   const readJson = async (answer: Response | null): Promise<JsonValue | null> => {
@@ -153,6 +167,12 @@ const createMusicWeb = ({
     failures: () => failed,
 
     json: async (url) => readJson(await ask(url, 'application/json')),
+
+    reachJson: async (url) => {
+      const answer = await reach(url, 'application/json');
+
+      return answer === undefined ? undefined : readJson(answer);
+    },
 
     post: async (url, body) => readJson(await ask(url, 'application/json', body)),
 

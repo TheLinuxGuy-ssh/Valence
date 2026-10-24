@@ -197,9 +197,11 @@ describe('createMissingAlbumMatcher', () => {
     expect(await matcher.settle(VIEWER, 'not-theirs', 5)).toBeNull();
   });
 
-  it('remembers nothing from a search that failed, so the next run asks again', async () => {
+  it('remembers nothing from a search that failed, so a run a minute later asks again', async () => {
     const find = vi
-      .fn<(songs: readonly PlaylistMissingSong[]) => Promise<(MusicCatalogueHit | null)[]>>()
+      .fn<
+        (songs: readonly PlaylistMissingSong[]) => Promise<(MusicCatalogueHit | null | undefined)[]>
+      >()
       .mockRejectedValueOnce(new Error('unreachable'))
       .mockResolvedValue([hitFor('Isles')]);
     const held = { time: 0 };
@@ -210,9 +212,61 @@ describe('createMissingAlbumMatcher', () => {
       now: () => held.time,
     });
 
-    expect((await matcher.settle(VIEWER, PLAYLIST_ID, 1000))?.albums[0]?.hit).toBeNull();
-    expect((await matcher.settle(VIEWER, PLAYLIST_ID, 1000))?.albums[0]?.hit?.title).toBe('Isles');
+    expect(await matcher.settle(VIEWER, PLAYLIST_ID, 1000)).toMatchObject({
+      hasFailed: true,
+      albums: [{ hit: null }],
+    });
+
+    held.time += 60_000;
+
+    expect(await matcher.settle(VIEWER, PLAYLIST_ID, 1000)).toMatchObject({
+      hasFailed: false,
+      albums: [{ hit: { title: 'Isles' } }],
+    });
     expect(find).toHaveBeenCalledTimes(2);
+  });
+
+  it('keeps what was found when some could not be asked about, and asks only about those again', async () => {
+    const find = vi
+      .fn<
+        (songs: readonly PlaylistMissingSong[]) => Promise<(MusicCatalogueHit | null | undefined)[]>
+      >()
+      .mockResolvedValueOnce([hitFor('Isles'), undefined])
+      .mockResolvedValue([hitFor('Bicep')]);
+    const held = { time: 0 };
+    const onDone = vi.fn();
+    const matcher = createMissingAlbumMatcher({
+      playlists: {
+        read: () =>
+          Promise.resolve(detailOf([missing('Apricots', 'Isles'), missing('Glue', 'Bicep')])),
+      },
+      find: async (songs) => {
+        const hits = await find(songs);
+
+        held.time += 30_000;
+
+        return hits;
+      },
+      onDone,
+      now: () => held.time,
+    });
+
+    expect(await matcher.settle(VIEWER, PLAYLIST_ID, 1000)).toMatchObject({
+      isMatching: false,
+      hasFailed: true,
+      albums: [{ hit: { title: 'Isles' } }, { hit: null }],
+    });
+    expect(onDone).not.toHaveBeenCalled();
+    expect((await matcher.match(VIEWER, PLAYLIST_ID))?.isMatching).toBe(false);
+    expect(find).toHaveBeenCalledOnce();
+
+    held.time += 60_000;
+
+    expect(await matcher.settle(VIEWER, PLAYLIST_ID, 1000)).toMatchObject({
+      hasFailed: false,
+      albums: [{ hit: { title: 'Isles' } }, { hit: { title: 'Bicep' } }],
+    });
+    expect(find.mock.calls[1]?.[0]).toEqual([expect.objectContaining({ title: 'Glue' })]);
   });
 
   it('finds nothing for a playlist the person cannot read', async () => {
