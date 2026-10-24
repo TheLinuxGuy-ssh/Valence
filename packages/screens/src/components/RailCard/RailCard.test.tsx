@@ -496,9 +496,31 @@ describe('a card that stands upright', () => {
 
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
-      `/api/media/${MEDIA.id}/image/backdrop`,
+      `/api/media/${MEDIA.id}/image/backdrop?size=medium`,
     );
     expect(container.querySelector('.aspect-video')).not.toBeNull();
+  });
+
+  it('asks for the whole backdrop where it is drawn larger than a rail draws it', () => {
+    const { container } = renderInAnAddress(
+      <RailCard media={MEDIA} onPlay={vi.fn()} onInspect={vi.fn()} drawsLarge />,
+    );
+
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      `/api/media/${MEDIA.id}/image/backdrop`,
+    );
+  });
+
+  it('asks for the whole poster where it stands upright larger than a rail draws it', () => {
+    const { container } = renderInAnAddress(
+      <RailCard media={MEDIA} shape="poster" onPlay={vi.fn()} onInspect={vi.fn()} drawsLarge />,
+    );
+
+    expect(container.querySelector('img')).toHaveAttribute(
+      'src',
+      `/api/media/${MEDIA.id}/image/poster`,
+    );
   });
 
   it('falls back to the backdrop for something with no poster', () => {
@@ -513,7 +535,7 @@ describe('a card that stands upright', () => {
 
     expect(container.querySelector('img')).toHaveAttribute(
       'src',
-      `/api/media/${MEDIA.id}/image/backdrop`,
+      `/api/media/${MEDIA.id}/image/backdrop?size=medium`,
     );
   });
 
