@@ -2736,6 +2736,11 @@
     "context": "Shown, used in several places, among them the ask for the code of the phone app and the setup wizard."
   },
   {
+    "handler": "common.couldNotRemoveTitleFromContinueWatching",
+    "text": "Couldn’t remove {title} from Continue watching. Try again.",
+    "context": "Shown when the server would not take a title off the Continue watching row. {title} is the film or programme."
+  },
+  {
     "handler": "common.count.albums.one",
     "text": "{count} album",
     "context": "How many albums there are, such as in a music library. {count} is the number."
@@ -3703,7 +3708,7 @@
   {
     "handler": "common.forget",
     "text": "Remove",
-    "context": "The confirm label of a confirm dialog, used in the media requests panel in the admin area and in the upload media dialog in the admin area."
+    "context": "The confirm label of a confirm dialog, used in the media requests panel in the admin area, in the upload media dialog in the admin area, and when taking a title off Continue watching on a phone or television."
   },
   {
     "handler": "common.forgetEverything",
@@ -3995,11 +4000,6 @@
     "handler": "common.keepThem",
     "text": "Keep them",
     "context": "The text, used in the devices in the account of the phone app and in the notifications of the phone app."
-  },
-  {
-    "handler": "common.keepTitle",
-    "text": "Keep {title}",
-    "context": "Shown, used in the media detail dialog and in the rail card. {title} is filled in by the app."
   },
   {
     "handler": "common.kind",
@@ -6350,11 +6350,6 @@
     "context": "The label of a button, used in several places, among them the still watching of the phone app and the encoding panel in the admin area."
   },
   {
-    "handler": "common.stopKeepingTitle",
-    "text": "Remove {title} from favourites",
-    "context": "Shown, used in the media detail dialog and in the rail card. {title} is filled in by the app."
-  },
-  {
     "handler": "common.stopped",
     "text": "Stopped",
     "context": "Shown, used in the admin (from `describeReencodeState`) and in the status look in the status."
@@ -6933,6 +6928,11 @@
     "handler": "common.underAMinute",
     "text": "Under a minute",
     "context": "Shown, used in the requests of the television app (from `partsOfDownload`) and in the downloads panel (from `describeTimeLeft`)."
+  },
+  {
+    "handler": "common.undo",
+    "text": "Undo",
+    "context": "The button on a notice that takes back what was just done, such as taking a title off Continue watching."
   },
   {
     "handler": "common.unknownSize",
@@ -9968,6 +9968,16 @@
     "handler": "native.captionTextStyle.snellRoundhand",
     "text": "Snell Roundhand",
     "context": "The name of a font installed on Apple devices, asked for by name to draw the Script caption font. Normally left as it is, since it names the font."
+  },
+  {
+    "handler": "native.library.useAskToDismiss.itComesBackWhenYouWatchIt",
+    "text": "It comes back the next time you watch it, and still resumes where you stopped.",
+    "context": "The explanation under the question about taking a title off the Continue watching row."
+  },
+  {
+    "handler": "native.library.useAskToDismiss.removeTitleFromContinueWatching",
+    "text": "Remove {title} from Continue watching?",
+    "context": "The question asked on a phone or television after holding down a card in the Continue watching row. {title} is the film or programme."
   },
   {
     "handler": "phone.aBook.aChapterToHear.listenFromTitle",
@@ -23002,7 +23012,7 @@
   {
     "handler": "screens.bookDialog.keep",
     "text": "Add to favourites",
-    "context": "Shown in the book dialog."
+    "context": "The button that adds a title or book to the viewer's favourites, on its page or its card's preview."
   },
   {
     "handler": "screens.bookDialog.moreToDoWithThisBook",
@@ -23017,7 +23027,7 @@
   {
     "handler": "screens.bookDialog.stopKeeping",
     "text": "Remove from favourites",
-    "context": "Shown in the book dialog."
+    "context": "The button that takes a title or book out of the viewer's favourites, on its page or its card's preview."
   },
   {
     "handler": "screens.bookFormatChooser.eachIsSearchedForOnItsOwn",
@@ -24331,7 +24341,7 @@
   },
   {
     "handler": "screens.getStarted.keepAFavourite",
-    "text": "Keep a favourite",
+    "text": "Add a favourite",
     "context": "The get-started checklist kept in the corner of the app for somebody new. A step: favourite a film or show."
   },
   {
@@ -25705,6 +25715,11 @@
     "context": "The label in the library (from `libraryChoicesFor`)."
   },
   {
+    "handler": "screens.library.useDismissWithUndo.removedTitleFromContinueWatching",
+    "text": "Removed {title} from Continue watching",
+    "context": "The notice after a title is taken off the Continue watching row, with a button to undo it. {title} is the film or programme."
+  },
+  {
     "handler": "screens.libraryBrowser.emptyLibrary.nothingHasBeenScannedYet",
     "text": "Nothing has been scanned yet",
     "context": "Shown in the empty library in the library browser."
@@ -25826,7 +25841,7 @@
   },
   {
     "handler": "screens.liveTvPage.keepName",
-    "text": "Keep {name} as a favourite",
+    "text": "Add {name} to favourites",
     "context": "Label of the star that keeps a live TV channel as a favourite. {name} is the channel."
   },
   {
@@ -25856,7 +25871,7 @@
   },
   {
     "handler": "screens.liveTvPage.noFavouritesYet",
-    "text": "You haven’t kept any channels yet. Star one to find it here.",
+    "text": "You haven’t added any favourite channels yet. Star one to find it here.",
     "context": "Shown in the live TV guide when the favourites filter is on and nothing is kept."
   },
   {
@@ -25906,7 +25921,7 @@
   },
   {
     "handler": "screens.liveTvPage.stopKeepingName",
-    "text": "Stop keeping {name} as a favourite",
+    "text": "Remove {name} from favourites",
     "context": "Label of the star that removes a live TV channel from favourites. {name} is the channel."
   },
   {
@@ -25916,7 +25931,7 @@
   },
   {
     "handler": "screens.liveTvPage.thatCouldNotBeKept",
-    "text": "That channel couldn’t be kept.",
+    "text": "Couldn’t change your favourite channels.",
     "context": "Toast when keeping a live TV channel as a favourite failed."
   },
   {
@@ -26221,11 +26236,6 @@
     "context": "The label of a skeleton in the albums view in the music page."
   },
   {
-    "handler": "screens.musicPage.albumView.addTitleToAPlaylist",
-    "text": "Add {title} to a playlist",
-    "context": "The label of a action menu in the album view in the music page. {title} is filled in by the app."
-  },
-  {
     "handler": "screens.musicPage.albumView.nothingOnThisAlbumYouCan",
     "text": "No playable tracks on this album",
     "context": "The title of a nothing here in the album view in the music page."
@@ -26234,11 +26244,6 @@
     "handler": "screens.musicPage.albumView.readingTheAlbum",
     "text": "Loading album",
     "context": "The label of a skeleton in the album view in the music page."
-  },
-  {
-    "handler": "screens.musicPage.albumView.shuffleTitle",
-    "text": "Shuffle {title}",
-    "context": "The label of a button in the album view in the music page. {title} is filled in by the app."
   },
   {
     "handler": "screens.musicPage.albumView.thisAlbumCouldNotBeRead",
@@ -26454,11 +26459,6 @@
     "handler": "screens.musicPage.playlistView.sharedPlaylist",
     "text": "Shared playlist",
     "context": "Shown in the playlist view in the music page."
-  },
-  {
-    "handler": "screens.musicPage.playlistView.shuffleName",
-    "text": "Shuffle {name}",
-    "context": "The label of a button in the playlist view in the music page. {name} is filled in by the app."
   },
   {
     "handler": "screens.musicPage.playlistView.thisBelongedToAProfileThat",
@@ -28191,11 +28191,6 @@
     "context": "On a series' card, how many of its episodes are still to watch. Shown after the season and episode counts, as in 3 seasons · 30 episodes · 4 left."
   },
   {
-    "handler": "screens.railCard.hideTitle",
-    "text": "Hide {title}",
-    "context": "The label in the rail card. {title} is filled in by the app."
-  },
-  {
     "handler": "screens.railCard.moreAboutValue",
     "text": "More about {value}",
     "context": "Read aloud by screen readers as the name of a button in the rail card. {value} is filled in by the app."
@@ -28206,14 +28201,14 @@
     "context": "The label of a action menu in the rail card. {title} is filled in by the app."
   },
   {
+    "handler": "screens.railCard.removeFromContinueWatching",
+    "text": "Remove from Continue watching",
+    "context": "The button on a card's preview in the Continue watching row that takes it off the row without changing how far through it the viewer is."
+  },
+  {
     "handler": "screens.railCard.resumeFromResumeSeconds",
     "text": "Resume from {resumeSeconds}",
     "context": "Shown in the rail card. {resumeSeconds} is filled in by the app."
-  },
-  {
-    "handler": "screens.railCard.startTitleAgain",
-    "text": "Play {title} from the start",
-    "context": "The label in the rail card. {title} is filled in by the app."
   },
   {
     "handler": "screens.ratingPanel.fromCountRating.one",

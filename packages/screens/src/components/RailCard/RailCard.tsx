@@ -5,6 +5,7 @@ import {
   EyeOff as EyeOffIcon,
   Heart as HeartIcon,
   MoreHorizontal as MoreHorizontalIcon,
+  X as XIcon,
 } from '@keyline-icons/react';
 import { Heart as HeartFilledIcon, Play as PlayFilledIcon } from '@keyline-icons/react/fill';
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
@@ -104,6 +105,7 @@ const fitInside = (top: number, height: number): number => {
  * @param onOpenShow - Told to open the programme an episode belongs to.
  * @param isKept - Whether it is kept.
  * @param onToggleKept - Told to keep it, or stop.
+ * @param onDismiss - Told to take it off continue watching, on the row of it.
  * @param isSeries - Whether this card stands for a whole programme rather than for the episode that
  *   happens to represent it, in which case the episode's own name and number are not what a reader
  *   is looking at — and pressing it opens the programme rather than that one episode.
@@ -131,6 +133,7 @@ const RailCard = ({
   isKept = false,
   onToggleKept,
   onHide,
+  onDismiss,
   isSeries = false,
   shape: askedShape = 'wide',
   look = 'card',
@@ -213,7 +216,7 @@ const RailCard = ({
       : [
           {
             id: 'again',
-            label: say('screens.railCard.startTitleAgain', { title: media.title }),
+            label: say('common.startAgain'),
             icon: <Icon of={ArrowUTurnRightIcon} size={17} />,
             onChoose: () => {
               onPlay(media, 0);
@@ -225,13 +228,24 @@ const RailCard = ({
       : [
           {
             id: 'keep',
-            label: isKept
-              ? say('common.stopKeepingTitle', { title: media.title })
-              : say('common.keepTitle', { title: media.title }),
+            label: isKept ? say('screens.bookDialog.stopKeeping') : say('screens.bookDialog.keep'),
             icon: <Icon of={HeartIcon} whenActive={HeartFilledIcon} isActive={isKept} size={17} />,
             isActive: isKept,
             onChoose: () => {
               onToggleKept(media);
+            },
+          },
+        ]),
+    ...(onDismiss === undefined
+      ? []
+      : [
+          {
+            id: 'dismiss',
+            label: say('screens.railCard.removeFromContinueWatching'),
+            icon: <Icon of={XIcon} size={17} />,
+            onChoose: () => {
+              close();
+              onDismiss(media);
             },
           },
         ]),
@@ -240,7 +254,7 @@ const RailCard = ({
       : [
           {
             id: 'hide',
-            label: say('screens.railCard.hideTitle', { title: media.title }),
+            label: say('common.hide'),
             icon: <Icon of={EyeOffIcon} size={17} />,
             onChoose: () => {
               onHide(media);

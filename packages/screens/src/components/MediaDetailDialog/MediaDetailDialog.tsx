@@ -238,8 +238,8 @@ const MediaDetailDialog = ({
                           variant="overlay"
                           label={
                             isKept
-                              ? say('common.stopKeepingTitle', { title: shown.title })
-                              : say('common.keepTitle', { title: shown.title })
+                              ? say('screens.bookDialog.stopKeeping')
+                              : say('screens.bookDialog.keep')
                           }
                           isActive={isKept}
                           onClick={() => {

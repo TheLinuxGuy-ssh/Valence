@@ -440,9 +440,39 @@ describe('what the open card offers besides playing', () => {
 
     await restOn(cardHolder(container));
     await actor.click(screen.getByRole('button', { name: 'More options for Parasite' }));
-    await actor.click(await screen.findByRole('menuitem', { name: 'Hide Parasite' }));
+    await actor.click(await screen.findByRole('menuitem', { name: 'Hide' }));
 
     expect(onHide).toHaveBeenCalledWith(MEDIA);
+  });
+
+  it('offers to take it off continue watching, and closes once chosen', async () => {
+    const onDismiss = vi.fn();
+    const actor = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
+    const { container } = renderInAnAddress(
+      <RailCard media={MEDIA} onPlay={vi.fn()} onInspect={vi.fn()} onDismiss={onDismiss} />,
+    );
+
+    await restOn(cardHolder(container));
+    await actor.click(screen.getByRole('button', { name: 'Remove from Continue watching' }));
+
+    expect(onDismiss).toHaveBeenCalledWith(MEDIA);
+    await waitFor(() => {
+      expect(
+        screen.queryByRole('button', { name: 'Remove from Continue watching' }),
+      ).not.toBeInTheDocument();
+    });
+  });
+
+  it('offers nothing of the kind on a card that is not on continue watching', async () => {
+    const { container } = renderInAnAddress(
+      <RailCard media={MEDIA} onPlay={vi.fn()} onInspect={vi.fn()} onToggleKept={vi.fn()} />,
+    );
+
+    await restOn(cardHolder(container));
+
+    expect(
+      screen.queryByRole('button', { name: 'Remove from Continue watching' }),
+    ).not.toBeInTheDocument();
   });
 
   it('keeps a single thing beside the play button, with no menu for it', async () => {
@@ -458,7 +488,7 @@ describe('what the open card offers besides playing', () => {
       screen.queryByRole('button', { name: 'More options for Parasite' }),
     ).not.toBeInTheDocument();
 
-    await actor.click(screen.getByRole('button', { name: 'Keep Parasite' }));
+    await actor.click(screen.getByRole('button', { name: 'Add to favourites' }));
 
     expect(onToggleKept).toHaveBeenCalledWith(MEDIA);
   });
