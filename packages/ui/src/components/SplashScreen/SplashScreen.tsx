@@ -282,7 +282,7 @@ const SplashScreen = ({
             word={name}
             isShown={hasLanded}
             hasArrived={hadLanded}
-            wordClassName="pl-5 text-6xl font-normal"
+            wordClassName="pl-5 text-6xl font-normal sm:text-7xl max-w-[calc(100vw-4rem)] overflow-hidden"
           />
         )}
 

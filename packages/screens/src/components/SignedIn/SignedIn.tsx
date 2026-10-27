@@ -537,7 +537,6 @@ const SignedIn = ({ title }: SignedInProps) => {
 
       {phase === 'gone' ? null : (
         <SplashScreenWithBrand
-          label={say('common.loadingTitle', { title })}
           isReady={!isWaiting}
           marksPlace={MARKS_PLACE}
           hasMark={phase === 'holding'}

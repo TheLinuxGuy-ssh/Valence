@@ -16,7 +16,7 @@ type SplashScreenProps = Omit<UISplashScreenProps, 'brand' | 'mark' | 'name'> & 
  *
  * @param mark - Optional override for the mark (falls back to fetched brand logo or Valence logo)
  */
-export const SplashScreenWithBrand = ({ mark: markProp, ...props }: SplashScreenProps) => {
+export const SplashScreenWithBrand = ({ mark: markProp, label, ...props }: SplashScreenProps) => {
   const brandQuery = useQuery(appearanceQueries.appearance());
   const fetchedBrand = brandQuery.data?.brand;
 
@@ -36,7 +36,9 @@ export const SplashScreenWithBrand = ({ mark: markProp, ...props }: SplashScreen
 
   const finalName = fetchedBrand?.name ?? say('common.valence');
 
-  return <SplashScreen name={finalName} mark={finalMark} {...props} />;
+  const finalLabel = label ?? say('common.loadingTitle', { title: finalName });
+
+  return <SplashScreen name={finalName} mark={finalMark} label={finalLabel} {...props} />;
 };
 
 SplashScreenWithBrand.displayName = 'SplashScreenWithBrand';
