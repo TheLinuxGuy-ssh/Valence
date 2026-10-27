@@ -1,4 +1,5 @@
-import { useReducedMotionConfig } from 'motion/react';
+import { useEffect, useState } from 'react';
+import { useMotion } from '@ValenceClient/shell/useMotion';
 import { cn } from '@ValenceUI/cn';
 import type { PlayingBarsProps } from './PlayingBars.types';
 
@@ -31,8 +32,27 @@ const PlayingBars = ({
   size = 16,
   className,
 }: PlayingBarsProps) => {
-  const prefersReducedMotion = useReducedMotionConfig();
-  const isStill = prefersReducedMotion === true;
+  const { motion } = useMotion();
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const mediaQuery = window.matchMedia('(prefers-reduced-motion: reduce)');
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handler = (event: MediaQueryListEvent) => {
+      setPrefersReducedMotion(event.matches);
+    };
+
+    mediaQuery.addEventListener('change', handler);
+
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, []);
+
+  const isStill = motion === 'reduced' || (motion === 'system' && prefersReducedMotion);
   const isBeating = isPlaying && !isStill;
   const width = Math.max(Math.round(size / 7), 2);
 
@@ -46,14 +66,17 @@ const PlayingBars = ({
         <span
           key={at}
           className={cn(
-            'transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)]',
             isBeating ? 'valence-bars' : undefined,
+            !isStill
+              ? 'transition-transform duration-[var(--duration-base)] ease-[var(--ease-out)]'
+              : undefined,
           )}
           style={{
             width,
             height: size,
             borderRadius: width / 2,
             backgroundColor: colour,
+            transformOrigin: 'bottom',
             transform: `scaleY(${isPlaying && isStill ? STANDS_AT : RESTS_AT})`,
             animationDuration: `${bar.beatMs}ms`,
             animationDelay: `${(-1 * at * LAGS_BY_MS).toString()}ms`,

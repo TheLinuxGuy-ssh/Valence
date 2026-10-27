@@ -1,16 +1,19 @@
 import { render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type * as Motion from 'motion/react';
+import type * as Motion from '@ValenceClient/shell/useMotion';
 import { PlayingBars } from './PlayingBars';
 
-const motion = vi.hoisted(() => ({ isReduced: false }));
+const motion = vi.hoisted(() => ({ motion: 'system' }));
 
-vi.mock('motion/react', async (original) => {
+vi.mock('@ValenceClient/shell/useMotion', async (original) => {
   const real = await original<typeof Motion>();
 
   return {
     ...real,
-    useReducedMotionConfig: () => motion.isReduced,
+    useMotion: () => ({
+      motion: motion.motion,
+      choose: vi.fn(),
+    }),
   };
 });
 
@@ -19,7 +22,7 @@ const barsOf = (container: HTMLElement): HTMLElement[] => [
 ];
 
 afterEach(() => {
-  motion.isReduced = false;
+  motion.motion = 'system';
 });
 
 describe('PlayingBars', () => {
@@ -56,8 +59,8 @@ describe('PlayingBars', () => {
     }
   });
 
-  it('stands still halfway up for somebody who asked for less movement', () => {
-    motion.isReduced = true;
+  it('stands still halfway up when motion is reduced', () => {
+    motion.motion = 'reduced';
     const mine = render(<PlayingBars isPlaying />);
 
     const bars = barsOf(mine.container);
@@ -68,12 +71,23 @@ describe('PlayingBars', () => {
     }
   });
 
-  it('keeps standing low once a song has stopped', () => {
-    motion.isReduced = true;
+  it('keeps standing low once a song has stopped when motion is reduced', () => {
+    motion.motion = 'reduced';
     const mine = render(<PlayingBars isPlaying={false} />);
 
     for (const bar of barsOf(mine.container)) {
       expect(bar.style.transform).toBe('scaleY(0.3)');
+    }
+  });
+
+  it('animates when motion is full even if OS prefers reduced', () => {
+    motion.motion = 'full';
+    const mine = render(<PlayingBars isPlaying />);
+
+    const bars = barsOf(mine.container);
+
+    for (const bar of bars) {
+      expect(bar).toHaveClass('valence-bars');
     }
   });
 
