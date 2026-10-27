@@ -602,6 +602,9 @@ const ValenceShell = () => {
             onOpen={(kind, mediaId) => {
               replace(placeOfArrival(kind, mediaId));
             }}
+            onPlay={(mediaId) => {
+              go({ asking: null, playing: mediaId });
+            }}
           />
         ) : null}
 
