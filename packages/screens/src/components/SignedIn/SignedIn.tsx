@@ -18,7 +18,7 @@ import { ProfileGate } from '@ValenceScreens/components/ProfileGate/ProfileGate'
 import { WhoIsWatching } from '@ValenceScreens/components/WhoIsWatching/WhoIsWatching';
 import { useProfileChoice } from '@ValenceClient/profiles/useProfileChoice';
 import { SetupWizard } from '@ValenceScreens/components/SetupWizard/SetupWizard';
-import { SplashScreen } from '@ValenceUI/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
 import { shellContext } from '@ValenceClient/shell/shellContext';
 import { sessionQueries } from '@ValenceClient/query/sessionQueries';
 import { viewingQueries } from '@ValenceClient/query/viewingQueries';
@@ -536,8 +536,7 @@ const SignedIn = ({ title }: SignedInProps) => {
       )}
 
       {phase === 'gone' ? null : (
-        <SplashScreen
-          name={title}
+        <SplashScreenWithBrand
           label={say('common.loadingTitle', { title })}
           isReady={!isWaiting}
           marksPlace={MARKS_PLACE}

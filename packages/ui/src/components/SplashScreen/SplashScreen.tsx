@@ -83,6 +83,8 @@ const DONE_AT_MILLISECONDS = NAME_AT_MILLISECONDS + CARD_OPENS_SECONDS * 1000;
 const SplashScreen = ({
   name = say('common.valence'),
   label = say('common.loading'),
+  brand,
+  mark,
   isReady = false,
   failure = null,
   onTryAgain,
@@ -95,7 +97,14 @@ const SplashScreen = ({
 }: SplashScreenProps) => {
   const prefersReducedMotion = useReducedMotionConfig();
 
-  const isOurs = name.toLowerCase() === OURS;
+  const finalMark =
+    mark ??
+    brand ??
+    (name.toLowerCase() === OURS ? (
+      <Logo size={56} isSolid label={name} />
+    ) : (
+      <p className="text-4xl font-semibold tracking-[-0.05em] text-text sm:text-5xl">{name}</p>
+    ));
   const [startedAt] = useState(() => {
     splashIntro.startedAt ??= Date.now();
 
@@ -264,17 +273,11 @@ const SplashScreen = ({
             }}
             className="flex items-center justify-center"
           >
-            {isOurs ? (
-              <Logo size={56} isSolid label={name} />
-            ) : (
-              <p className="text-4xl font-semibold tracking-[-0.05em] text-text sm:text-5xl">
-                {name}
-              </p>
-            )}
+            {finalMark}
           </motion.span>
         )}
 
-        {!hasMark || !isOurs ? null : (
+        {!hasMark ? null : (
           <WordReveal
             word={name}
             isShown={hasLanded}

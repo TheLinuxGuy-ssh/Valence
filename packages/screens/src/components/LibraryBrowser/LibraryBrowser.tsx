@@ -10,7 +10,7 @@ import { BackToTop } from '@ValenceUI/BackToTop';
 import { Rail } from '@ValenceUI/Rail';
 import { ComingUp } from '@ValenceScreens/components/ComingUp/ComingUp';
 import { RevealItem } from '@ValenceUI/RevealItem';
-import { SplashScreen } from '@ValenceUI/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
 import { Spinner } from '@ValenceUI/Spinner';
 import { Hero } from '@ValenceScreens/components/Hero/Hero';
 import { groupIntoRails, RESUMING } from '@ValenceClient/library/groupIntoRails';
@@ -78,7 +78,7 @@ const WATCHABLE: ReadonlySet<LibraryKind> = new Set(['movies', 'shows', 'anime']
 const LibraryBrowser = ({
   search = '',
   hasHero = false,
-  name,
+  name: _name,
   onFeatureChange,
   onPalette,
   onItemsLoaded,
@@ -244,10 +244,10 @@ const LibraryBrowser = ({
 
   if (isReading) {
     return onReading !== undefined ? null : (
-      <SplashScreen
-        {...(name === undefined ? {} : { name })}
+      <SplashScreenWithBrand
         label={say('screens.libraryBrowser.readingYourLibrary')}
-        hasMark={false}
+        hasMark={true}
+        marksPlace="valence-mark"
       />
     );
   }
