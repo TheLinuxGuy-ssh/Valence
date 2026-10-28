@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreenWithBrand/SplashScreenWithBrand';
 import { describeProblem } from './describeProblem';
 import type { PageProblemProps } from './PageProblem.types';
 

@@ -10,7 +10,7 @@ import type { RefObject } from 'react';
  * @param dep - Optional dependency that triggers re-measurement when it changes.
  * @returns The width in pixels, or null until it has been measured.
  */
-const useFitWidth = <T,>(contentRef: RefObject<HTMLElement | null>, dep?: T): number | null => {
+const useFitWidth = <T>(contentRef: RefObject<HTMLElement | null>, dep?: T): number | null => {
   const [width, setWidth] = useState<number | null>(null);
   const watched = dep ?? null;
 

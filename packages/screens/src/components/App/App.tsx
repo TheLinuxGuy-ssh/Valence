@@ -1,10 +1,9 @@
 import { useCallback, useState } from 'react';
 import { Outlet } from '@tanstack/react-router';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreenWithBrand/SplashScreenWithBrand';
 import { SetupWizard } from '@ValenceScreens/components/SetupWizard/SetupWizard';
 import { sessionQueries } from '@ValenceClient/query/sessionQueries';
-import type { AppProps } from './App.types';
 import { say } from '@ValenceI18n/say';
 
 /**
@@ -15,10 +14,8 @@ import { say } from '@ValenceI18n/say';
  * browser cannot skip it and a stale tab cannot behave as though it is past it. Once begun it stays
  * on screen until it is finished, though the server reports itself set up as soon as the
  * administrator is made, partway through.
- *
- * @param initialTitle - What the platform is called, which an operator may have changed.
  */
-const App = ({ initialTitle: _initialTitle = say('common.valence') }: AppProps) => {
+const App = () => {
   const cache = useQueryClient();
 
   const server = useQuery(sessionQueries.setup());

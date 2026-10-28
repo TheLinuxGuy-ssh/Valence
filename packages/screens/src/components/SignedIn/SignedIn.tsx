@@ -18,7 +18,7 @@ import { ProfileGate } from '@ValenceScreens/components/ProfileGate/ProfileGate'
 import { WhoIsWatching } from '@ValenceScreens/components/WhoIsWatching/WhoIsWatching';
 import { useProfileChoice } from '@ValenceClient/profiles/useProfileChoice';
 import { SetupWizard } from '@ValenceScreens/components/SetupWizard/SetupWizard';
-import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreenWithBrand/SplashScreenWithBrand';
 import { shellContext } from '@ValenceClient/shell/shellContext';
 import { sessionQueries } from '@ValenceClient/query/sessionQueries';
 import { viewingQueries } from '@ValenceClient/query/viewingQueries';

@@ -8,7 +8,6 @@ type SplashFailure = {
 type SplashScreenProps = {
   name?: string;
   label?: string;
-  brand?: ReactNode;
   mark?: ReactNode;
   isReady?: boolean;
   failure?: SplashFailure | null;

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useReducedMotionConfig } from 'motion/react';
-import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreen/SplashScreen';
+import { SplashScreenWithBrand } from '@ValenceScreens/components/SplashScreenWithBrand/SplashScreenWithBrand';
 import { VideoPlayer } from '@ValenceScreens/components/VideoPlayer/VideoPlayer';
 import { PreRoll } from '@ValenceScreens/components/PreRoll/PreRoll';
 import { usePreRoll } from '@ValenceClient/playback/usePreRoll';
@@ -35,7 +35,6 @@ const WatchPage = () => {
   useQuietMusic();
 
   const {
-    title: _title,
     known,
     progress,
     isProgressReady,
@@ -133,21 +132,11 @@ const WatchPage = () => {
   );
 
   if (shown === null) {
-    return (
-      <SplashScreenWithBrand
-        hasMark={true}
-        marksPlace="valence-mark"
-      />
-    );
+    return <SplashScreenWithBrand hasMark={true} marksPlace="valence-mark" />;
   }
 
   if (!isCarryingOn && !isProgressReady && startOverride?.mediaId !== shown.id) {
-    return (
-      <SplashScreenWithBrand
-        hasMark={true}
-        marksPlace="valence-mark"
-      />
-    );
+    return <SplashScreenWithBrand hasMark={true} marksPlace="valence-mark" />;
   }
 
   if (!isCarryingOn && beginning.kind === 'wait') {
@@ -161,12 +150,7 @@ const WatchPage = () => {
   }
 
   if (preRoll.kind === 'asking') {
-    return (
-      <SplashScreenWithBrand
-        hasMark={true}
-        marksPlace="valence-mark"
-      />
-    );
+    return <SplashScreenWithBrand hasMark={true} marksPlace="valence-mark" />;
   }
 
   if (preRoll.kind === 'clip') {

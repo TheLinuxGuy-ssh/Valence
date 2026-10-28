@@ -4,6 +4,7 @@ import { Logo } from '@ValenceUI/Logo';
 import { liquidSpring, stillTransition, openSpring } from '@ValenceUI/animations/reveal';
 import { StatusRing } from '@ValenceUI/StatusRing';
 import { Button } from '@ValenceUI/Button';
+import { cn } from '@ValenceUI/cn';
 import { layoutBoxOf } from '@ValenceUI/layoutBoxOf';
 import { splashIntro } from './splashIntro';
 import type { SplashScreenProps } from './SplashScreen.types';
@@ -32,6 +33,8 @@ const TICK_DRAWS_MILLISECONDS = 420;
 const FADES_MILLISECONDS = 260;
 
 const NAME_AT_MILLISECONDS = MARK_RISES_MILLISECONDS + NAME_PAUSE_MILLISECONDS;
+
+const SHORT_NAME_LENGTH = 10;
 
 const DONE_AT_MILLISECONDS = NAME_AT_MILLISECONDS + CARD_OPENS_SECONDS * 1000;
 
@@ -65,6 +68,7 @@ const DONE_AT_MILLISECONDS = NAME_AT_MILLISECONDS + CARD_OPENS_SECONDS * 1000;
  *
  * @param name - What the platform is called, which may have been renamed by an operator.
  * @param label - What is being waited for, read out to anybody who cannot see the screen.
+ * @param mark - What is held up beside the name, where it is not Valence's own mark.
  * @param isReady - Whether what was being waited for has arrived, which turns the status mark's
  *   running arc into a tick and then fades it.
  * @param failure - Why what was being waited for could not be had, which turns the mark into a
@@ -82,7 +86,6 @@ const DONE_AT_MILLISECONDS = NAME_AT_MILLISECONDS + CARD_OPENS_SECONDS * 1000;
 const SplashScreen = ({
   name = say('common.valence'),
   label = say('common.loading'),
-  brand,
   mark,
   isReady = false,
   failure = null,
@@ -97,11 +100,7 @@ const SplashScreen = ({
   const prefersReducedMotion = useReducedMotionConfig();
 
   const finalMark =
-    mark ??
-    brand ??
-    (name.toLowerCase() === OURS ? (
-      <Logo size={56} isSolid label={name} />
-    ) : null);
+    mark ?? (name.toLowerCase() === OURS ? <Logo size={56} isSolid label={name} /> : null);
   const [startedAt] = useState(() => {
     splashIntro.startedAt ??= Date.now();
 
@@ -277,7 +276,10 @@ const SplashScreen = ({
         {!hasMark ? null : (
           <motion.span
             aria-hidden
-            className="pl-5 text-6xl font-normal sm:text-7xl max-w-[calc(100vw-4rem)] overflow-hidden"
+            className={cn(
+              'max-w-[calc(100vw-7.5rem)] truncate pl-5 font-normal',
+              name.length > SHORT_NAME_LENGTH ? 'text-4xl sm:text-6xl' : 'text-6xl',
+            )}
             initial={prefersReducedMotion === true || hadLanded ? false : { width: 0 }}
             animate={{ width: hasLanded || prefersReducedMotion === true ? 'auto' : 0 }}
             transition={prefersReducedMotion === true || hadLanded ? { duration: 0 } : openSpring}
