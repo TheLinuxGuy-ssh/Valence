@@ -35,7 +35,7 @@ const WatchPage = () => {
   useQuietMusic();
 
   const {
-    title,
+    title: _title,
     known,
     progress,
     isProgressReady,
@@ -135,7 +135,6 @@ const WatchPage = () => {
   if (shown === null) {
     return (
       <SplashScreenWithBrand
-        label={say('common.loadingTitle', { title })}
         hasMark={true}
         marksPlace="valence-mark"
       />
@@ -145,7 +144,6 @@ const WatchPage = () => {
   if (!isCarryingOn && !isProgressReady && startOverride?.mediaId !== shown.id) {
     return (
       <SplashScreenWithBrand
-        label={say('common.loadingTitle', { title })}
         hasMark={true}
         marksPlace="valence-mark"
       />
@@ -165,7 +163,6 @@ const WatchPage = () => {
   if (preRoll.kind === 'asking') {
     return (
       <SplashScreenWithBrand
-        label={say('common.loadingTitle', { title })}
         hasMark={true}
         marksPlace="valence-mark"
       />

@@ -1,8 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion, useReducedMotionConfig } from 'motion/react';
 import { Logo } from '@ValenceUI/Logo';
-import { liquidSpring, stillTransition } from '@ValenceUI/animations/reveal';
-import { WordReveal } from '@ValenceUI/WordReveal';
+import { liquidSpring, stillTransition, openSpring } from '@ValenceUI/animations/reveal';
 import { StatusRing } from '@ValenceUI/StatusRing';
 import { Button } from '@ValenceUI/Button';
 import { layoutBoxOf } from '@ValenceUI/layoutBoxOf';
@@ -102,9 +101,7 @@ const SplashScreen = ({
     brand ??
     (name.toLowerCase() === OURS ? (
       <Logo size={56} isSolid label={name} />
-    ) : (
-      <p className="text-4xl font-semibold tracking-[-0.05em] text-text sm:text-5xl">{name}</p>
-    ));
+    ) : null);
   const [startedAt] = useState(() => {
     splashIntro.startedAt ??= Date.now();
 
@@ -278,12 +275,15 @@ const SplashScreen = ({
         )}
 
         {!hasMark ? null : (
-          <WordReveal
-            word={name}
-            isShown={hasLanded}
-            hasArrived={hadLanded}
-            wordClassName="pl-5 text-6xl font-normal sm:text-7xl max-w-[calc(100vw-4rem)] overflow-hidden"
-          />
+          <motion.span
+            aria-hidden
+            className="pl-5 text-6xl font-normal sm:text-7xl max-w-[calc(100vw-4rem)] overflow-hidden"
+            initial={prefersReducedMotion === true || hadLanded ? false : { width: 0 }}
+            animate={{ width: hasLanded || prefersReducedMotion === true ? 'auto' : 0 }}
+            transition={prefersReducedMotion === true || hadLanded ? { duration: 0 } : openSpring}
+          >
+            {name}
+          </motion.span>
         )}
 
         <AnimatePresence>

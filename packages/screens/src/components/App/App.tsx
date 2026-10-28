@@ -18,7 +18,7 @@ import { say } from '@ValenceI18n/say';
  *
  * @param initialTitle - What the platform is called, which an operator may have changed.
  */
-const App = ({ initialTitle = say('common.valence') }: AppProps) => {
+const App = ({ initialTitle: _initialTitle = say('common.valence') }: AppProps) => {
   const cache = useQueryClient();
 
   const server = useQuery(sessionQueries.setup());
@@ -39,7 +39,6 @@ const App = ({ initialTitle = say('common.valence') }: AppProps) => {
 
     return (
       <SplashScreenWithBrand
-        label={say('screens.app.loadingInitialTitle', { initialTitle })}
         failure={
           hasFailed
             ? {

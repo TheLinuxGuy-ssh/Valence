@@ -4,6 +4,7 @@ import { Logo } from '@ValenceUI/Logo';
 import { appearanceQueries } from '@ValenceClient/query/appearanceQueries';
 import { say } from '@ValenceI18n/say';
 import type { SplashScreenProps as UISplashScreenProps } from '@ValenceUI/SplashScreen.types';
+import { useState, useEffect } from 'react';
 
 type SplashScreenProps = Omit<UISplashScreenProps, 'brand' | 'mark' | 'name'> & {
   mark?: React.ReactNode;
@@ -20,9 +21,15 @@ export const SplashScreenWithBrand = ({ mark: markProp, label, ...props }: Splas
   const brandQuery = useQuery(appearanceQueries.appearance());
   const fetchedBrand = brandQuery.data?.brand;
 
+  const [logoError, setLogoError] = useState(false);
+
+  useEffect(() => {
+    setLogoError(false);
+  }, [fetchedBrand?.logo]);
+
   const finalMark =
     markProp ??
-    (fetchedBrand?.logo === null || fetchedBrand?.logo === undefined ? (
+    (fetchedBrand?.logo === null || fetchedBrand?.logo === undefined || logoError ? (
       <Logo size={56} isSolid label={fetchedBrand?.name ?? say('common.valence')} />
     ) : (
       <img
@@ -31,6 +38,7 @@ export const SplashScreenWithBrand = ({ mark: markProp, label, ...props }: Splas
         width={56}
         height={56}
         className="rounded-md object-contain"
+        onError={() => setLogoError(true)}
       />
     ));
 

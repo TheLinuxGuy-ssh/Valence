@@ -184,7 +184,7 @@ describe('LibraryBrowser', () => {
     fetchLibrariesMock.mockReturnValue(new Promise(() => undefined));
     draw(<LibraryBrowser onPlay={vi.fn()} />);
 
-    expect(screen.getByRole('status', { name: 'Loading your library' })).toBeInTheDocument();
+    expect(screen.getByRole('status', { name: /Loading Valence/i })).toBeInTheDocument();
   });
 
   it('opens on what was added most recently, even where there is only one thing', async () => {
