@@ -245,6 +245,7 @@ const LibraryBrowser = ({
   if (isReading) {
     return onReading !== undefined ? null : (
       <SplashScreenWithBrand
+        label={say('screens.libraryBrowser.readingYourLibrary')}
         hasMark={true}
         marksPlace="valence-mark"
       />
